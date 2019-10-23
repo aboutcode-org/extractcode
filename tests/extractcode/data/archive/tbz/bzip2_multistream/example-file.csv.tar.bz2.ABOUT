@@ -1,4 +1,5 @@
-about_resource: example-file.csv.bz2
+name: bzip2 test archive from Python.org
+about_resource: example-file.csv.tar.bz2
 download_url: http://bugs.python.org/file34230/example-file.csv.bz2
 notes: See also 
  http://bugs.python.org/issue20781
