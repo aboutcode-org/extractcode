@@ -45,7 +45,6 @@ from extractcode import libarchive2
 from extractcode.uncompress import uncompress_gzip
 from extractcode.uncompress import uncompress_bzip2
 
-
 logger = logging.getLogger(__name__)
 TRACE = False
 TRACE_DEEP = False

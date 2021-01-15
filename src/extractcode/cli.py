@@ -53,7 +53,7 @@ Visit https://aboutcode.org and https://github.com/nexB/extractcode/ for support
 
 notice_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'NOTICE')
 notice_text = open(notice_path).read()
-    
+
 
 def print_about(ctx, param, value):
     """
