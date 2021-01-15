@@ -1,5 +1,11 @@
 Release notes
--------------
-### Version 0.0.0
+=============
 
-*xxxx-xx-xx* -- Initial release.
+vNext
+-----
+
+Version 20.10
+-------------
+
+*2020-10-06*
+- Initial release.
