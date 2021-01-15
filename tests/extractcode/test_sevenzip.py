@@ -1,42 +1,35 @@
 #
-# Copyright (c) nexB Inc. and others. All rights reserved.
-# http://nexb.com and https://github.com/nexB/scancode-toolkit/
-# The ScanCode software is licensed under the Apache License version 2.0.
-# Data generated with ScanCode require an acknowledgment.
+# Copyright (c) nexB Inc. and others.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Visit https://aboutcode.org and https://github.com/nexB/ for support and download.
 # ScanCode is a trademark of nexB Inc.
 #
-# You may not use this software except in compliance with the License.
-# You may obtain a copy of the License at: http://apache.org/licenses/LICENSE-2.0
-# Unless required by applicable law or agreed to in writing, software distributed
-# under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-# CONDITIONS OF ANY KIND, either express or implied. See the License for the
-# specific language governing permissions and limitations under the License.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# When you publish or redistribute any data created with ScanCode or any ScanCode
-# derivative work, you must accompany this data with the following acknowledgment:
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-#  Generated with ScanCode and provided on an "AS IS" BASIS, WITHOUT WARRANTIES
-#  OR CONDITIONS OF ANY KIND, either express or implied. No content created from
-#  ScanCode should be considered or used as legal advice. Consult an Attorney
-#  for any legal advice.
-#  ScanCode is a free software code scanning tool from nexB Inc. and others.
-#  Visit https://github.com/nexB/scancode-toolkit/ for support and download.
-
-from __future__ import absolute_import
-from __future__ import print_function
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 
 import os
 import json
 import posixpath
-from unittest.case import skipIf
 
-from commoncode.testcase import FileBasedTesting
-from commoncode.system import py2
-from commoncode.system import py3
-from commoncode.system import on_windows
+import pytest
+
 from commoncode import fileutils
-from extractcode import sevenzip
+from commoncode.testcase import FileBasedTesting
+from commoncode.system import on_windows
+
 from extractcode import ExtractErrorFailedToExtract
+from extractcode import sevenzip
 
 
 class TestSevenZip(FileBasedTesting):
@@ -44,15 +37,11 @@ class TestSevenZip(FileBasedTesting):
 
     def check_results_with_expected_json(self, results, expected_loc, clean_dates=False, regen=False):
         if regen:
-            if py2:
-                wmode = 'wb'
-            if py3:
-                wmode = 'w'
-            with open(expected_loc, wmode) as ex:
+            with open(expected_loc, 'w') as ex:
                 json.dump(results, ex, indent=2, separators=(',', ':'))
 
-        with open(expected_loc, 'rb') as ex:
-            expected = json.load(ex, encoding='utf-8')
+        with open(expected_loc) as ex:
+            expected = json.load(ex)
         if clean_dates:
             if isinstance(results, list):
                 self.clean_dates(results)
@@ -147,7 +136,7 @@ Compressed: 7674
 
 class TestSevenZipListEntries(TestSevenZip):
 
-    @skipIf(on_windows, 'Windows file-by-file extracton is not working well')
+    @pytest.mark.skipif(on_windows, reason='Windows file-by-file extracton is not working well')
     def test_list_entries_of_special_tar(self):
         test_loc = self.get_test_loc('sevenzip/special.tar')
         expected_loc = test_loc + '-entries-expected.json'
@@ -157,7 +146,7 @@ class TestSevenZipListEntries(TestSevenZip):
         results = entries + errors
         self.check_results_with_expected_json(results, expected_loc, regen=False)
 
-    @skipIf(not on_windows, 'Windows file-by-file extracton is not working well')
+    @pytest.mark.skipif(not on_windows, reason='Windows file-by-file extracton is not working well')
     def test_list_entries_of_special_tar_win(self):
         test_loc = self.get_test_loc('sevenzip/special.tar')
         expected_loc = test_loc + '-entries-expected-win.json'
@@ -167,7 +156,7 @@ class TestSevenZipListEntries(TestSevenZip):
         results = entries + errors
         self.check_results_with_expected_json(results, expected_loc, clean_dates=True, regen=False)
 
-    @skipIf(on_windows, 'Windows file-by-file extracton is not working well')
+    @pytest.mark.skipif(on_windows, reason='Windows file-by-file extracton is not working well')
     def test_list_entries_with_weird_names_7z(self):
         test_loc = self.get_test_loc('sevenzip/weird_names.7z')
         expected_loc = test_loc + '-entries-expected.json'
@@ -177,7 +166,7 @@ class TestSevenZipListEntries(TestSevenZip):
         results = entries + errors
         self.check_results_with_expected_json(results, expected_loc, regen=False)
 
-    @skipIf(not on_windows, 'Windows file-by-file extracton is not working well')
+    @pytest.mark.skipif(not on_windows, reason='Windows file-by-file extracton is not working well')
     def test_list_entries_with_weird_names_7z_win(self):
         test_loc = self.get_test_loc('sevenzip/weird_names.7z')
         expected_loc = test_loc + '-entries-expected-win.json'
@@ -300,6 +289,7 @@ class TestSevenZipFileByFile(TestSevenZip):
     def test_extract_file_by_file_weird_names_zip(self):
         self.check_extract_file_by_file('sevenzip/weird_names.zip', regen=False)
 
+    @pytest.mark.xfail(on_windows, reason='Fails on Windows becasue it has file names that cannot be extracted there')
     def test_extract_file_by_file_weird_names_ar(self):
         self.check_extract_file_by_file('sevenzip/weird_names.ar', regen=False)
 
