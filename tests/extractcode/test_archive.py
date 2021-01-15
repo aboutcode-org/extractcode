@@ -19,16 +19,16 @@
 # limitations under the License.
 #
 
-import io
 import os
 
 import pytest
 
-import commoncode.date
+from commoncode import date as commoncode_date
 from commoncode import fileutils
 from commoncode.system import on_linux
 from commoncode.system import on_mac
 from commoncode.system import on_windows
+from commoncode.testcase import is_same
 
 from extractcode_assert_utils import BaseArchiveTestCase
 from extractcode_assert_utils import check_files
@@ -40,7 +40,6 @@ from extractcode import archive
 from extractcode import ExtractErrorFailedToExtract
 from extractcode import libarchive2
 from extractcode import sevenzip
-from extractcode.libarchive2 import ArchiveError
 
 """
 For each archive type --when possible-- we are testing extraction of:
@@ -383,7 +382,7 @@ class TestTarGzip(BaseArchiveTestCase):
         test_dir2 = self.get_temp_dir()
         test_file2 = self.get_test_loc('archive/tgz/no_trailing.tar.gz')
         archive.extract_tar(test_file2, test_dir2)
-        assert commoncode.testcase.is_same(test_dir1, test_dir2)
+        assert is_same(test_dir1, test_dir2)
 
     def test_extract_targz_with_mixed_case_and_symlink(self):
         test_file = self.get_test_loc('archive/tgz/mixed_case_and_symlink.tgz')
@@ -960,7 +959,7 @@ class TestZip(BaseArchiveTestCase):
         ]
         # DST sends a monkey wrench.... so we only test the date, not the time
         for loc, expected_date in expected:
-            result = commoncode.date.get_file_mtime(loc)
+            result = commoncode_date.get_file_mtime(loc)
             assert result.startswith(expected_date)
 
     def test_extract_zip_with_timezone_2(self):
@@ -974,7 +973,7 @@ class TestZip(BaseArchiveTestCase):
             (os.path.join(test_dir, 'primes2.txt'), ('2009-12-05', '2009-12-06',))
         ]
         for loc, expected_date in expected:
-            result = commoncode.date.get_file_mtime(loc)
+            result = commoncode_date.get_file_mtime(loc)
             assert result.startswith(expected_date)
 
     def test_extract_zip_with_backslash_in_path_1(self):
@@ -1268,7 +1267,7 @@ class TestAr(BaseArchiveTestCase):
         ]
         # DST sends a monkey wrench.... so we only test the date, not the time
         for loc, expected_date in expected:
-            result = commoncode.date.get_file_mtime(loc)
+            result = commoncode_date.get_file_mtime(loc)
             assert result.startswith(expected_date)
 
     def test_extract_ar_broken_7z(self):
@@ -2318,7 +2317,7 @@ class TestExtractArchiveWithIllegalFilenamesWithLibarchiveOnWindows(ExtractArchi
             self.check_extract_weird_names(
                 libarchive2.extract, test_file, expected_warnings=[], expected_suffix='libarch')
             self.fail('Exception not raised.')
-        except ArchiveError as ae:
+        except libarchive2.ArchiveError as ae:
             assert str(ae).startswith('Incorrect file header signature')
 
     def test_extract_cpio_with_weird_filenames_with_libarchive_win(self):

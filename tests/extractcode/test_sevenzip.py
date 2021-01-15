@@ -21,11 +21,12 @@
 import os
 import json
 import posixpath
-from unittest.case import skipIf
 
+import pytest
+
+from commoncode import fileutils
 from commoncode.testcase import FileBasedTesting
 from commoncode.system import on_windows
-from commoncode import fileutils
 
 from extractcode import ExtractErrorFailedToExtract
 from extractcode import sevenzip
@@ -135,7 +136,7 @@ Compressed: 7674
 
 class TestSevenZipListEntries(TestSevenZip):
 
-    @skipIf(on_windows, 'Windows file-by-file extracton is not working well')
+    @pytest.mark.skipif(on_windows, reason='Windows file-by-file extracton is not working well')
     def test_list_entries_of_special_tar(self):
         test_loc = self.get_test_loc('sevenzip/special.tar')
         expected_loc = test_loc + '-entries-expected.json'
@@ -145,7 +146,7 @@ class TestSevenZipListEntries(TestSevenZip):
         results = entries + errors
         self.check_results_with_expected_json(results, expected_loc, regen=False)
 
-    @skipIf(not on_windows, 'Windows file-by-file extracton is not working well')
+    @pytest.mark.skipif(not on_windows, reason='Windows file-by-file extracton is not working well')
     def test_list_entries_of_special_tar_win(self):
         test_loc = self.get_test_loc('sevenzip/special.tar')
         expected_loc = test_loc + '-entries-expected-win.json'
@@ -155,7 +156,7 @@ class TestSevenZipListEntries(TestSevenZip):
         results = entries + errors
         self.check_results_with_expected_json(results, expected_loc, clean_dates=True, regen=False)
 
-    @skipIf(on_windows, 'Windows file-by-file extracton is not working well')
+    @pytest.mark.skipif(on_windows, reason='Windows file-by-file extracton is not working well')
     def test_list_entries_with_weird_names_7z(self):
         test_loc = self.get_test_loc('sevenzip/weird_names.7z')
         expected_loc = test_loc + '-entries-expected.json'
@@ -165,7 +166,7 @@ class TestSevenZipListEntries(TestSevenZip):
         results = entries + errors
         self.check_results_with_expected_json(results, expected_loc, regen=False)
 
-    @skipIf(not on_windows, 'Windows file-by-file extracton is not working well')
+    @pytest.mark.skipif(not on_windows, reason='Windows file-by-file extracton is not working well')
     def test_list_entries_with_weird_names_7z_win(self):
         test_loc = self.get_test_loc('sevenzip/weird_names.7z')
         expected_loc = test_loc + '-entries-expected-win.json'
@@ -288,6 +289,7 @@ class TestSevenZipFileByFile(TestSevenZip):
     def test_extract_file_by_file_weird_names_zip(self):
         self.check_extract_file_by_file('sevenzip/weird_names.zip', regen=False)
 
+    @pytest.mark.xfail(on_windows, reason='Fails on Windows becasue it has file names that cannot be extracted there')
     def test_extract_file_by_file_weird_names_ar(self):
         self.check_extract_file_by_file('sevenzip/weird_names.ar', regen=False)
 
