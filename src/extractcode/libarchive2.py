@@ -1,31 +1,22 @@
 #
-# Copyright (c) 2018 nexB Inc. and others. All rights reserved.
-# http://nexb.com and https://github.com/nexB/scancode-toolkit/
-# The ScanCode software is licensed under the Apache License version 2.0.
-# Data generated with ScanCode require an acknowledgment.
+# Copyright (c) nexB Inc. and others.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Visit https://aboutcode.org and https://github.com/nexB/ for support and download.
 # ScanCode is a trademark of nexB Inc.
 #
-# You may not use this software except in compliance with the License.
-# You may obtain a copy of the License at: http://apache.org/licenses/LICENSE-2.0
-# Unless required by applicable law or agreed to in writing, software distributed
-# under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-# CONDITIONS OF ANY KIND, either express or implied. See the License for the
-# specific language governing permissions and limitations under the License.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# When you publish or redistribute any data created with ScanCode or any ScanCode
-# derivative work, you must accompany this data with the following acknowledgment:
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-#  Generated with ScanCode and provided on an "AS IS" BASIS, WITHOUT WARRANTIES
-#  OR CONDITIONS OF ANY KIND, either express or implied. No content created from
-#  ScanCode should be considered or used as legal advice. Consult an Attorney
-#  for any legal advice.
-#  ScanCode is a free software code scanning tool from nexB Inc. and others.
-#  Visit https://github.com/nexB/scancode-toolkit/ for support and download.
-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 
 from functools import partial
 import locale
@@ -43,11 +34,8 @@ from ctypes import create_string_buffer
 import attr
 
 from commoncode import command
-from commoncode import compat
 from commoncode import fileutils
 from commoncode import paths
-from commoncode.system import py2
-from commoncode.system import py3
 from commoncode import text
 
 import extractcode
@@ -262,7 +250,7 @@ class Archive(object):
             free_archive(self.archive_struct)
             self.archive_struct = None
 
-    def iter(self, verbose=False):
+    def iter(self):
         """
         Yield Entry for this archive.
         """
@@ -387,13 +375,7 @@ class Entry(object):
         path = func(self.entry_struct)
         if not path:
             path = func_w(self.entry_struct)
-
-        if py2 and isinstance(path, compat.unicode):
-            # FIXME: encoding MAY fail if the encoding is NOT UTF-8!
-            # .... should we transliterate there?
-            path = path.encode('utf-8')
-
-        if py3 and not isinstance(path, compat.unicode):
+        if not isinstance(path, str):
             path = text.as_unicode(path)
 
         return path

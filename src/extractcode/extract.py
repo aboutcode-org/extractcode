@@ -1,43 +1,35 @@
 #
-# Copyright (c) 2018 nexB Inc. and others. All rights reserved.
-# http://nexb.com and https://github.com/nexB/scancode-toolkit/
-# The ScanCode software is licensed under the Apache License version 2.0.
-# Data generated with ScanCode require an acknowledgment.
+# Copyright (c) nexB Inc. and others.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Visit https://aboutcode.org and https://github.com/nexB/ for support and download.
 # ScanCode is a trademark of nexB Inc.
 #
-# You may not use this software except in compliance with the License.
-# You may obtain a copy of the License at: http://apache.org/licenses/LICENSE-2.0
-# Unless required by applicable law or agreed to in writing, software distributed
-# under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-# CONDITIONS OF ANY KIND, either express or implied. See the License for the
-# specific language governing permissions and limitations under the License.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# When you publish or redistribute any data created with ScanCode or any ScanCode
-# derivative work, you must accompany this data with the following acknowledgment:
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-#  Generated with ScanCode and provided on an "AS IS" BASIS, WITHOUT WARRANTIES
-#  OR CONDITIONS OF ANY KIND, either express or implied. No content created from
-#  ScanCode should be considered or used as legal advice. Consult an Attorney
-#  for any legal advice.
-#  ScanCode is a free software code scanning tool from nexB Inc. and others.
-#  Visit https://github.com/nexB/scancode-toolkit/ for support and download.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import unicode_literals
+import logging
+import traceback
 
 from collections import namedtuple
 from functools import partial
-import logging
 from os.path import abspath
 from os.path import expanduser
 from os.path import join
-import traceback
 
 from commoncode import fileutils
 from commoncode import ignore
 import extractcode
-from extractcode import archive
 
 logger = logging.getLogger(__name__)
 TRACE = False
@@ -189,7 +181,7 @@ def extract_files(
                     logger.debug('extract:walk not recurse: skipped  file: %(loc)r' % locals())
                 continue
 
-            if not archive.should_extract(loc, kinds, ignore_pattern):
+            if not extractcode.archive.should_extract(loc, kinds, ignore_pattern):
                 if TRACE:
                     logger.debug('extract:walk: skipped file: not should_extract: %(loc)r' % locals())
                 continue
@@ -219,9 +211,9 @@ def extract_files(
 
 
 def extract_file(
-    location, 
-    target, 
-    kinds=extractcode.default_kinds, 
+    location,
+    target,
+    kinds=extractcode.default_kinds,
     verbose=False,
 ):
     """
@@ -230,13 +222,11 @@ def extract_file(
     """
     warnings = []
     errors = []
-    extractor = archive.get_extractor(location, kinds)
+    extractor = extractcode.archive.get_extractor(location, kinds)
     if TRACE:
         emodule = getattr(extractor, '__module__', '')
         ename = getattr(extractor, '__name__', '')
-        logger.debug(
-            'extract_file: extractor: for: {location} with kinds: {kinds}: {emodule}.{ename}'
-            .format(**locals()))
+        logger.debug(f'extract_file: extractor: for: {location} with kinds: {kinds}: {emodule}.{ename}')
 
     if extractor:
         yield ExtractEvent(location, target, done=False, warnings=[], errors=[])

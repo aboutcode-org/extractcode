@@ -1,30 +1,22 @@
 #
-# Copyright (c) 2015 nexB Inc. and others. All rights reserved.
-# http://nexb.com and https://github.com/nexB/scancode-toolkit/
-# The ScanCode software is licensed under the Apache License version 2.0.
-# Data generated with ScanCode require an acknowledgment.
+# Copyright (c) nexB Inc. and others.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Visit https://aboutcode.org and https://github.com/nexB/ for support and download.
 # ScanCode is a trademark of nexB Inc.
 #
-# You may not use this software except in compliance with the License.
-# You may obtain a copy of the License at: http://apache.org/licenses/LICENSE-2.0
-# Unless required by applicable law or agreed to in writing, software distributed
-# under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-# CONDITIONS OF ANY KIND, either express or implied. See the License for the
-# specific language governing permissions and limitations under the License.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# When you publish or redistribute any data created with ScanCode or any ScanCode
-# derivative work, you must accompany this data with the following acknowledgment:
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-#  Generated with ScanCode and provided on an "AS IS" BASIS, WITHOUT WARRANTIES
-#  OR CONDITIONS OF ANY KIND, either express or implied. No content created from
-#  ScanCode should be considered or used as legal advice. Consult an Attorney
-#  for any legal advice.
-#  ScanCode is a free software code scanning tool from nexB Inc. and others.
-#  Visit https://github.com/nexB/scancode-toolkit/ for support and download.
-
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import unicode_literals
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 
 import posixpath
 import logging
@@ -34,13 +26,11 @@ import patch as pythonpatch
 
 from commoncode import paths
 from commoncode import fileutils
-from commoncode.system import py2
-from commoncode.system import py3
 from commoncode import text
-import extractcode
-from extractcode import ExtractErrorFailedToExtract
 import typecode.contenttype
 
+import extractcode
+from extractcode import ExtractErrorFailedToExtract
 
 """
 Low level utilities to parse patch files and treat them as if they were
@@ -93,15 +83,9 @@ def extract(location, target_dir):
 
         # write the location proper, with a suffix extension to avoid
         # recursive extraction
-        if py2:
-            mode = 'wb'
-            eol = b'\n'
-        if py3:
-            mode = 'w'
-            eol = u'\n'
         subfile_path = base_subfile_path + extractcode.EXTRACT_SUFFIX
-        with open(subfile_path, mode) as subfile:
-            subfile.write(eol.join(text))
+        with open(subfile_path, 'w') as subfile:
+            subfile.write('\n'.join(text))
 
         return []
 
@@ -113,9 +97,11 @@ def is_patch(location, include_extracted=False):
     """
     T = typecode.contenttype.get_type(location)
     file_name = fileutils.file_name(location)
-    patch_like = ('diff ' in T.filetype_file.lower()
-                  or '.diff' in file_name
-                  or '.patch' in file_name)
+    patch_like = (
+        'diff ' in T.filetype_file.lower()
+        or '.diff' in file_name
+        or '.patch' in file_name
+    )
 
     if not patch_like:
         return False

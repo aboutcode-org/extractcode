@@ -1,29 +1,23 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2015 nexB Inc. and others. All rights reserved.
-# http://nexb.com and https://github.com/nexB/scancode-toolkit/
-# The ScanCode software is licensed under the Apache License version 2.0.
-# Data generated with ScanCode require an acknowledgment.
+# Copyright (c) nexB Inc. and others.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Visit https://aboutcode.org and https://github.com/nexB/ for support and download.
 # ScanCode is a trademark of nexB Inc.
 #
-# You may not use this software except in compliance with the License.
-# You may obtain a copy of the License at: http://apache.org/licenses/LICENSE-2.0
-# Unless required by applicable law or agreed to in writing, software distributed
-# under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-# CONDITIONS OF ANY KIND, either express or implied. See the License for the
-# specific language governing permissions and limitations under the License.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# When you publish or redistribute any data created with ScanCode or any ScanCode
-# derivative work, you must accompany this data with the following acknowledgment:
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-#  Generated with ScanCode and provided on an "AS IS" BASIS, WITHOUT WARRANTIES
-#  OR CONDITIONS OF ANY KIND, either express or implied. No content created from
-#  ScanCode should be considered or used as legal advice. Consult an Attorney
-#  for any legal advice.
-#  ScanCode is a free software code scanning tool from nexB Inc. and others.
-#  Visit https://github.com/nexB/scancode-toolkit/ for support and download.
-
-from __future__ import absolute_import, print_function
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 
 import io
 import os
@@ -35,7 +29,6 @@ from commoncode import fileutils
 from commoncode.fileutils import as_posixpath
 from commoncode.system import on_linux
 from commoncode.system import on_windows
-from commoncode.system import py3
 from commoncode.testcase import FileBasedTesting
 
 import extractcode
@@ -386,7 +379,6 @@ class TestExtract(BaseArchiveTestCase):
 
     def test_uncompress_corrupted_archive_with_zlib(self):
         from extractcode import archive
-        import zlib
         test_file = self.get_test_loc('extract/corrupted/a.tar.gz', copy=True)
         test_dir = self.get_temp_dir()
         expected = Exception('Error -3 while decompressing')
@@ -399,7 +391,7 @@ class TestExtract(BaseArchiveTestCase):
         expected = Exception('gzip decompression failed')
         self.assertRaisesInstance(expected, libarchive2.extract, test_file, test_dir)
 
-    @pytest.mark.skipif(py3 and not on_linux, reason='Expectations are different on Windows and macOS')
+    @pytest.mark.skipif(not on_linux, reason='Expectations are different on Windows and macOS')
     def test_extract_tree_with_corrupted_archives_linux(self):
         expected = (
             'a.tar.gz',
@@ -413,7 +405,7 @@ class TestExtract(BaseArchiveTestCase):
         assert result.errors[0].startswith('gzip decompression failed')
         assert not result.warnings
 
-    @pytest.mark.skipif(py3 and on_linux, reason='Expectations are different on Windows and macOS')
+    @pytest.mark.skipif(on_linux, reason='Expectations are different on Windows and macOS')
     def test_extract_tree_with_corrupted_archives_mac_win(self):
         expected = (
             'a.tar.gz',
@@ -857,7 +849,7 @@ class TestExtract(BaseArchiveTestCase):
         test_dir = self.get_test_loc('extract/generator', copy=True)
         result = extract.extract(test_dir)
         assert isinstance(result, GeneratorType)
-    
+
     def test_extract_ignore_file(self):
         test_dir = self.get_test_loc('extract/ignore', copy=True)
         expected = [
@@ -869,7 +861,6 @@ class TestExtract(BaseArchiveTestCase):
             'gamma/gamma.zip',
             'gamma/gamma.zip-extract/c.txt'
         ]
-        from extractcode import default_kinds
         result = list(extract.extract(test_dir, recurse=True, ignore_pattern=('alpha.zip',)))
         check_no_error(result)
         check_files(test_dir, expected)
@@ -889,7 +880,6 @@ class TestExtract(BaseArchiveTestCase):
             'beta.tar-extract/c.txt',
             'gamma/gamma.zip',
         ]
-        from extractcode import default_kinds
         result = list(extract.extract(test_dir, recurse=True, ignore_pattern=('gamma',)))
         check_no_error(result)
         check_files(test_dir, expected)
@@ -909,7 +899,6 @@ class TestExtract(BaseArchiveTestCase):
             'gamma/gamma.zip',
             'gamma/gamma.zip-extract/c.txt'
         ]
-        from extractcode import default_kinds
         result = list(extract.extract(test_dir, recurse=True, ignore_pattern=('b*.zip',)))
         check_no_error(result)
         check_files(test_dir, expected)

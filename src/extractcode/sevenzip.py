@@ -1,30 +1,23 @@
+
 #
-# Copyright (c) nexB Inc. and others. All rights reserved.
-# http://nexb.com and https://github.com/nexB/scancode-toolkit/
-# The ScanCode software is licensed under the Apache License version 2.0.
-# Data generated with ScanCode require an acknowledgment.
+# Copyright (c) nexB Inc. and others.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Visit https://aboutcode.org and https://github.com/nexB/ for support and download.
 # ScanCode is a trademark of nexB Inc.
 #
-# You may not use this software except in compliance with the License.
-# You may obtain a copy of the License at: http://apache.org/licenses/LICENSE-2.0
-# Unless required by applicable law or agreed to in writing, software distributed
-# under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-# CONDITIONS OF ANY KIND, either express or implied. See the License for the
-# specific language governing permissions and limitations under the License.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# When you publish or redistribute any data created with ScanCode or any ScanCode
-# derivative work, you must accompany this data with the following acknowledgment:
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-#  Generated with ScanCode and provided on an "AS IS" BASIS, WITHOUT WARRANTIES
-#  OR CONDITIONS OF ANY KIND, either express or implied. No content created from
-#  ScanCode should be considered or used as legal advice. Consult an Attorney
-#  for any legal advice.
-#  ScanCode is a free software code scanning tool from nexB Inc. and others.
-#  Visit https://github.com/nexB/scancode-toolkit/ for support and download.
-
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import unicode_literals
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 
 from collections import defaultdict
 import io
@@ -42,18 +35,13 @@ from commoncode.system import is_case_sensitive_fs
 from commoncode.system import on_mac
 from commoncode.system import on_macos_14_or_higher
 from commoncode.system import on_windows
-from commoncode.system import py3
 from commoncode import text
 
 import extractcode
 from extractcode import ExtractErrorFailedToExtract
 from extractcode import ExtractWarningIncorrectEntry
 
-if py3:
-    from shlex import quote as shlex_quote  # NOQA
-else:
-    from pipes import quote as shlex_quote  # NOQA
-
+from shlex import quote as shlex_quote
 
 """
 Low level support for p/7zip-based archive extraction.
@@ -95,8 +83,12 @@ def get_7z_errors(stdout, stderr):
     if not stdout or not stdout.strip():
         return
 
-    # ERROR: Can not create symbolic link : A required privilege is not held by the client. : .\2-SYMTYPE
-    find_7z_errors = re.compile('^Error:(.*)$', re.MULTILINE | re.DOTALL | re.IGNORECASE).findall  # NOQA
+    # ERROR: Can not create symbolic link : A required privilege is not held by
+    # the client. : .\2-SYMTYPE
+    find_7z_errors = re.compile(
+        '^Error:(.*)$',
+        re.MULTILINE | re.DOTALL | re.IGNORECASE
+    ).findall
 
     stdlow = stderr.lower()
     for err, msg in sevenzip_errors:
@@ -558,29 +550,11 @@ def parse_7z_listing(location, utf=False):
     We ignore the header and footer in a listing.
     """
 
-    if utf or py3:
-        # read to unicode
-        with io.open(location, 'r', encoding='utf-8') as listing:
-            text = listing.read()
-            text = text.replace(u'\r\n', u'\n')
-
-        end_of_header = u'----------\n'
-        path_key = u'Path'
-        kv_sep = u'='
-        path_blocks_sep = u'\n\n'
-        line_sep = u'\n'
-
-    else:
-        # read to bytes
-        with io.open(location, 'rb') as listing:
-            text = listing.read()
-            text = text.replace(b'\r\n', b'\n')
-
-        end_of_header = b'----------\n'
-        path_key = b'Path'
-        kv_sep = b'='
-        path_blocks_sep = b'\n\n'
-        line_sep = b'\n'
+    # read to unicode
+    with io.open(location, 'r', encoding='utf-8') as listing:
+        text = listing.read()
+        # normalize line endings to POSIX
+        text = text.replace('\r\n', '\n')
 
     if TRACE:
         logger.debug('parse_7z_listing: initial text: type: ' + repr(type(text)))
@@ -588,7 +562,8 @@ def parse_7z_listing(location, utf=False):
         print(text)
         print('--------------------------------------')
 
-    # for now we ignore the header
+    # for now we ignore the header, and only start dealing with text after that
+    end_of_header = '----------\n'
     _header, _, paths = text.rpartition(end_of_header)
 
     if not paths:
@@ -601,8 +576,11 @@ def parse_7z_listing(location, utf=False):
     #   (unless there is a \n in file name which is an error condition)
     # - ends with an empty line
     # then we have a global footer
+    two_empty_lines = '\n\n'
+    path_key = 'Path'
+    path_blocks = [pb for pb in paths.split(two_empty_lines) if pb and path_key in pb]
 
-    path_blocks = [pb for pb in paths.split(path_blocks_sep) if pb and path_key in pb]
+    key_value_sep = '='
 
     entries = []
 
@@ -613,22 +591,22 @@ def parse_7z_listing(location, utf=False):
             continue
         # we have a weird case of path with line returns in the file name
         # we concatenate these in the first Path line
-        while len(lines) > 1 and lines[0].startswith(path_key) and kv_sep not in lines[1]:
+        while len(lines) > 1 and lines[0].startswith(path_key) and key_value_sep not in lines[1]:
             first_line = lines[0]
             second_line = lines.pop(1)
-            first_line = line_sep.join([first_line, second_line])
+            first_line = '\n'.join([first_line, second_line])
             lines[0] = first_line
 
-        dangling_lines = [line  for line in lines if kv_sep not in line]
+        dangling_lines = [line  for line in lines if key_value_sep not in line]
         entry_errors = []
         if dangling_lines:
             emsg = 'Invalid 7z listing path block missing "=" as key/value separator: {}'.format(repr(path_block))
             entry_errors.append(emsg)
 
         entry_attributes = {}
-        key_lines = [line  for line in lines if kv_sep in line]
+        key_lines = [line  for line in lines if key_value_sep in line]
         for line in key_lines:
-            k, _, v = line.partition(kv_sep)
+            k, _, v = line.partition(key_value_sep)
             k = k.strip()
             v = v.strip()
             entry_attributes[k] = v
@@ -641,15 +619,6 @@ def parse_7z_listing(location, utf=False):
             logger.debug('    ' + repr(entry.to_dict()))
 
     return entries
-
-
-def filter_entries(entries):
-    """
-    Given an iterable of entries, return two list of entries:
-    a list of valid entries that can be extracted and a list entries that cannot
-    be extracted.
-    """
-    # extractible
 
 
 @attr.s(slots=True)

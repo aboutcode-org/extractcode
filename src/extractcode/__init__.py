@@ -1,30 +1,22 @@
 #
-# Copyright (c) 2018 nexB Inc. and others. All rights reserved.
-# http://nexb.com and https://github.com/nexB/scancode-toolkit/
-# The ScanCode software is licensed under the Apache License version 2.0.
-# Data generated with ScanCode require an acknowledgment.
+# Copyright (c) nexB Inc. and others.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Visit https://aboutcode.org and https://github.com/nexB/ for support and download.
 # ScanCode is a trademark of nexB Inc.
 #
-# You may not use this software except in compliance with the License.
-# You may obtain a copy of the License at: http://apache.org/licenses/LICENSE-2.0
-# Unless required by applicable law or agreed to in writing, software distributed
-# under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-# CONDITIONS OF ANY KIND, either express or implied. See the License for the
-# specific language governing permissions and limitations under the License.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# When you publish or redistribute any data created with ScanCode or any ScanCode
-# derivative work, you must accompany this data with the following acknowledgment:
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-#  Generated with ScanCode and provided on an "AS IS" BASIS, WITHOUT WARRANTIES
-#  OR CONDITIONS OF ANY KIND, either express or implied. No content created from
-#  ScanCode should be considered or used as legal advice. Consult an Attorney
-#  for any legal advice.
-#  ScanCode is a free software code scanning tool from nexB Inc. and others.
-#  Visit https://github.com/nexB/scancode-toolkit/ for support and download.
-
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import unicode_literals
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 
 import logging
 import os
@@ -33,17 +25,16 @@ import re
 import shutil
 import sys
 
-from commoncode.fileutils import as_posixpath
-from commoncode.fileutils import create_dir
-from commoncode.fileutils import file_name
-from commoncode.fileutils import fsencode
-from commoncode.fileutils import parent_directory
-from commoncode.text import toascii
-from commoncode.system import on_linux
-from commoncode.system import py2
 from os.path import dirname
 from os.path import join
 from os.path import exists
+
+from commoncode.fileutils import as_posixpath
+from commoncode.fileutils import create_dir
+from commoncode.fileutils import file_name
+from commoncode.fileutils import parent_directory
+from commoncode.text import toascii
+from commoncode.system import on_linux
 
 logger = logging.getLogger(__name__)
 DEBUG = False
@@ -53,16 +44,8 @@ DEBUG = False
 
 root_dir = join(dirname(__file__), 'bin')
 
-POSIX_PATH_SEP = b'/' if  (on_linux and py2)  else '/'
-WIN_PATH_SEP = b'\\' if  (on_linux and py2)  else '\\'
-PATHS_SEPS = POSIX_PATH_SEP + WIN_PATH_SEP
-EMPTY_STRING = b'' if  (on_linux and py2)  else ''
-DOT = b'.' if  (on_linux and py2)  else '.'
-DOTDOT = DOT + DOT
-UNDERSCORE = b'_' if (on_linux and py2)  else '_'
-
 # Suffix added to extracted target_dir paths
-EXTRACT_SUFFIX = b'-extract' if (on_linux  and py2) else r'-extract'
+EXTRACT_SUFFIX = '-extract'
 
 # high level archive "kinds"
 docs = 1
@@ -103,10 +86,7 @@ def is_extraction_path(path):
     """
     Return True is the path points to an extraction path.
     """
-    if on_linux and py2:
-        path = fsencode(path)
-
-    return path and path.rstrip(PATHS_SEPS).endswith(EXTRACT_SUFFIX)
+    return path and path.rstrip('\\/').endswith(EXTRACT_SUFFIX)
 
 
 def is_extracted(location):
@@ -114,8 +94,6 @@ def is_extracted(location):
     Return True is the location is already extracted to the corresponding
     extraction location.
     """
-    if on_linux and py2:
-        location = fsencode(location)
     return location and exists(get_extraction_path(location))
 
 
@@ -123,18 +101,14 @@ def get_extraction_path(path):
     """
     Return a path where to extract.
     """
-    if on_linux and py2:
-        path = fsencode(path)
-    return path.rstrip(PATHS_SEPS) + EXTRACT_SUFFIX
+    return path.rstrip('\\/') + EXTRACT_SUFFIX
 
 
 def remove_archive_suffix(path):
     """
     Remove all the extracted suffix from a path.
     """
-    if on_linux and py2:
-        path = fsencode(path)
-    return re.sub(EXTRACT_SUFFIX, EMPTY_STRING, path)
+    return re.sub(EXTRACT_SUFFIX, '', path)
 
 
 def remove_backslashes_and_dotdots(directory):
@@ -142,21 +116,16 @@ def remove_backslashes_and_dotdots(directory):
     Walk a directory and rename the files if their names contain backslashes.
     Return a list of errors if any.
     """
-    if on_linux and py2:
-        directory = fsencode(directory)
     errors = []
     for top, _, files in os.walk(directory):
         for filename in files:
-            if not (WIN_PATH_SEP in filename or DOTDOT in filename):
+            if not ('\\' in filename or '..' in filename):
                 continue
             try:
-                new_path = as_posixpath(filename)
-                new_path = new_path.strip(POSIX_PATH_SEP)
+                new_path = as_posixpath(filename).strip('/')
+                new_path = posixpath.normpath(new_path).replace('..', '/').strip('/')
                 new_path = posixpath.normpath(new_path)
-                new_path = new_path.replace(DOTDOT, POSIX_PATH_SEP)
-                new_path = new_path.strip(POSIX_PATH_SEP)
-                new_path = posixpath.normpath(new_path)
-                segments = new_path.split(POSIX_PATH_SEP)
+                segments = new_path.split('/')
                 directory = join(top, *segments[:-1])
                 create_dir(directory)
                 shutil.move(join(top, filename), join(top, *segments))
@@ -180,9 +149,7 @@ def new_name(location, is_dir=False):
        the extension unchanged.
     """
     assert location
-    if on_linux and py2:
-        location = fsencode(location)
-    location = location.rstrip(PATHS_SEPS)
+    location = location.rstrip('\\/')
     assert location
 
     parent = parent_directory(location)
@@ -193,8 +160,8 @@ def new_name(location, is_dir=False):
     filename = file_name(location)
 
     # corner case
-    if filename in (DOT, DOT):
-        filename = UNDERSCORE
+    if filename in ('.', '..'):
+        filename = '_'
 
     # if unique, return this
     if filename.lower() not in siblings_lower:
@@ -204,19 +171,19 @@ def new_name(location, is_dir=False):
     if is_dir:
         # directories do not have an "extension"
         base_name = filename
-        ext = EMPTY_STRING
+        ext = ''
     else:
-        base_name, dot, ext = filename.partition(DOT)
+        base_name, dot, ext = filename.partition('.')
         if dot:
-            ext = dot + ext
+            ext = f'.{ext}'
         else:
             base_name = filename
-            ext = EMPTY_STRING
+            ext = ''
 
     # find a unique filename, adding a counter int to the base_name
     counter = 1
     while 1:
-        filename = base_name + UNDERSCORE + str(counter) + ext
+        filename = f'{base_name}_{counter}{ext}'
         if filename.lower() not in siblings_lower:
             break
         counter += 1
