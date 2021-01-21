@@ -35,6 +35,8 @@ from extractcode import cli
 
 test_env = FileDrivenTesting()
 test_env.test_data_dir = os.path.join(os.path.dirname(__file__), 'data')
+project_root = os.path.dirname(os.path.dirname(__file__))
+
 
 """
 These CLI tests are dependent on py.test monkeypatch to  ensure we are testing
@@ -86,14 +88,13 @@ def test_extractcode_command_works_with_relative_paths(monkeypatch):
     # The setup is a tad complex because we want to have a relative dir
     # to the base dir where we run tests from, i.e. the git checkout  dir
     # To use relative paths, we use our tmp dir at the root of the code tree
-    from os.path import dirname, join, abspath
+    from os.path import join, abspath
     from  commoncode import fileutils
     import extractcode
     import tempfile
     import shutil
 
     try:
-        project_root = dirname(dirname(dirname(__file__)))
         project_tmp = join(project_root, 'tmp')
         fileutils.create_dir(project_tmp)
         project_root_abs = abspath(project_root)
@@ -121,13 +122,12 @@ def test_extractcode_command_works_with_relative_paths_verbose(monkeypatch):
     # The setup is a tad complex because we want to have a relative dir
     # to the base dir where we run tests from, i.e. the git checkout dir
     # To use relative paths, we use our tmp dir at the root of the code tree
-    from os.path import dirname, join, abspath
+    from os.path import join, abspath
     from  commoncode import fileutils
     import tempfile
     import shutil
 
     try:
-        project_root = dirname(dirname(dirname(__file__)))
         project_tmp = join(project_root, 'tmp')
         fileutils.create_dir(project_tmp)
         project_root_abs = abspath(project_root)

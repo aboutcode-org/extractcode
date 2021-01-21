@@ -57,6 +57,7 @@ For each archive type --when possible-- we are testing extraction of:
  - password-protected when supported
 """
 
+project_root = os.path.dirname(os.path.dirname(__file__))
 
 class TestGetExtractorTest(BaseArchiveTestCase):
 
@@ -287,13 +288,13 @@ class TestGetExtractorTest(BaseArchiveTestCase):
         # The setup is a tad complex because we want to have a relative dir
         # to the base dir where we run tests from, i.e. the git checkout dir.
         # To use relative paths, we use our tmp dir at the root of the code tree
-        from os.path import dirname, join, abspath
+        from os.path import join, abspath
         import tempfile
         import shutil
         from extractcode.sevenzip import extract
 
         test_file = self.get_test_loc('archive/relative_path/basic.zip', copy=True)
-        project_root = dirname(dirname(dirname(__file__)))
+        
         project_tmp = join(project_root, 'tmp')
         fileutils.create_dir(project_tmp)
         project_root_abs = abspath(project_root)
@@ -1648,7 +1649,7 @@ class TestExtractTwice(BaseArchiveTestCase):
         # The setup is a tad complex because we want to have a relative dir
         # to the base dir where we run tests from, i.e. the git checkout dir
         # To use relative paths, we use our tmp dir at the root of the code tree
-        from os.path import dirname, join, abspath, exists
+        from os.path import join, abspath, exists
         import shutil
         import tempfile
 
@@ -1656,7 +1657,6 @@ class TestExtractTwice(BaseArchiveTestCase):
         # this will return an extractor that extracts twice
         extractor = archive.get_extractor(test_file)
 
-        project_root = dirname(dirname(dirname(__file__)))
         project_tmp = join(project_root, 'tmp')
         fileutils.create_dir(project_tmp)
         project_root_abs = abspath(project_root)

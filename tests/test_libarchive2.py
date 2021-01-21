@@ -18,11 +18,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import os
 
 from commoncode import fileutils
 
 from extractcode_assert_utils import check_files
 from extractcode_assert_utils import BaseArchiveTestCase
+
+project_root = os.path.dirname(os.path.dirname(__file__))
 
 """
 Minimal smoke tests for libarchive2.
@@ -35,13 +38,12 @@ class TestExtractorTest(BaseArchiveTestCase):
         # The setup is a tad complex because we want to have a relative dir
         # to the base dir where we run tests from, i.e. the git checkout dir
         # To use relative paths, we use our tmp dir at the root of the code tree
-        from os.path import dirname, join, abspath
+        from os.path import join, abspath
         import tempfile
         import shutil
         from extractcode.libarchive2 import extract
 
         test_file = self.get_test_loc('archive/relative_path/basic.zip')
-        project_root = dirname(dirname(dirname(__file__)))
         project_tmp = join(project_root, 'tmp')
         fileutils.create_dir(project_tmp)
         project_root_abs = abspath(project_root)
