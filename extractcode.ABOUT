@@ -1,0 +1,13 @@
+about_resource: .
+copyright: copyright (c) nexB. Inc. and others
+description: A mostly universal archive extractor using z7zip, libarchve, other 
+ libraries and the Python standard library for reliable archive extraction.
+ It is used by ScanCode toolkit and related projects 
+keywords: archive, extraction, libarchive, 7zip, scancode-toolkit
+homepage_url: https://github.com/nexB/extractcode
+holder: nexB. Inc. and others
+holder_contact: info@aboutcode.org
+license_expression: apache-2.0
+name: extractcode
+package_url: pkg:pypi/extractcode
+primary_language: Python
