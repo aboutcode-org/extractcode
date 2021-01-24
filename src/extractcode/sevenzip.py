@@ -34,7 +34,6 @@ from commoncode.system import is_case_sensitive_fs
 from commoncode.system import on_mac
 from commoncode.system import on_macos_14_or_higher
 from commoncode.system import on_windows
-from commoncode import text
 
 import extractcode
 from extractcode import ExtractErrorFailedToExtract
