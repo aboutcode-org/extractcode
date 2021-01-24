@@ -89,8 +89,7 @@ call mkdir "%CFG_ROOT_DIR%tmp"
 call curl -o "%CFG_ROOT_DIR%tmp\virtualenv.pyz" https://bootstrap.pypa.io/virtualenv.pyz
 call %PYTHON_EXECUTABLE% "%CFG_ROOT_DIR%tmp\virtualenv.pyz" "%CFG_ROOT_DIR%tmp"
 call "%CFG_ROOT_DIR%tmp\Scripts\activate"
-call "%CFG_ROOT_DIR%tmp\Scripts\pip" install --upgrade pip virtualenv setuptools wheel
-call "%CFG_ROOT_DIR%tmp\Scripts\pip" install -e .[testing]
+call "%CFG_ROOT_DIR%tmp\Scripts\pip" install  -e .[full] -e .[testing]
 
 @rem Return a proper return code on failure
 if %ERRORLEVEL% neq 0 (
