@@ -29,7 +29,9 @@ from os.path import join
 
 from commoncode import fileutils
 from commoncode import ignore
+
 import extractcode
+import extractcode.archive
 
 logger = logging.getLogger(__name__)
 TRACE = False

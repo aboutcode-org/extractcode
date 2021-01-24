@@ -21,22 +21,18 @@
 
 import os
 
-import click
-from click.testing import CliRunner
+import attr
 import pytest
 
+from commoncode.command import execute2
 from commoncode.fileutils import as_posixpath
 from commoncode.fileutils import resource_iter
 from commoncode.testcase import FileDrivenTesting
-from commoncode.system import on_linux
 from commoncode.system import on_windows
-
-from extractcode import cli
 
 test_env = FileDrivenTesting()
 test_env.test_data_dir = os.path.join(os.path.dirname(__file__), 'data')
-project_root = os.path.dirname(os.path.dirname(__file__))
-
+project_root = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
 """
 These CLI tests are dependent on py.test monkeypatch to  ensure we are testing
@@ -44,22 +40,46 @@ the actual command outputs as if using a TTY or not.
 """
 
 
-def test_extractcode_command_can_take_an_empty_directory(monkeypatch):
+@attr.s
+class Result:
+    exit_code = attr.ib()
+    output = attr.ib()
+
+
+def run_extract(options, expected_rc=None, cwd=None):
+    """
+    Run extractcode as a plain subprocess. Return rc, stdout, stderr.
+    """
+    cmd_loc = os.path.join(project_root, 'tmp', 'bin', 'extractcode')
+    rc, stdout, stderr = execute2(cmd_loc=cmd_loc, args=options, cwd=cwd)
+
+    if expected_rc is not None and rc != expected_rc:
+        opts = ' '.join(options)
+        error = '''
+Failure to run: extractcode %(opts)s
+stdout:
+%(stdout)s
+
+stderr:
+%(stderr)s
+''' % locals()
+        assert rc == expected_rc, error
+
+    return Result(exit_code=rc, output=stdout + stderr)
+
+
+def test_extractcode_command_can_take_an_empty_directory():
     test_dir = test_env.get_temp_dir()
-    monkeypatch.setattr(click._termui_impl, 'isatty', lambda _: True)
-    runner = CliRunner()
-    result = runner.invoke(cli.extractcode, [test_dir])
-    assert result.exit_code == 0
+    result = run_extract([test_dir], expected_rc=0)
+
     assert 'Extracting archives...' in result.output
     assert 'Extracting done' in result.output
 
 
-def test_extractcode_command_does_extract_verbose(monkeypatch):
+def test_extractcode_command_does_extract_verbose():
     test_dir = test_env.get_test_loc('cli/extract', copy=True)
-    monkeypatch.setattr(click._termui_impl, 'isatty', lambda _: True)
-    runner = CliRunner()
-    result = runner.invoke(cli.extractcode, ['--verbose', test_dir])
-    assert result.exit_code == 1
+    result = run_extract(['--verbose', test_dir], expected_rc=1)
+
     assert os.path.exists(os.path.join(test_dir, 'some.tar.gz-extract'))
     expected = [
         'Extracting archives...',
@@ -74,55 +94,61 @@ def test_extractcode_command_does_extract_verbose(monkeypatch):
         assert e in result.output
 
 
-def test_extractcode_command_always_shows_something_if_not_using_a_tty_verbose_or_not(monkeypatch):
+def test_extractcode_command_always_shows_something_if_not_using_a_tty_verbose_or_not():
     test_dir = test_env.get_test_loc('cli/extract/some.tar.gz', copy=True)
-    monkeypatch.setattr(click._termui_impl, 'isatty', lambda _: False)
-    runner = CliRunner()
-    result = runner.invoke(cli.extractcode, ['--verbose', test_dir])
+
+    result = run_extract(options=['--verbose', test_dir], expected_rc=0)
     assert all(x in result.output for x in ('Extracting archives...', 'Extracting: some.tar.gz', 'Extracting done.'))
-    result = runner.invoke(cli.extractcode, [test_dir])
+
+    result = run_extract(options=[test_dir], expected_rc=0)
     assert all(x in result.output for x in ('Extracting archives...', 'Extracting done.'))
 
 
-def test_extractcode_command_works_with_relative_paths(monkeypatch):
-    # The setup is a tad complex because we want to have a relative dir
-    # to the base dir where we run tests from, i.e. the git checkout  dir
-    # To use relative paths, we use our tmp dir at the root of the code tree
-    from os.path import join, abspath
+def test_extractcode_command_works_with_relative_paths():
+    # The setup is complex because we want to have a relative dir to the base
+    # dir where we run tests from, i.e. the git checkout  dir To use relative
+    # paths, we use our tmp dir at the root of the code tree
+    from os.path import join
     from  commoncode import fileutils
     import extractcode
     import tempfile
     import shutil
 
     try:
+        test_file = test_env.get_test_loc('cli/extract_relative_path/basic.zip')
+
         project_tmp = join(project_root, 'tmp')
         fileutils.create_dir(project_tmp)
-        project_root_abs = abspath(project_root)
-        test_src_dir = tempfile.mkdtemp(dir=project_tmp).replace(project_root_abs, '').strip('\\/')
-        test_file = test_env.get_test_loc('cli/extract_relative_path/basic.zip')
-        shutil.copy(test_file, test_src_dir)
-        test_src_file = join(test_src_dir, 'basic.zip')
-        test_tgt_dir = join(project_root, test_src_file) + extractcode.EXTRACT_SUFFIX
+        temp_rel = tempfile.mkdtemp(dir=project_tmp)
+        assert os.path.exists(temp_rel)
 
-        runner = CliRunner()
-        monkeypatch.setattr(click._termui_impl, 'isatty', lambda _: True)
-        result = runner.invoke(cli.extractcode, [test_src_file])
-        assert result.exit_code == 0
+        relative_dir = temp_rel.replace(project_root, '').strip('\\/')
+        shutil.copy(test_file, temp_rel)
+
+        test_src_file = join(relative_dir, 'basic.zip')
+        test_tgt_dir = join(project_root, test_src_file) + extractcode.EXTRACT_SUFFIX
+        result = run_extract([test_src_file], expected_rc=0, cwd=project_root)
+
         assert 'Extracting done' in result.output
         assert not 'WARNING' in result.output
         assert not 'ERROR' in result.output
+
         expected = ['/c/a/a.txt', '/c/b/a.txt', '/c/c/a.txt']
-        file_result = [as_posixpath(f.replace(test_tgt_dir, '')) for f in fileutils.resource_iter(test_tgt_dir, with_dirs=False)]
+        file_result = [
+            as_posixpath(f.replace(test_tgt_dir, ''))
+            for f in fileutils.resource_iter(test_tgt_dir, with_dirs=False)]
+
         assert sorted(expected) == sorted(file_result)
+
     finally:
-        fileutils.delete(test_src_dir)
+        fileutils.delete(relative_dir)
 
 
-def test_extractcode_command_works_with_relative_paths_verbose(monkeypatch):
+def test_extractcode_command_works_with_relative_paths_verbose():
     # The setup is a tad complex because we want to have a relative dir
     # to the base dir where we run tests from, i.e. the git checkout dir
     # To use relative paths, we use our tmp dir at the root of the code tree
-    from os.path import join, abspath
+    from os.path import join
     from  commoncode import fileutils
     import tempfile
     import shutil
@@ -130,15 +156,13 @@ def test_extractcode_command_works_with_relative_paths_verbose(monkeypatch):
     try:
         project_tmp = join(project_root, 'tmp')
         fileutils.create_dir(project_tmp)
-        project_root_abs = abspath(project_root)
-        test_src_dir = tempfile.mkdtemp(dir=project_tmp).replace(project_root_abs, '').strip('\\/')
+        test_src_dir = tempfile.mkdtemp(dir=project_tmp).replace(project_root, '').strip('\\/')
         test_file = test_env.get_test_loc('cli/extract_relative_path/basic.zip')
         shutil.copy(test_file, test_src_dir)
         test_src_file = join(test_src_dir, 'basic.zip')
-        runner = CliRunner()
-        monkeypatch.setattr(click._termui_impl, 'isatty', lambda _: True)
-        result = runner.invoke(cli.extractcode, ['--verbose', test_src_file])
-        assert result.exit_code == 0
+
+        result = run_extract(['--verbose', test_src_file] , expected_rc=2)
+
         # extract the path from the second line of the output
         # check that the path is relative and not absolute
         lines = result.output.splitlines(False)
@@ -153,31 +177,28 @@ def test_extractcode_command_works_with_relative_paths_verbose(monkeypatch):
         fileutils.delete(test_src_dir)
 
 
-def test_usage_and_help_return_a_correct_script_name_on_all_platforms(monkeypatch):
-    monkeypatch.setattr(click._termui_impl, 'isatty', lambda _: True)
-    runner = CliRunner()
-    result = runner.invoke(cli.extractcode, ['--help'])
+def test_usage_and_help_return_a_correct_script_name_on_all_platforms():
+    options = ['--help']
+
+    result = run_extract(options , expected_rc=0)
+
     assert 'Usage: extractcode [OPTIONS]' in result.output
     # this was showing up on Windows
     assert 'extractcode-script.py' not in result.output
 
-    result = runner.invoke(cli.extractcode, [])
+    result = run_extract([])
     assert 'Usage: extractcode [OPTIONS]' in result.output
     # this was showing up on Windows
     assert 'extractcode-script.py' not in result.output
 
-    result = runner.invoke(cli.extractcode, ['-xyz'])
+    result = run_extract(['-xyz'] , expected_rc=2)
     # this was showing up on Windows
     assert 'extractcode-script.py' not in result.output
 
 
-def test_extractcode_command_can_extract_archive_with_unicode_names_verbose(monkeypatch):
-    monkeypatch.setattr(click._termui_impl, 'isatty', lambda _: True)
+def test_extractcode_command_can_extract_archive_with_unicode_names_verbose():
     test_dir = test_env.get_test_loc('cli/unicodearch', copy=True)
-    runner = CliRunner()
-    result = runner.invoke(cli.extractcode, ['--verbose', test_dir])
-    assert result.exit_code == 0
-
+    result = run_extract(['--verbose', test_dir] , expected_rc=0)
     assert 'Sanders' in result.output
 
     file_result = [
@@ -193,12 +214,9 @@ def test_extractcode_command_can_extract_archive_with_unicode_names_verbose(monk
     assert sorted(expected) == sorted(file_result)
 
 
-def test_extractcode_command_can_extract_archive_with_unicode_names(monkeypatch):
-    monkeypatch.setattr(click._termui_impl, 'isatty', lambda _: True)
+def test_extractcode_command_can_extract_archive_with_unicode_names():
     test_dir = test_env.get_test_loc('cli/unicodearch', copy=True)
-    runner = CliRunner()
-    result = runner.invoke(cli.extractcode, [test_dir])
-    assert result.exit_code == 0
+    run_extract([test_dir] , expected_rc=0)
 
     file_result = [
         f for f in map(as_posixpath, resource_iter(test_dir, with_dirs=False))
@@ -213,12 +231,10 @@ def test_extractcode_command_can_extract_archive_with_unicode_names(monkeypatch)
     assert sorted(expected) == sorted(file_result)
 
 
-def test_extractcode_command_can_extract_shallow(monkeypatch):
+def test_extractcode_command_can_extract_shallow():
     test_dir = test_env.get_test_loc('cli/extract_shallow', copy=True)
-    monkeypatch.setattr(click._termui_impl, 'isatty', lambda _: True)
-    runner = CliRunner()
-    result = runner.invoke(cli.extractcode, ['--shallow', test_dir])
-    assert result.exit_code == 0
+    run_extract(['--shallow', test_dir] , expected_rc=0)
+
     file_result = [
         f for f in map(as_posixpath, resource_iter(test_dir, with_dirs=False))
         if not f.endswith('unicodepath.tgz')]
@@ -233,12 +249,9 @@ def test_extractcode_command_can_extract_shallow(monkeypatch):
     assert sorted(expected) == sorted(file_result)
 
 
-def test_extractcode_command_can_ignore(monkeypatch):
-    monkeypatch.setattr(click._termui_impl, 'isatty', lambda _: True)
+def test_extractcode_command_can_ignore():
     test_dir = test_env.get_test_loc('cli/extract_ignore', copy=True)
-    runner = CliRunner()
-    result = runner.invoke(cli.extractcode, ['--ignore', '*.tar', test_dir])
-    assert result.exit_code == 0
+    run_extract(['--ignore', '*.tar', test_dir] , expected_rc=0)
 
     file_result = [
         f for f in map(as_posixpath, resource_iter(test_dir, with_dirs=False))
@@ -255,11 +268,10 @@ def test_extractcode_command_can_ignore(monkeypatch):
 
 
 @pytest.mark.skipif(on_windows, reason='FIXME: this test fails on Windows until we have support for long file names.')
-def test_extractcode_command_can_extract_nuget(monkeypatch):
+def test_extractcode_command_can_extract_nuget():
     test_dir = test_env.get_test_loc('cli/extract_nuget', copy=True)
-    monkeypatch.setattr(click._termui_impl, 'isatty', lambda _: True)
-    runner = CliRunner()
-    result = runner.invoke(cli.extractcode, ['--verbose', test_dir], catch_exceptions=False)
+    result = run_extract(['--verbose', test_dir])
+
     if result.exit_code != 0:
         print(result.output)
     assert 'ERROR extracting' not in result.output
