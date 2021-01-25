@@ -45,7 +45,7 @@ def run_extract(options, expected_rc=None, cwd=None):
     """
     bin_dir = 'Scripts' if on_windows else 'bin'
     cmd_loc = os.path.join(project_root, 'tmp', bin_dir, 'extractcode')
-    assert os.path.exists(cmd_loc)
+    assert os.path.exists(cmd_loc + ('.exe' if on_windows else ''))
     args = [cmd_loc] + options
     result = subprocess.run(args,
         stderr=subprocess.PIPE,
