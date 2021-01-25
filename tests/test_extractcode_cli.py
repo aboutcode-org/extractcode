@@ -43,14 +43,14 @@ def run_extract(options, expected_rc=None, cwd=None):
     """
     Run extractcode as a plain subprocess. Return rc, stdout, stderr.
     """
-    cmd_loc = os.path.join(project_root, 'tmp', 'bin', 'extractcode')
+    bin_dir = 'Scripts' if on_windows else 'bin'
+    cmd_loc = os.path.join(project_root, 'tmp', bin_dir, 'extractcode')
     args = [cmd_loc] + options
     result = subprocess.run(args,
         stderr=subprocess.PIPE,
         stdout=subprocess.PIPE,
         cwd=cwd,
         universal_newlines=True,
-#         encoding='utf-8',
     )
 
     if expected_rc is not None and result.returncode != expected_rc:
