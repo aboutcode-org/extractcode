@@ -20,11 +20,10 @@
 #
 
 import os
+import subprocess
 
-import attr
 import pytest
 
-from commoncode.command import execute2
 from commoncode.fileutils import as_posixpath
 from commoncode.fileutils import resource_iter
 from commoncode.testcase import FileDrivenTesting
@@ -40,40 +39,41 @@ the actual command outputs as if using a TTY or not.
 """
 
 
-@attr.s
-class Result:
-    exit_code = attr.ib()
-    output = attr.ib()
-
-
 def run_extract(options, expected_rc=None, cwd=None):
     """
     Run extractcode as a plain subprocess. Return rc, stdout, stderr.
     """
     cmd_loc = os.path.join(project_root, 'tmp', 'bin', 'extractcode')
-    rc, stdout, stderr = execute2(cmd_loc=cmd_loc, args=options, cwd=cwd)
+    args = [cmd_loc] + options
+    result = subprocess.run(args,
+        stderr=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        cwd=cwd,
+        universal_newlines=True,
+#         encoding='utf-8',
+    )
 
-    if expected_rc is not None and rc != expected_rc:
+    if expected_rc is not None and result.returncode != expected_rc:
         opts = ' '.join(options)
-        error = '''
-Failure to run: extractcode %(opts)s
+        error = f'''
+Failure to run: extractcode {opts}:
 stdout:
-%(stdout)s
+{result.stdout}
 
 stderr:
-%(stderr)s
-''' % locals()
-        assert rc == expected_rc, error
+{result.stderr}
+'''
+        assert result.returncode == expected_rc, error
 
-    return Result(exit_code=rc, output=stdout + stderr)
+    return result
 
 
 def test_extractcode_command_can_take_an_empty_directory():
     test_dir = test_env.get_temp_dir()
     result = run_extract([test_dir], expected_rc=0)
 
-    assert 'Extracting archives...' in result.output
-    assert 'Extracting done' in result.output
+    assert 'Extracting archives...' in result.stderr
+    assert 'Extracting done' in result.stderr
 
 
 def test_extractcode_command_does_extract_verbose():
@@ -81,27 +81,26 @@ def test_extractcode_command_does_extract_verbose():
     result = run_extract(['--verbose', test_dir], expected_rc=1)
 
     assert os.path.exists(os.path.join(test_dir, 'some.tar.gz-extract'))
-    expected = [
-        'Extracting archives...',
-        'some.tar.gz',
-        'broken.tar.gz',
-        'tarred_gzipped.tgz',
-        'ERROR extracting',
-        "broken.tar.gz: Unrecognized archive format",
-        'Extracting done.',
-    ]
-    for e in expected:
-        assert e in result.output
+    assert 'Extracting archives...' in result.stderr
+    assert 'some.tar.gz' in result.stdout
+    assert 'broken.tar.gz' in result.stderr
+    assert 'tarred_gzipped.tgz' in result.stdout
+    assert 'ERROR extracting' in result.stderr
+    assert "broken.tar.gz: Unrecognized archive format" in result.stderr
+    assert 'Extracting done.' in result.stderr
 
 
 def test_extractcode_command_always_shows_something_if_not_using_a_tty_verbose_or_not():
     test_dir = test_env.get_test_loc('cli/extract/some.tar.gz', copy=True)
 
     result = run_extract(options=['--verbose', test_dir], expected_rc=0)
-    assert all(x in result.output for x in ('Extracting archives...', 'Extracting: some.tar.gz', 'Extracting done.'))
+    assert 'Extracting archives...' in result.stderr
+    assert 'Extracting: some.tar.gz' in result.stdout
+    assert 'Extracting done.' in result.stderr
 
     result = run_extract(options=[test_dir], expected_rc=0)
-    assert all(x in result.output for x in ('Extracting archives...', 'Extracting done.'))
+    assert 'Extracting archives...' in result.stderr
+    assert 'Extracting done.' in result.stderr
 
 
 def test_extractcode_command_works_with_relative_paths():
@@ -129,9 +128,9 @@ def test_extractcode_command_works_with_relative_paths():
         test_tgt_dir = join(project_root, test_src_file) + extractcode.EXTRACT_SUFFIX
         result = run_extract([test_src_file], expected_rc=0, cwd=project_root)
 
-        assert 'Extracting done' in result.output
-        assert not 'WARNING' in result.output
-        assert not 'ERROR' in result.output
+        assert 'Extracting done' in result.stderr
+        assert not 'WARNING' in result.stderr
+        assert not 'ERROR' in result.stderr
 
         expected = ['/c/a/a.txt', '/c/b/a.txt', '/c/c/a.txt']
         file_result = [
@@ -161,11 +160,11 @@ def test_extractcode_command_works_with_relative_paths_verbose():
         shutil.copy(test_file, test_src_dir)
         test_src_file = join(test_src_dir, 'basic.zip')
 
-        result = run_extract(['--verbose', test_src_file] , expected_rc=2)
+        result = run_extract(['--verbose', test_src_file] , expected_rc=0)
 
         # extract the path from the second line of the output
         # check that the path is relative and not absolute
-        lines = result.output.splitlines(False)
+        lines = result.stderr.splitlines(False)
         line = lines[1]
         line_path = line.split(':', 1)[-1].strip()
         if on_windows:
@@ -182,24 +181,24 @@ def test_usage_and_help_return_a_correct_script_name_on_all_platforms():
 
     result = run_extract(options , expected_rc=0)
 
-    assert 'Usage: extractcode [OPTIONS]' in result.output
+    assert 'Usage: extractcode [OPTIONS]' in result.stdout
     # this was showing up on Windows
-    assert 'extractcode-script.py' not in result.output
+    assert 'extractcode-script.py' not in result.stderr
 
     result = run_extract([])
-    assert 'Usage: extractcode [OPTIONS]' in result.output
+    assert 'Usage: extractcode [OPTIONS]' in result.stderr
     # this was showing up on Windows
-    assert 'extractcode-script.py' not in result.output
+    assert 'extractcode-script.py' not in result.stderr
 
     result = run_extract(['-xyz'] , expected_rc=2)
     # this was showing up on Windows
-    assert 'extractcode-script.py' not in result.output
+    assert 'extractcode-script.py' not in result.stderr
 
 
 def test_extractcode_command_can_extract_archive_with_unicode_names_verbose():
     test_dir = test_env.get_test_loc('cli/unicodearch', copy=True)
     result = run_extract(['--verbose', test_dir] , expected_rc=0)
-    assert 'Sanders' in result.output
+    assert 'Sanders' in result.stdout
 
     file_result = [
         f for f in map(as_posixpath, resource_iter(test_dir, with_dirs=False))
@@ -272,6 +271,7 @@ def test_extractcode_command_can_extract_nuget():
     test_dir = test_env.get_test_loc('cli/extract_nuget', copy=True)
     result = run_extract(['--verbose', test_dir])
 
-    if result.exit_code != 0:
-        print(result.output)
-    assert 'ERROR extracting' not in result.output
+    if result.returncode != 0:
+        print(result.stdout)
+    assert 'ERROR extracting' not in result.stdout
+    assert 'ERROR extracting' not in result.stderr
