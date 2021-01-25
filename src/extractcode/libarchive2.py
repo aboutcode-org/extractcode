@@ -93,10 +93,16 @@ def load_lib():
     """
     from plugincode.location_provider import get_location
 
-    # get paths from plugins
     dll = get_location(EXTRACTCODE_LIBARCHIVE_DLL)
     libdir = get_location(EXTRACTCODE_LIBARCHIVE_LIBDIR)
+    if not (dll and libdir) or not os.path.isfile(dll) or not os.path.isdir(libdir):
+        raise Exception(
+            'CRITICAL: libarchive DLL is not installed. '
+            'Unable to continue: you need to install a valid extractcode-libarchive '
+            'plugin with a valid libarchive DLL available.'
+    )
     return command.load_shared_library(dll, libdir)
+    
 
 
 def set_env_with_tz():

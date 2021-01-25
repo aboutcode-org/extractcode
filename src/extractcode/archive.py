@@ -26,7 +26,6 @@ from commoncode import fileutils
 from commoncode import filetype
 from commoncode import functional
 from commoncode.ignore import is_ignored
-from commoncode.system import on_linux
 
 from typecode import contenttype
 

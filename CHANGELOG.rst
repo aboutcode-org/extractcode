@@ -4,8 +4,19 @@ Release notes
 vNext
 -----
 
+Version 21.1.21
+---------------
+
+*2021-01-21*
+- Add new [full] extra requires that install all the dependencies
+- Fix bug related to commoncode libraries loading
+- improve the extra requirements
+- set minimum version for dependencies
+- Improve documentation
+
+
 Version 21.1.15
--------------
+---------------
 
 *2021-01-15*
 - Drop support for Python 2

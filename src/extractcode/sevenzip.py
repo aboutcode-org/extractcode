@@ -1,4 +1,3 @@
-
 #
 # Copyright (c) nexB Inc. and others.
 # SPDX-License-Identifier: Apache-2.0
@@ -35,7 +34,6 @@ from commoncode.system import is_case_sensitive_fs
 from commoncode.system import on_mac
 from commoncode.system import on_macos_14_or_higher
 from commoncode.system import on_windows
-from commoncode import text
 
 import extractcode
 from extractcode import ExtractErrorFailedToExtract
@@ -71,6 +69,24 @@ sevenzip_errors = [
 ]
 
 UNKNOWN_ERROR = 'Unknown extraction error'
+
+
+def get_bin_locations():
+    """
+    Return a tuple of (lib_dir, cmd_loc) for 7zip loaded from plugin-provided path.
+    """
+    from plugincode.location_provider import get_location
+
+    cmd_loc = get_location(EXTRACTCODE_7ZIP_EXE)
+    libdir = get_location(EXTRACTCODE_7ZIP_LIBDIR)
+    if not (cmd_loc and libdir) or not os.path.isfile(cmd_loc) or not os.path.isdir(libdir):
+        raise Exception(
+            'CRITICAL: 7zip executable is not installed. '
+            'Unable to continue: you need to install a valid extractcode-7z '
+            'plugin with a valid executable available.'
+    )
+
+    return libdir, cmd_loc
 
 
 def get_7z_errors(stdout, stderr):
@@ -158,18 +174,6 @@ def is_rar(location):
     from typecode import contenttype
     T = contenttype.get_type(location)
     return T.filetype_file.lower().startswith('rar archive')
-
-
-def get_bin_locations():
-    """
-    Return a tuple of (lib_dir, cmd_loc) for 7zip loaded from plugin-provided path.
-    """
-    from plugincode.location_provider import get_location
-
-    # get paths from plugins
-    lib_dir = get_location(EXTRACTCODE_7ZIP_LIBDIR)
-    cmd_loc = get_location(EXTRACTCODE_7ZIP_EXE)
-    return lib_dir, cmd_loc
 
 
 def extract(location, target_dir, arch_type='*', file_by_file=on_mac, skip_symlinks=True):

@@ -37,6 +37,8 @@ from extractcode_assert_utils import check_files
 from extractcode_assert_utils import check_no_error
 from extractcode_assert_utils import BaseArchiveTestCase
 
+project_root = os.path.dirname(os.path.dirname(__file__))
+
 
 class TestExtract(BaseArchiveTestCase):
     test_data_dir = os.path.join(os.path.dirname(__file__), 'data')
@@ -789,11 +791,10 @@ class TestExtract(BaseArchiveTestCase):
         # The setup is a tad complex because we want to have a relative dir
         # to the base dir where we run tests from, i.e. the git checkout dir
         # To use relative paths, we use our tmp dir at the root of the code tree
-        from os.path import dirname, join, abspath
+        from os.path import join, abspath
         import shutil
         import tempfile
 
-        project_root = dirname(dirname(dirname(__file__)))
         project_tmp = join(project_root, 'tmp')
         fileutils.create_dir(project_tmp)
         project_root_abs = abspath(project_root)

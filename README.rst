@@ -4,7 +4,7 @@ ExtractCode
 - license: Apache-2.0
 - copyright: copyright (c) nexB. Inc. and others
 - homepage_url: https://github.com/nexB/extractode
-- keywords: archiev, extraction, libarchive, 7zip, scancode-toolkit
+- keywords: archive, extraction, libarchive, 7zip, scancode-toolkit
 
 
 ExtractCode is a universal archive extractor. It uses behind the scenes 
