@@ -3,7 +3,7 @@ ExtractCode
 
 - license: Apache-2.0
 - copyright: copyright (c) nexB. Inc. and others
-- homepage_url: https://github.com/nexB/extractode
+- homepage_url: https://github.com/nexB/extractcode
 - keywords: archive, extraction, libarchive, 7zip, scancode-toolkit
 
 
