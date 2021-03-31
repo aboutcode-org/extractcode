@@ -24,6 +24,7 @@ import logging
 import os
 import pprint
 import re
+from shutil import which
 
 import attr
 
@@ -80,11 +81,16 @@ def get_bin_locations():
     cmd_loc = get_location(EXTRACTCODE_7ZIP_EXE)
     libdir = get_location(EXTRACTCODE_7ZIP_LIBDIR)
     if not (cmd_loc and libdir) or not os.path.isfile(cmd_loc) or not os.path.isdir(libdir):
-        raise Exception(
-            'CRITICAL: 7zip executable is not installed. '
-            'Unable to continue: you need to install a valid extractcode-7z '
-            'plugin with a valid executable available.'
-    )
+        sevenzip = which('7z')
+        if not sevenzip:
+            raise ImportError(
+                'CRITICAL: 7zip executable is not installed. '
+                'Unable to continue: you need to install a valid extractcode-7z '
+                'plugin with a valid executable available '
+                'or install p7zip in your system, so that a "7z" program is available on your PATH'
+            )
+        logger.warning('Cannot to use plugin for libarchive, defaulting to system binary at ' + sevenzip)
+        return '', sevenzip
 
     return libdir, cmd_loc
 

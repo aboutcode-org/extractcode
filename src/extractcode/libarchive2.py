@@ -24,6 +24,7 @@ import logging
 import mmap
 import os
 
+import ctypes.util
 from ctypes import c_char_p, c_wchar_p
 from ctypes import c_int, c_longlong
 from ctypes import c_size_t, c_ssize_t
@@ -85,6 +86,7 @@ ffi-libarchive.
 # keys for plugin-provided locations
 EXTRACTCODE_LIBARCHIVE_LIBDIR = 'extractcode.libarchive.libdir'
 EXTRACTCODE_LIBARCHIVE_DLL = 'extractcode.libarchive.dll'
+_LIBRARY_NAME = 'libarchive'
 
 
 def load_lib():
@@ -96,11 +98,17 @@ def load_lib():
     dll = get_location(EXTRACTCODE_LIBARCHIVE_DLL)
     libdir = get_location(EXTRACTCODE_LIBARCHIVE_LIBDIR)
     if not (dll and libdir) or not os.path.isfile(dll) or not os.path.isdir(libdir):
-        raise Exception(
-            'CRITICAL: libarchive DLL is not installed. '
-            'Unable to continue: you need to install a valid extractcode-libarchive '
-            'plugin with a valid libarchive DLL available.'
-    )
+        filepath = ctypes.util.find_library(_LIBRARY_NAME)
+        libarchive = ctypes.cdll.LoadLibrary(filepath)
+        if not libarchive:
+            raise ImportError(
+                'CRITICAL: libarchive DLL is not installed. '
+                'Unable to continue: you need to install a valid extractcode-libarchive '
+                'plugin with a valid libarchive DLL available '
+                'or to have "libarchive" library installed in your system.'
+        )
+        logger.warning('Cannot to use plugin for libarchive, defaulting to system library at ' + filepath)
+        return libarchive
     return command.load_shared_library(dll, libdir)
     
 
