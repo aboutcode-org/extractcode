@@ -41,6 +41,7 @@ from extractcode import special_package
 from extractcode import libarchive2
 from extractcode import patch
 from extractcode import sevenzip
+from extractcode import vmimage
 
 from extractcode.uncompress import uncompress_gzip
 from extractcode.uncompress import uncompress_bzip2
@@ -469,6 +470,7 @@ extract_rpm = sevenzip.extract
 extract_xz = sevenzip.extract
 extract_lzma = sevenzip.extract
 extract_squashfs = sevenzip.extract
+extract_vm_image = vmimage.extract
 extract_cab = sevenzip.extract
 extract_nsis = sevenzip.extract
 extract_ishield = sevenzip.extract
@@ -1034,7 +1036,7 @@ IsoImageHandler = Handler(
 )
 
 SquashfsHandler = Handler(
-    name='squashfs FS',
+    name='SquashFS disk image',
     filetypes=('squashfs',),
     mimetypes=(),
     extensions=(),
@@ -1043,7 +1045,38 @@ SquashfsHandler = Handler(
     strict=False
 )
 
-`PatchHandler = Handler(
+QCOWHandler = Handler(
+    # note that there are v1, v2 and v3 formats.
+    name='QEMU QCOW2 disk image',
+    filetypes=('qemu qcow2 image',),
+    mimetypes=('application/octet-stream',),
+    extensions=('.qcow2',),
+    kind=file_system,
+    extractors=[extract_vm_image, extract_tar],
+    strict=False,
+)
+
+VMDKHandler = Handler(
+    name='VMDK disk image',
+    filetypes=('vmware4 disk image',),
+    mimetypes=('application/octet-stream',),
+    extensions=('.vmdk',),
+    kind=file_system,
+    extractors=[extract_vm_image, extract_tar],
+    strict=True,
+)
+
+VirtualBoxHandler = Handler(
+    name='VirtualBox disk image',
+    filetypes=('virtualbox disk image',),
+    mimetypes=('application/octet-stream',),
+    extensions=('.vdi',),
+    kind=file_system,
+    extractors=[extract_vm_image, extract_tar],
+    strict=True,
+)
+
+PatchHandler = Handler(
     name='Patch',
     filetypes=('diff', 'patch',),
     mimetypes=('text/x-diff',),
@@ -1111,5 +1144,8 @@ archive_handlers = [
     AppleDmgHandler,
     IsoImageHandler,
     SquashfsHandler,
-    PatchHandler
+    QCOWHandler,
+    VMDKHandler,
+    VirtualBoxHandler,
+    PatchHandler,
 ]
