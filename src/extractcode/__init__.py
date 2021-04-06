@@ -37,10 +37,10 @@ from commoncode.text import toascii
 from commoncode.system import on_linux
 
 logger = logging.getLogger(__name__)
-DEBUG = False
-# import sys
-# logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
-# logger.setLevel(logging.DEBUG)
+TRACE = False
+if TRACE:
+    logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
+    logger.setLevel(logging.DEBUG)
 
 root_dir = join(dirname(__file__), 'bin')
 
