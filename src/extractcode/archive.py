@@ -38,9 +38,10 @@ from extractcode import file_system
 from extractcode import patches
 from extractcode import special_package
 
+from extractcode import libarchive2
 from extractcode import patch
 from extractcode import sevenzip
-from extractcode import libarchive2
+
 from extractcode.uncompress import uncompress_gzip
 from extractcode.uncompress import uncompress_bzip2
 
@@ -79,8 +80,19 @@ For background on archive and compressed file formats see:
  - http://en.wikipedia.org/wiki/List_of_file_formats#Archive_and_compressed
 """
 
-# if strict, all hanlders criteria must be matched for it to be selected
-Handler = namedtuple('Handler', ['name', 'filetypes', 'mimetypes', 'extensions', 'kind', 'extractors', 'strict'])
+# if strict, all handlers criteria must be matched for a handler to be selected
+Handler = namedtuple(
+    'Handler',
+    [
+        'name',
+        'filetypes',
+        'mimetypes',
+        'extensions',
+        'kind',
+        'extractors',
+        'strict',
+    ]
+)
 
 
 def can_extract(location):
@@ -96,13 +108,17 @@ def can_extract(location):
 
 def should_extract(location, kinds, ignore_pattern=()):
     """
-    Return True if this location should be extracted based on the provided
-    kinds
+    Return True if this location should be extracted based on the provided kinds
     """
     location = os.path.abspath(os.path.expanduser(location))
     ignore_pattern = {extension : 'User ignore: Supplied by --ignore' for extension in ignore_pattern}
     should_ignore = is_ignored(location, ignore_pattern)
-    if get_extractor(location, kinds) and not should_ignore:
+    extractor = get_extractor(location, kinds=kinds)
+
+    if TRACE_DEEP:
+        logger.debug(f'  should_extract: extractor: {extractor}, should_ignore: {should_ignore}')
+
+    if extractor and not should_ignore:
         return True
 
 
@@ -113,15 +129,19 @@ def get_extractor(location, kinds=all_kinds):
     """
     assert location
     location = os.path.abspath(os.path.expanduser(location))
-    extractors = get_extractors(location, kinds)
+    extractors = get_extractors(location, kinds=kinds)
     if not extractors:
+        if TRACE_DEEP:
+            logger.debug(f'  get_extractor: not extractors: {extractors}')
         return None
 
     if len(extractors) == 2:
         extractor1, extractor2 = extractors
-        nested_extractor = functional.partial(extract_twice,
-                                             extractor1=extractor1,
-                                             extractor2=extractor2)
+        nested_extractor = functional.partial(
+            extract_twice,
+            extractor1=extractor1,
+            extractor2=extractor2,
+        )
         return nested_extractor
     elif len(extractors) == 1:
         return extractors[0]
@@ -135,23 +155,38 @@ def get_extractors(location, kinds=all_kinds):
     location or an empty list.
     """
     handler = get_best_handler(location, kinds)
+    if TRACE_DEEP:
+        logger.debug(f'  get_extractors: handler: {handler}')
+
     return handler and handler.extractors or []
 
 
 def get_best_handler(location, kinds=all_kinds):
     """
-    Return the best handler of None for the file at location.
+    Return the best handler for the file at `location` or None .
     """
     location = os.path.abspath(os.path.expanduser(location))
     if not filetype.is_file(location):
         return
+
     handlers = list(get_handlers(location))
     if TRACE_DEEP:
-        logger.debug('get_best_handler: handlers: %(handlers)r ' % locals())
+        logger.debug(f'    get_best_handler: handlers: {handlers}')
+    if not handlers:
+        return
 
-    if handlers:
-        candidates = score_handlers(handlers)
-        return candidates and pick_best_handler(candidates, kinds)
+    candidates = list(score_handlers(handlers))
+    if TRACE_DEEP:
+        logger.debug(f'    get_best_handler: candidates: {candidates}')
+    if not candidates:
+        if TRACE_DEEP:
+            logger.debug(f'    get_best_handler: candidates: {candidates}')
+        return
+
+    picked = pick_best_handler(candidates, kinds=kinds)
+    if TRACE_DEEP:
+        logger.debug(f'    get_best_handler: picked: {picked}')
+    return picked
 
 
 def get_handlers(location):
@@ -177,6 +212,8 @@ def get_handlers(location):
 
             # default to False
             type_matched = handler.filetypes and any(t in ftype for t in handler.filetypes)
+            if TRACE_DEEP:
+                logger.debug(f'    get_handlers: handler.filetypes={handler.filetypes}')
             mime_matched = handler.mimetypes and any(m in mtype for m in handler.mimetypes)
             exts = handler.extensions
             if exts:
@@ -201,10 +238,18 @@ def score_handlers(handlers):
     Score candidate handlers. Higher score is better.
     """
     for handler, type_matched, mime_matched, extension_matched in handlers:
+        if TRACE_DEEP:
+            logger.debug(
+                f'     score_handlers: handler={handler}, '
+                f'type_matched={type_matched}, '
+                f'mime_matched={mime_matched}, '
+                f'extension_matched={extension_matched}'
+            )
         score = 0
         # increment kind value: higher kinds numerical values are more
         # specific by design
         score += handler.kind
+        if TRACE_DEEP: logger.debug(f'     score_handlers: score += handler.kind {score}')
 
         # increment score based on matched criteria
         if type_matched and mime_matched and extension_matched:
@@ -255,6 +300,10 @@ def pick_best_handler(candidates, kinds):
     """
     # sort by increasing scores
     scored = sorted(candidates, reverse=True)
+
+    if TRACE_DEEP:
+        logger.debug(f'  pick_best_handler: scored: {scored}')
+
     if not scored:
         return
 
@@ -994,7 +1043,7 @@ SquashfsHandler = Handler(
     strict=False
 )
 
-PatchHandler = Handler(
+`PatchHandler = Handler(
     name='Patch',
     filetypes=('diff', 'patch',),
     mimetypes=('text/x-diff',),

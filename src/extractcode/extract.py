@@ -123,9 +123,17 @@ def extract(
     if recurse and a nested archive is found, it is extracted to full depth
     first before resuming the file system walk.
     """
+
+    extract_events = extract_files(
+        location=location,
+        kinds=kinds,
+        recurse=recurse,
+        ignore_pattern=ignore_pattern,
+    )
+
     processed_events = []
     processed_events_append = processed_events.append
-    for event in extract_files(location, kinds, recurse, ignore_pattern):
+    for event in extract_events:
         yield event
         if replace_originals:
             processed_events_append(event)
@@ -155,7 +163,9 @@ def extract_files(
     Extract only archives of a kind listed in the `kinds` kind tuple.
 
     If `recurse` is True, extract recursively archives nested inside other
-    archives. If `recurse` is false, then do not extract further an already
+    archives.
+
+    If `recurse` is false, then do not extract further an already
     extracted archive identified by the corresponding extract suffix location.
     """
     ignored = partial(ignore.is_ignored, ignores=ignore.default_ignores, unignores={})
@@ -193,7 +203,11 @@ def extract_files(
                 logger.debug('extract:target: %(target)r' % locals())
 
             # extract proper
-            for xevent in extract_file(loc, target, kinds):
+            for xevent in extract_file(
+                location=loc,
+                target=target,
+                kinds=kinds,
+            ):
                 if TRACE:
                     logger.debug('extract:walk:extraction event: %(xevent)r' % locals())
                 yield xevent
@@ -217,6 +231,7 @@ def extract_file(
     target,
     kinds=extractcode.default_kinds,
     verbose=False,
+    all_formats=False,
 ):
     """
     Extract a single archive at `location` in the `target` directory if it is

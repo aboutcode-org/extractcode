@@ -103,14 +103,16 @@ Try 'extractcode --help' for help on options and arguments.'''
 @click.option('--shallow', is_flag=True, default=False, help='Do not extract recursively nested archives (e.g. not archives in archives).')
 @click.option('--replace-originals', is_flag=True, default=False, help='Replace extracted archives by the extracted content.')
 @click.option('--ignore', default=[], multiple=True, help='Ignore files/directories following a glob-pattern.')
+@click.option('--all-formats', is_flag=True, default=False, help='Extract archives from all known formats.')
 
 @click.help_option('-h', '--help')
 @click.option('--about', is_flag=True, is_eager=True, callback=print_about, help='Show information about ExtractCode and licensing and exit.')
 @click.option('--version', is_flag=True, is_eager=True, callback=print_version, help='Show the version and exit.')
-def extractcode(ctx, input, verbose, quiet, shallow, replace_originals, ignore, *args, **kwargs):  # NOQA
+def extractcode(ctx, input, verbose, quiet, shallow, replace_originals, ignore, all_formats, *args, **kwargs):  # NOQA
     """extract archives and compressed files found in the <input> file or directory tree.
 
     Archives found inside an extracted archive are extracted recursively.
+    Use --shallow for a shallow extraction.
     Extraction for each archive is done in-place in a new directory named
     '<archive file name>-extract' created side-by-side with an archive.
     """
@@ -125,17 +127,26 @@ def extractcode(ctx, input, verbose, quiet, shallow, replace_originals, ignore, 
             return ''
         if not item:
             return ''
+
         source = item.source
         if not isinstance(source, str):
             source = toascii(source, translit=True).decode('utf-8', 'replace')
+
         if verbose:
             if item.done:
                 return ''
-            line = source and get_relative_path(path=source, len_base_path=len_base_path, base_is_dir=base_is_dir) or ''
+            line = source and get_relative_path(
+                path=source,
+                len_base_path=len_base_path,
+                base_is_dir=base_is_dir,
+            ) or ''
+
         else:
             line = source and fileutils.file_name(source) or ''
+
         if not isinstance(line, str):
             line = toascii(line, translit=True).decode('utf-8', 'replace')
+
         return 'Extracting: %(line)s' % locals()
 
     def display_extract_summary():
@@ -149,11 +160,19 @@ def extractcode(ctx, input, verbose, quiet, shallow, replace_originals, ignore, 
             has_errors = has_errors or bool(xev.errors)
             has_warnings = has_warnings or bool(xev.warnings)
             source = fileutils.as_posixpath(xev.source)
+
             if not isinstance(source, str):
                 source = toascii(source, translit=True).decode('utf-8', 'replace')
-                source = get_relative_path(path=source, len_base_path=len_base_path, base_is_dir=base_is_dir)
+
+                source = get_relative_path(
+                    path=source,
+                    len_base_path=len_base_path,
+                    base_is_dir=base_is_dir,
+                )
+
             for e in xev.errors:
                 echo_stderr('ERROR extracting: %(source)s: %(e)s' % locals(), fg='red')
+
             for warn in xev.warnings:
                 echo_stderr('WARNING extracting: %(source)s: %(warn)s' % locals(), fg='yellow')
 
@@ -174,7 +193,12 @@ def extractcode(ctx, input, verbose, quiet, shallow, replace_originals, ignore, 
     has_extract_errors = False
 
     extractibles = extract_archives(
-        abs_location, recurse=not shallow, replace_originals=replace_originals, ignore_pattern=ignore)
+        abs_location,
+        recurse=not shallow,
+        replace_originals=replace_originals,
+        ignore_pattern=ignore,
+        all_formats=all_formats,
+    )
 
     if not quiet:
         echo_stderr('Extracting archives...', fg='green')
