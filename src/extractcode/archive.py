@@ -221,10 +221,11 @@ def get_handlers(location):
                 extension_matched = exts and location.lower().endswith(exts)
 
             if TRACE_DEEP:
-                logger.debug('  get_handlers: matched type: %(type_matched)s, mime: %(mime_matched)s, ext: %(extension_matched)s' % locals())
+                print(f'  get_handlers: matched type: {type_matched}, mime: {mime_matched}, ext: {extension_matched}' % locals())
 
-            if handler.strict and not all([type_matched, mime_matched, extension_matched]):
-                logger.debug('  get_handlers: skip strict' % locals())
+            if handler.strict and not (type_matched and mime_matched and extension_matched):
+                if TRACE_DEEP:
+                    print(f'  get_handlers: skip strict: {handler.name}')
                 continue
 
             if type_matched or mime_matched or extension_matched:
@@ -1052,8 +1053,8 @@ QCOWHandler = Handler(
     mimetypes=('application/octet-stream',),
     extensions=('.qcow2',),
     kind=file_system,
-    extractors=[extract_vm_image, extract_tar],
-    strict=False,
+    extractors=[extract_vm_image],
+    strict=True,
 )
 
 VMDKHandler = Handler(
@@ -1062,7 +1063,7 @@ VMDKHandler = Handler(
     mimetypes=('application/octet-stream',),
     extensions=('.vmdk',),
     kind=file_system,
-    extractors=[extract_vm_image, extract_tar],
+    extractors=[extract_vm_image],
     strict=True,
 )
 
@@ -1072,7 +1073,7 @@ VirtualBoxHandler = Handler(
     mimetypes=('application/octet-stream',),
     extensions=('.vdi',),
     kind=file_system,
-    extractors=[extract_vm_image, extract_tar],
+    extractors=[extract_vm_image],
     strict=True,
 )
 

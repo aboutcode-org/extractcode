@@ -20,6 +20,7 @@
 #
 
 import os
+from pathlib import Path
 
 import pytest
 
@@ -214,6 +215,18 @@ class TestGetExtractorTest(BaseArchiveTestCase):
 
         expected = []
         self.check_get_extractors(test_file, expected, kinds=extractcode.default_kinds)
+
+    def test_get_extractor_qcow2(self):
+        test_file = self.extract_test_tar('vmimage/foobar.qcow2.tar.gz')
+        test_file = str(Path(test_file) / 'foobar.qcow2')
+
+        expected = []
+        self.check_get_extractors(test_file, expected, kinds=extractcode.default_kinds)
+
+        expected = [archive.extract_vm_image]
+        self.check_get_extractors(test_file, expected, kinds=())
+        self.check_get_extractors(test_file, expected, kinds=(extractcode.file_system, ))
+        self.check_get_extractors(test_file, expected, kinds=extractcode.all_kinds)
 
     def test_get_extractor_for_dia(self):
         test_file = self.get_test_loc('archive/dia/dia.dia', copy=True)

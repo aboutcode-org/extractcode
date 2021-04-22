@@ -30,7 +30,7 @@ from os.path import join
 from commoncode import fileutils
 from commoncode import ignore
 
-import extractcode
+import extractcode  # NOQA
 import extractcode.archive
 
 logger = logging.getLogger(__name__)
@@ -61,7 +61,7 @@ In particular:
 
  - Symlinks may be replaced by plain file copies as if they were regular files.
    Hardlinks may be recreated as regular files, not as hardlinks to the original
-   file.
+   files.
 
  - Files and directories may be renamed when their name is a duplicate. And a
    name may be considered a duplicate ignore upper and lower case mixes even

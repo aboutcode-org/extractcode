@@ -21,7 +21,9 @@ jobs:
           image_name: ubuntu-18.04
           python_versions: ['3.6', '3.7', '3.8', '3.9']
           test_suites:
-              all: tmp/bin/pytest -n 2 -vvs
+              all:
+                - apt-get install libguestfs-tools
+                - tmp/bin/pytest -n 2 -vvs
 
     - template: etc/ci/azure-linux.yml
       parameters:
@@ -29,7 +31,8 @@ jobs:
           image_name: ubuntu-20.04
           python_versions: ['3.6', '3.7', '3.8', '3.9']
           test_suites:
-              all: tmp/bin/pytest -n 2 -vvs
+              all: 
+                - tmp/bin/pytest -n 2 -vvs
 
     - template: etc/ci/azure-mac.yml
       parameters:
