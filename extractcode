@@ -109,10 +109,10 @@ _canonicalize_file_path() {
 EXTRACTCODE_BIN="$( realpath "${BASH_SOURCE[0]}" )"
 EXTRACTCODE_ROOT_DIR="$( cd "$( dirname "${EXTRACTCODE_BIN}" )" && pwd )"
 
-EXTRACTCODE_CONFIGURED_PYTHON="$EXTRACTCODE_ROOT_DIR/bin/python"
+EXTRACTCODE_CONFIGURED_PYTHON="$EXTRACTCODE_ROOT_DIR/tmp/bin/python"
 if [ ! -f "$EXTRACTCODE_CONFIGURED_PYTHON" ]; then
     echo "* Configuring ExtractCode for first use..."
     CONFIGURE_QUIET=1 "$EXTRACTCODE_ROOT_DIR/configure"
 fi
 
-"$EXTRACTCODE_ROOT_DIR/bin/extractcode" "$@"
+"$EXTRACTCODE_ROOT_DIR/tmp/bin/extractcode" "$@"
