@@ -137,6 +137,9 @@ class VmImage:
 
         supported_gfs_formats_by_extension = {
             '.qcow2': 'qcow2',
+            '.qcow2c': 'qcow2',
+            '.qcow': 'qcow2',
+            '.img': 'qcow2',
             '.vmdk': 'vmdk',
             '.vdi': 'vdi',
         }

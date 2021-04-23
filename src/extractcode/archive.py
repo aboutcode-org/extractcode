@@ -1049,9 +1049,9 @@ SquashfsHandler = Handler(
 QCOWHandler = Handler(
     # note that there are v1, v2 and v3 formats.
     name='QEMU QCOW2 disk image',
-    filetypes=('qemu qcow2 image',),
+    filetypes=('qemu qcow2 image', 'qemu qcow image',),
     mimetypes=('application/octet-stream',),
-    extensions=('.qcow2',),
+    extensions=('.qcow2', '.qcow', '.qcow2c', '.img',),
     kind=file_system,
     extractors=[extract_vm_image],
     strict=True,
