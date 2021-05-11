@@ -50,39 +50,75 @@ To run the command line tool in the activated environment::
     ./extractcode -h
 
 
-Adding support for VM images
-----------------------------
+Adding support for VM images extraction
+---------------------------------------
 
-Adding support for VM images requires the manual installation of libguestfs and
-it Python binding. You will need to install the libguestfs tools system package.
-On Debian and Ubuntu::
+Adding support for VM images requires the manual installation of libguestfs
+tools system package. This is suport on Linux only. On Debian and Ubuntu you can
+use this::
 
     sudo apt-get install libguestfs-tools
 
 
-On Ubuntu, a manual stpe is required if the kernel executable file cannot be read.
-This is required by guestfish and libguestfs and this is an oddity there and not on Debian.
+On Ubuntu only, an additional manual step is required as the kernel executable
+file cannot be read as required by libguestfish.
 
-Run this command as a temporary fix::
+Run this command as a temporary and immediate fix::
 
     for k in /boot/vmlinuz-*
-        do sudo dpkg-statoverride --add --update root root 0644 /boot/vmlinuz-$(uname -r)
+        do sudo dpkg-statoverride --add --update root root 0644 /boot/vmlinuz-$k
     done
 
-or::
 
-    sudo chmod +r /boot/vmlinuz-*,
+But you likely want both this temporary fix and a permanent fix; otherwise each
+kernel update will revert to the default permissions and extractcode will stop
+working for VM images extraction. 
 
+Therefore follow these instructions:
 
-For a permanent fix see: 
+1. As sudo, create the file /etc/kernel/postinst.d/statoverride with this
+content, devised by Kees Cook (@kees) in
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/759725/comments/3 ::
 
-    - https://bugs.launchpad.net/ubuntu/+source/libguestfs/+bug/1813662/comments/21
+    #!/bin/sh
+    version="$1"
+    # passing the kernel version is required
+    [ -z "${version}" ] && exit 0
+    dpkg-statoverride --update --add root root 0644 /boot/vmlinuz-${version}
 
-See also for a discussion:
+2. Set executable permissions::
+
+    sudo chmod +x /etc/kernel/postinst.d/statoverride 
+
+See also for a complete discussion:
 
     - https://bugs.launchpad.net/ubuntu/+source/linux/+bug/759725
     - https://bugzilla.redhat.com/show_bug.cgi?id=1670790
-    - https://bugs.launchpad.net/ubuntu/+source/libguestfs/+bug/1813662
+    - https://bugs.launchpad.net/ubuntu/+source/libguestfs/+bug/1813662/comments/24
 
 
+Configuration with environment variables
+----------------------------------------
 
+ExtractCode will use these environment variables if set:
+
+- EXTRACTCODE_GUESTFISH_PATH : the path to the ``guestfish`` tool from
+  libguestfs to use to extract VM images. If not provided, ExtractCode will look
+  in the PATH for an installed ``guestfish`` executable instead.
+
+- EXTRACTCODE_LIBARCHIVE_PATH : the path to the ``libarchive.so`` libarchive
+  shared library used to support some of the archive formats. If not provided,
+  ExtractCode will look for a plugin-provided libarchive library path. See 
+  https://github.com/nexB/scancode-plugins/tree/main/builtins for such plugins.
+  
+  If no plugin contributes libarchive, then a final attempt is made to look for
+  it in the PATH using standard DLL loading techniques.
+
+- EXTRACTCODE_7Z_PATH : the path to the ``7z`` 7zip executable used to support
+  some of the archive formats. If not provided, ExtractCode will look for a
+  plugin-provided 7z executable path. See
+  https://github.com/nexB/scancode-plugins/tree/main/builtins for such plugins.
+  
+  If no plugin contributes 7z, then a final attempt is made to look for
+  it in the PATH.
+  
