@@ -37,6 +37,7 @@ from commoncode import command
 from commoncode import fileutils
 from commoncode import paths
 from commoncode import text
+from commoncode.system import on_windows
 
 import extractcode
 from extractcode import ExtractError
@@ -83,26 +84,41 @@ ffi-libarchive.
 """
 
 # keys for plugin-provided locations
-EXTRACTCODE_LIBARCHIVE_LIBDIR = 'extractcode.libarchive.libdir'
 EXTRACTCODE_LIBARCHIVE_DLL = 'extractcode.libarchive.dll'
+
+EXTRACTCODE_LIBARCHIVE_PATH_ENVVAR = 'EXTRACTCODE_LIBARCHIVE_PATH'
 
 
 def load_lib():
     """
-    Return the loaded libarchive shared library object from plugin-provided path.
+    Return the libarchive shared library object loaded from either:
+    - an environment variable ``EXTRACTCODE_LIBARCHIVE_PATH``
+    - a plugin-provided path,
+    - the system PATH.
+    Raise an Exception if no libarchive can be found.
     """
     from plugincode.location_provider import get_location
 
-    dll = get_location(EXTRACTCODE_LIBARCHIVE_DLL)
-    libdir = get_location(EXTRACTCODE_LIBARCHIVE_LIBDIR)
-    if not (dll and libdir) or not os.path.isfile(dll) or not os.path.isdir(libdir):
+    # try the environment first
+    dll_loc = os.environ.get(EXTRACTCODE_LIBARCHIVE_PATH_ENVVAR)
+
+    # try a plugin-provided path second
+    if not dll_loc:
+        dll_loc = get_location(EXTRACTCODE_LIBARCHIVE_DLL)
+
+    # try the PATH
+    if not dll_loc:
+        dll = 'libarchive.dll' if on_windows else 'libarchive.so'
+        dll_loc = command.find_in_path(dll)
+
+    if not dll_loc or not os.path.isfile(dll_loc):
         raise Exception(
             'CRITICAL: libarchive DLL is not installed. '
             'Unable to continue: you need to install a valid extractcode-libarchive '
-            'plugin with a valid libarchive DLL available.'
+            'plugin with a valid libarchive DLL available. '
+            f'OR set the {EXTRACTCODE_LIBARCHIVE_PATH_ENVVAR} environment variable.'
     )
-    return command.load_shared_library(dll, libdir)
-    
+    return command.load_shared_library(dll_loc)
 
 
 def set_env_with_tz():

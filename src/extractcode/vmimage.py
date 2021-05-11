@@ -38,12 +38,6 @@ contain. This is based on libguestfs-tools and is tested only on Linux.
 Works only if libguestfs tool guestfish is in the path.
 
 See https://libguestfs.org/
-
-On Ubuntu, you may face this issue when running guestfish:
-
-- https://bugs.launchpad.net/ubuntu/+source/linux/+bug/759725
-- https://bugs.launchpad.net/ubuntu/+source/libguestfs/+bug/1813662
-- https://unix.stackexchange.com/a/642914/185837
 """
 
 logger = logging.getLogger(__name__)
@@ -59,8 +53,15 @@ GUESTFISH_NOT_FOUND = (
     'WARNING: guestfish executable is not installed. '
     'Unable to extract virtual machine image: you need to install the '
     'guestfish tool from libguestfs and extra FS drivers if needed. '
-    'See https://libguestfs.org/ for details.'
+    'See the ExtractCode README.rst and https://libguestfs.org/ for details.'
 )
+
+GUESTFISH_KERNEL_NOT_READABLE = (
+'''libguestfs requires the kernel executable to be readable.
+This is the case by default on most Linux distributions except on Ubuntu.
+Please follow the instructions in ExtractCode installation guide to make this happen.
+See the ExtractCode README.rst for details.
+''')
 
 EXTRACTCODE_GUESTFISH_PATH_ENVVAR = 'EXTRACTCODE_GUESTFISH_PATH'
 
@@ -89,26 +90,15 @@ def check_linux_kernel_is_readable():
         - https://bugzilla.redhat.com/show_bug.cgi?id=1670790
         - https://bugs.launchpad.net/ubuntu/+source/libguestfs/+bug/1813662
     """
-    error = (
-        'libguestfs requires the kernel executable to be readable. '
-        'This is the case on most Linux distribution except on Ubuntu.\n'
-        'Run this command as a temporary fix:\n'
-        '  for k in /boot/vmlinuz-*\n'
-        '    do sudo dpkg-statoverride --add --update root root 0644 /boot/vmlinuz-$(uname -r)\n'
-        '  done\n'
-        'or:\n'
-        '  sudo chmod +r /boot/vmlinuz-*\n\n',
-        'For a permanent fix see: '
-        'https://bugs.launchpad.net/ubuntu/+source/libguestfs/+bug/1813662/comments/21'
-    )
+
     if on_linux:
         kernels = list(pathlib.Path('/boot').glob('vmlinuz-*'))
         if not kernels:
-            raise ExtractErrorFailedToExtract(error)
+            raise ExtractErrorFailedToExtract(GUESTFISH_KERNEL_NOT_READABLE)
         for kern in kernels:
             if not os.access(kern, os.R_OK):
                 raise ExtractErrorFailedToExtract(
-                    f'Unable to read kernel at: {kern}.\n{error}')
+                    f'Unable to read kernel at: {kern}.\n{GUESTFISH_KERNEL_NOT_READABLE}')
 
 
 @attr.s
@@ -250,7 +240,7 @@ class VmImage:
         return as_unicode(stdout)
 
 
-def extract(location, target_dir, as_tarballs=True):
+def extract(location, target_dir, as_tarballs=False):
     """
     Extract all files from a guestfish-supported VM image archive file at
     location in the target_dir directory. Optionally only extract the
@@ -306,8 +296,7 @@ def extract(location, target_dir, as_tarballs=True):
             # we can safely extract this to a root / dir as we have only one partition
             partition, _parttype = partitions[0]
             if not as_tarballs:
-                intermediate_dir = fileutils.get_temp_dir(prefix='extractcode-vmimage')
-                tdir = intermediate_dir
+                tdir = fileutils.get_temp_dir(prefix='extractcode-vmimage')
             else:
                 tdir = target_dir
 
@@ -329,8 +318,7 @@ def extract(location, target_dir, as_tarballs=True):
                 base_name = partition.replace('/', '-')
 
                 if not as_tarballs:
-                    intermediate_dir = fileutils.get_temp_dir(prefix='extractcode-vmimage')
-                    tdir = intermediate_dir
+                    tdir = fileutils.get_temp_dir(prefix='extractcode-vmimage')
                 else:
                     tdir = target_dir
 
@@ -344,7 +332,7 @@ def extract(location, target_dir, as_tarballs=True):
                     fileutils.create_dir(partition_target_dir)
                     warns = extract_image_tarball(
                         tarball=target_tarball,
-                        target_dir=target_dir,
+                        target_dir=partition_target_dir,
                         skip_symlinks=False)
                     warnings.extend(warns)
 

@@ -56,9 +56,10 @@ if TRACE or TRACE_DEEP or TRACE_ENTRIES:
     logging.basicConfig(stream=sys.stdout)
     logger.setLevel(logging.DEBUG)
 
-# keys for plugin-provided locations
-EXTRACTCODE_7ZIP_LIBDIR = 'extractcode.sevenzip.libdir'
+# key of a plugin-provided location
 EXTRACTCODE_7ZIP_EXE = 'extractcode.sevenzip.exe'
+
+EXTRACTCODE_7ZIP_PATH_ENVVAR = 'EXTRACTCODE_7Z_PATH'
 
 sevenzip_errors = [
     ('unsupported method', 'Unsupported archive or broken archive'),
@@ -71,22 +72,40 @@ sevenzip_errors = [
 UNKNOWN_ERROR = 'Unknown extraction error'
 
 
-def get_bin_locations():
+def get_command_location(_cache=[]):
     """
-    Return a tuple of (lib_dir, cmd_loc) for 7zip loaded from plugin-provided path.
+    Return the location of a 7zip loaded from either:
+    - an environment variable ``EXTRACTCODE_7Z_PATH``,
+    - a plugin-provided path,
+    - the system PATH.
+    Raise an Exception if no 7Zip command can be found.
     """
+    if _cache:
+        return _cache[0]
+
     from plugincode.location_provider import get_location
 
-    cmd_loc = get_location(EXTRACTCODE_7ZIP_EXE)
-    libdir = get_location(EXTRACTCODE_7ZIP_LIBDIR)
-    if not (cmd_loc and libdir) or not os.path.isfile(cmd_loc) or not os.path.isdir(libdir):
+    # try the environment first
+    cmd_loc = os.environ.get(EXTRACTCODE_7ZIP_PATH_ENVVAR)
+
+    # try a plugin-provided path second
+    if not cmd_loc:
+        cmd_loc = get_location(EXTRACTCODE_7ZIP_EXE)
+
+    # try the PATH
+    if not cmd_loc:
+        cmd = '7z.exe' if on_windows else '7z'
+        cmd_loc = command.find_in_path(cmd)
+
+    if not cmd_loc or not os.path.isfile(cmd_loc):
         raise Exception(
             'CRITICAL: 7zip executable is not installed. '
             'Unable to continue: you need to install a valid extractcode-7z '
-            'plugin with a valid executable available.'
+            'plugin with a valid executable available. '
+            'OR set the EXTRACTCODE_7ZIP_PATH environment variable.'
     )
-
-    return libdir, cmd_loc
+    _cache.append(cmd_loc)
+    return cmd_loc
 
 
 def get_7z_errors(stdout, stderr):
@@ -315,12 +334,11 @@ def build_7z_extract_command(location, target_dir, single_entry=None, arch_type=
     if single_entry:
         args += [shlex_quote(single_entry.path)]
 
-    lib_dir, cmd_loc = get_bin_locations()
+    cmd_loc = get_command_location()
 
     ex_args = dict(
         cmd_loc=cmd_loc,
         args=args,
-        lib_dir=lib_dir,
         cwd=target_dir,
         env=timezone,
     )
@@ -387,7 +405,7 @@ def extract_file_by_file(location, target_dir, arch_type='*', skip_symlinks=True
             single_entry=entry,
             arch_type=arch_type,
         )
-        rc, stdout, stderr = command.execute2(**ex_args)
+        rc, stdout, stderr = command.execute(**ex_args)
 
         error = get_7z_errors(stdout, stderr)
         if error or rc != 0:
@@ -488,7 +506,7 @@ def list_entries(location, arch_type='*'):
         abs_location,
     ]
 
-    lib_dir, cmd_loc = get_bin_locations()
+    cmd_loc = get_command_location()
 
     rc, stdout, stderr = command.execute2(
         cmd_loc=cmd_loc,
