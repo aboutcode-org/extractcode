@@ -190,7 +190,7 @@ class VmImage:
 
     def extract_image(self, target_tarball):
         """
-        Extract all files from this VM image in the `target_tarball` file  as a
+        Extract all files from this VM image in the `target_tarball` file as a
         gzipped-compressed tarball (.tar.gz). Raise exception on errors.
         """
         args = [
@@ -230,25 +230,36 @@ class VmImage:
         import subprocess
         full_args = [self.guestfish_command] + args
         try:
-            stdout = subprocess.check_output(full_args, timeout=timeout, stderr=subprocess.STDOUT)
+            stdout = subprocess.check_output(
+                full_args,
+                timeout=timeout,
+                stderr=subprocess.STDOUT,
+            )
         except subprocess.CalledProcessError as cpe:
             args = ' '.join([self.guestfish_command] + args)
             output = as_unicode(cpe.output)
-            error = f'Failed to run guestfish to extract VM image: {args}\noutput: {output}'
-            raise ExtractErrorFailedToExtract(error)  # from cpe
+            error = (
+                f'Failed to run guestfish to extract VM image: {args}\n'
+                f'output: {output}'
+            )
+            raise ExtractErrorFailedToExtract(error)
 
         return as_unicode(stdout)
 
 
-def extract(location, target_dir, as_tarballs=False):
+def extract(location, target_dir, as_tarballs=False, skip_symlinks=True):
     """
     Extract all files from a guestfish-supported VM image archive file at
-    location in the target_dir directory. Optionally only extract the
-    intermediate tarballs if `as_tarball` is True. Otherwise, extract to
-    intermediate tarballs and then extract each tarballs to the final directory.
-
+    location in the target_dir directory.
     Return a list of warning messages if any or an empty list.
+
+    Optionally only extract the intermediate tarballs if `as_tarball` is True.
+    Otherwise, extract to intermediate tarballs and then extract each tarballs
+    to the final directory.
+
+    Optionally skip extracting symlinks.
     Raise exception on errors.
+
     This works only on Linux.
     """
     assert target_dir
@@ -280,7 +291,8 @@ def extract(location, target_dir, as_tarballs=False):
             warns = extract_image_tarball(
                 tarball=target_tarball,
                 target_dir=target_dir,
-                skip_symlinks=False)
+                skip_symlinks=skip_symlinks,
+            )
             warnings.extend(warns)
 
     except ExtractErrorFailedToExtract as e:
@@ -308,7 +320,8 @@ def extract(location, target_dir, as_tarballs=False):
                 warns = extract_image_tarball(
                     tarball=target_tarball,
                     target_dir=target_dir,
-                    skip_symlinks=False)
+                    skip_symlinks=skip_symlinks,
+                )
                 warnings.extend(warns)
         else:
             # with multiple partitions, we extract each partition to a unique
@@ -333,7 +346,8 @@ def extract(location, target_dir, as_tarballs=False):
                     warns = extract_image_tarball(
                         tarball=target_tarball,
                         target_dir=partition_target_dir,
-                        skip_symlinks=False)
+                        skip_symlinks=skip_symlinks,
+                    )
                     warnings.extend(warns)
 
     return warnings
