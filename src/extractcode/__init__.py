@@ -42,8 +42,6 @@ if TRACE:
     logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
     logger.setLevel(logging.DEBUG)
 
-root_dir = join(dirname(__file__), 'bin')
-
 # Suffix added to extracted target_dir paths
 EXTRACT_SUFFIX = '-extract'
 
@@ -66,13 +64,26 @@ kind_labels = {
     7: 'special_package',
 }
 
-# note: do not include special_package in all by default
-all_kinds = (regular, regular_nested, package, file_system, docs, patches, special_package)
-default_kinds = (regular, regular_nested, package)
+# note: we do not include special_package in all_kinds by default
+all_kinds = (
+    regular, 
+    regular_nested, 
+    package, 
+    file_system, 
+    docs, 
+    patches, 
+    special_package,
+)
+
+default_kinds = (
+    regular, 
+    regular_nested, 
+    package,
+)
 
 # map user-visible extract types to tuples of "kinds"
 extract_types = {
-    'default': (regular, regular_nested, package,),
+    'default': default_kinds,
     'all': all_kinds,
     'package': (package,),
     'filesystem': (file_system,),
