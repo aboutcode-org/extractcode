@@ -112,12 +112,16 @@ def should_extract(location, kinds, ignore_pattern=()):
     Return True if this location should be extracted based on the provided kinds
     """
     location = os.path.abspath(os.path.expanduser(location))
-    ignore_pattern = {extension : 'User ignore: Supplied by --ignore' for extension in ignore_pattern}
+    ignore_pattern = {extension : 'User ignore: Supplied by --ignore'
+        for extension in ignore_pattern}
     should_ignore = is_ignored(location, ignore_pattern)
     extractor = get_extractor(location, kinds=kinds)
 
     if TRACE_DEEP:
-        logger.debug(f'  should_extract: extractor: {extractor}, should_ignore: {should_ignore}')
+        logger.debug(
+            f'  should_extract: extractor: {extractor}, '
+            f'should_ignore: {should_ignore}'
+        )
 
     if extractor and not should_ignore:
         return True
@@ -125,8 +129,17 @@ def should_extract(location, kinds, ignore_pattern=()):
 
 def get_extractor(location, kinds=all_kinds):
     """
-    Return an extraction callable that can extract the file at location or
-    an None if no extract function is found.
+    Return an extraction callable that can extract the file at ``location`` or
+    None if no extraction callable function is found.
+    Limit the search for an extractor to the ``kinds`` list of archive kinds.
+    See  extractcode.all_kinds for details.
+
+    An extraction callable should accept these arguments:
+    - location of the file to extract
+    - target_dir where to extract
+    It should extract files from the `location` in the `target_dir` directory.
+    It must return a list of warning messages if any or an empty list.
+    It must raise Exceptions on errors.
     """
     assert location
     location = os.path.abspath(os.path.expanduser(location))

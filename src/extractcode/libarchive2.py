@@ -185,7 +185,8 @@ def extract(location, target_dir, skip_symlinks=True):
                 logger.debug('skipping: {}'.format(entry))
 
             if entry.issym and not skip_symlinks:
-                raise NotImplemented('extraction of symlinks with libarchive is not yet implemented.')
+                raise NotImplemented(
+                    'extraction of symlinks with libarchive is not yet implemented.')
             continue
 
         if TRACE:

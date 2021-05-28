@@ -230,7 +230,8 @@ def extract(location, target_dir, arch_type='*', file_by_file=on_mac, skip_symli
         location=abs_location,
         target_dir=abs_target_dir,
         arch_type=arch_type,
-        skip_symlinks=skip_symlinks)
+        skip_symlinks=skip_symlinks,
+    )
 
 
 def extract_all_files_at_once(location, target_dir, arch_type='*', skip_symlinks=True):
