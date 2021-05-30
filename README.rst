@@ -29,7 +29,6 @@ decompressor function. It can handle multi-level archives such as tar.gz and
 can extract recursively nested archives.
 
 
-
 Visit https://aboutcode.org and https://github.com/nexB/ for support and download.
 
 To set up the development environment::
@@ -110,7 +109,7 @@ ExtractCode will use these environment variables if set:
   shared library used to support some of the archive formats. If not provided,
   ExtractCode will look for a plugin-provided libarchive library path. See 
   https://github.com/nexB/scancode-plugins/tree/main/builtins for such plugins.
-  
+
   If no plugin contributes libarchive, then a final attempt is made to look for
   it in the PATH using standard DLL loading techniques.
 
@@ -118,7 +117,7 @@ ExtractCode will use these environment variables if set:
   some of the archive formats. If not provided, ExtractCode will look for a
   plugin-provided 7z executable path. See
   https://github.com/nexB/scancode-plugins/tree/main/builtins for such plugins.
-  
+
   If no plugin contributes 7z, then a final attempt is made to look for
   it in the PATH.
   
