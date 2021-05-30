@@ -242,7 +242,7 @@ def extract_all_files_at_once(location, target_dir, arch_type='*', skip_symlinks
     ex_args = build_7z_extract_command(
         location=location, target_dir=target_dir, arch_type=arch_type)
 
-    rc, stdout, stderr = command.execute2(**ex_args)
+    rc, stdout, stderr = command.execute(**ex_args)
 
     if rc != 0:
         if TRACE:
@@ -498,10 +498,9 @@ def list_entries(location, arch_type='*'):
 
     cmd_loc = get_command_location()
 
-    rc, stdout, stderr = command.execute2(
+    rc, stdout, stderr = command.execute(
         cmd_loc=cmd_loc,
         args=args,
-        lib_dir=lib_dir,
         env=timezone,
         to_files=True)
 
