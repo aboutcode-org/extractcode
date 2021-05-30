@@ -1,21 +1,10 @@
 #
-# Copyright (c) nexB Inc. and others.
-# SPDX-License-Identifier: Apache-2.0
-#
-# Visit https://aboutcode.org and https://github.com/nexB/ for support and download.
+# Copyright (c) nexB Inc. and others. All rights reserved.
 # ScanCode is a trademark of nexB Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
+# See http://www.apache.org/licenses/LICENSE-2.0 for the license text.
+# See https://github.com/nexB/extractcode for support or download.
+# See https://aboutcode.org for more information about nexB OSS projects.
 #
 
 import logging
@@ -66,18 +55,18 @@ kind_labels = {
 
 # note: we do not include special_package in all_kinds by default
 all_kinds = (
-    regular, 
-    regular_nested, 
-    package, 
-    file_system, 
-    docs, 
-    patches, 
+    regular,
+    regular_nested,
+    package,
+    file_system,
+    docs,
+    patches,
     special_package,
 )
 
 default_kinds = (
-    regular, 
-    regular_nested, 
+    regular,
+    regular_nested,
     package,
 )
 
