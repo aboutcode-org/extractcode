@@ -42,14 +42,17 @@ GUESTFISH_NOT_FOUND = (
     'WARNING: guestfish executable is not installed. '
     'Unable to extract virtual machine image: you need to install the '
     'guestfish tool from libguestfs and extra FS drivers if needed. '
-    'See the ExtractCode README.rst and https://libguestfs.org/ for details.'
+    'See the ExtractCode README.rst at '
+    'https://github.com/nexB/extractcode/blob/main/README.rst '
+    'and https://libguestfs.org/ for details.'
 )
 
 GUESTFISH_KERNEL_NOT_READABLE = (
 '''libguestfs requires the kernel executable to be readable.
 This is the case by default on most Linux distributions except on Ubuntu.
 Please follow the instructions in ExtractCode installation guide to make this happen.
-See the ExtractCode README.rst for details.
+See deatils in the ExtractCode README.rst at:
+https://github.com/nexB/extractcode/blob/main/README.rst '
 ''')
 
 EXTRACTCODE_GUESTFISH_PATH_ENVVAR = 'EXTRACTCODE_GUESTFISH_PATH'

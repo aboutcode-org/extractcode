@@ -64,6 +64,7 @@ file cannot be read as required by libguestfish.
 
 Run this command as a temporary and immediate fix::
 
+    sudo chmod 0644 /boot/vmlinuz-*
     for k in /boot/vmlinuz-*
         do sudo dpkg-statoverride --add --update root root 0644 /boot/vmlinuz-$k
     done
@@ -87,9 +88,9 @@ https://bugs.launchpad.net/ubuntu/+source/linux/+bug/759725/comments/3 ::
 
 2. Set executable permissions::
 
-    sudo chmod +x /etc/kernel/postinst.d/statoverride 
+    sudo chmod +x /etc/kernel/postinst.d/statoverride
 
-See also for a complete discussion:
+See also these links for a complete discussion:
 
     - https://bugs.launchpad.net/ubuntu/+source/linux/+bug/759725
     - https://bugzilla.redhat.com/show_bug.cgi?id=1670790
@@ -109,7 +110,6 @@ ExtractCode will use these environment variables if set:
   shared library used to support some of the archive formats. If not provided,
   ExtractCode will look for a plugin-provided libarchive library path. See 
   https://github.com/nexB/scancode-plugins/tree/main/builtins for such plugins.
-
   If no plugin contributes libarchive, then a final attempt is made to look for
   it in the PATH using standard DLL loading techniques.
 
@@ -117,7 +117,6 @@ ExtractCode will use these environment variables if set:
   some of the archive formats. If not provided, ExtractCode will look for a
   plugin-provided 7z executable path. See
   https://github.com/nexB/scancode-plugins/tree/main/builtins for such plugins.
-
   If no plugin contributes 7z, then a final attempt is made to look for
   it in the PATH.
   
