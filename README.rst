@@ -4,16 +4,16 @@ ExtractCode
 - license: Apache-2.0
 - copyright: copyright (c) nexB. Inc. and others
 - homepage_url: https://github.com/nexB/extractcode
-- keywords: archive, extraction, libarchive, 7zip, scancode-toolkit
+- keywords: archive, extraction, libarchive, 7zip, scancode-toolkit, extractcode
 
 
 ExtractCode is a universal archive extractor. It uses behind the scenes
 multiple tools such as:
 
-- the Python standard library, 
+- the Python standard library,
 - a custom ctypes binding to libarchive,
-- the 7zip command line
-- optionally libguestfs on Linux
+- the 7zip command line, and
+- optionally libguestfs on Linux.
 
 With these it is possible to extract a large number of common and
 
@@ -28,16 +28,83 @@ binding to libmagic) to select the most appropriate extractor or
 decompressor function. It can handle multi-level archives such as tar.gz and
 can extract recursively nested archives.
 
-
 Visit https://aboutcode.org and https://github.com/nexB/ for support and download.
+
+We run CI tests on:
+
+ - Azure pipelines https://dev.azure.com/nexB/extractcode/_build
+
+We run CI tests on:
+
+ - Azure pipelines https://dev.azure.com/nexB/extractcode/_build
+
+To install this package with its full capability (where the binaries for
+7zip and libarchive are installed), use the `full` option::
+
+    pip install extractcode[full]
+
+If you want to use the version of binaries (possibly) provided by your operating
+system, use the `minimal` option::
+
+    pip install extractcode
+
+In this case, you will need to provide a working libarchive and 7zip
+available in one of these ways:
+
+- **a typecode-libarchive and typecode-7z plugin**: See the standard ones at 
+  https://github.com/nexB/scancode-plugins/tree/main/builtins
+  These can either bundle a libarchive library, a 7z executable or expose a
+  system-installed libraries.
+  It does so by providing plugin entry points as ``scancode_location_provider``
+  for ``extractcode_libarchive`` that should point to a ``LocationProviderPlugin``
+  subclass with a ``get_locations()`` method that must return a mapping with this key:
+
+    - 'extractcode.libarchive.dll': the absolute path to a libarchive DLL
+
+  See for example:
+
+    - https://github.com/nexB/scancode-plugins/blob/4da5fe8a5ab1c87b9b4af9e54d7ad60e289747f5/builtins/extractcode_libarchive-linux/setup.py#L40
+    - https://github.com/nexB/scancode-plugins/blob/4da5fe8a5ab1c87b9b4af9e54d7ad60e289747f5/builtins/extractcode_libarchive-linux/src/extractcode_libarchive/__init__.py#L17
+
+  And the ``scancode_location_provider`` for ``extractcode_7zip`` should point
+  to a ``LocationProviderPlugin`` subclass with a ``get_locations()`` method that must
+  return a mapping with this key:
+
+    - 'extractcode.sevenzip.exe': the absolute path to a 7zip executable
+
+  See for example:
+
+    - https://github.com/nexB/scancode-plugins/blob/4da5fe8a5ab1c87b9b4af9e54d7ad60e289747f5/builtins/extractcode_7z-linux/setup.py#L40
+    - https://github.com/nexB/scancode-plugins/blob/4da5fe8a5ab1c87b9b4af9e54d7ad60e289747f5/builtins/extractcode_7z-linux/src/extractcode_7z/__init__.py#L18
+
+- **environment variables**:
+
+    - EXTRACTCODE_LIBARCHIVE_PATH: the absolute path to a libarchive DLL
+    - EXTRACTCODE_7Z_PATH: the absolute path to a 7zip executable
+
+
+- **a system-installed libarchive and 7zip executable in the system PATH**:
+
+
+The supported  versions are:
+
+- libarchive  3.5.x
+- 7zip 16.5.x
+
+
+Development
+-----------
+
 
 To set up the development environment::
 
     source configure
 
+
 To run unit tests::
 
     pytest -vvs -n 2
+
 
 To clean up development environment::
 
