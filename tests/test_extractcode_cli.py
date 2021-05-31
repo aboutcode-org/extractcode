@@ -70,13 +70,17 @@ def test_extractcode_command_does_extract_verbose():
     result = run_extract(['--verbose', test_dir], expected_rc=1)
 
     assert os.path.exists(os.path.join(test_dir, 'some.tar.gz-extract'))
-    assert 'Extracting archives...' in result.stderr
-    assert 'some.tar.gz' in result.stdout
-    assert 'broken.tar.gz' in result.stderr
-    assert 'tarred_gzipped.tgz' in result.stdout
-    assert 'ERROR extracting' in result.stderr
-    assert "broken.tar.gz: Unrecognized archive format" in result.stderr
-    assert 'Extracting done.' in result.stderr
+    try:
+        assert 'some.tar.gz' in result.stdout
+        assert 'tarred_gzipped.tgz' in result.stdout
+
+        assert 'Extracting archives...' in result.stderr
+        assert 'ERROR extracting' in result.stderr
+        assert 'broken.tar.gz' in result.stderr
+        assert "broken.tar.gz: Unrecognized archive format" in result.stderr
+        assert 'Extracting done.' in result.stderr
+    except:
+        assert [result.stderr, result.stdout] == []
 
 
 def test_extractcode_command_always_shows_something_if_not_using_a_tty_verbose_or_not():
