@@ -16,8 +16,8 @@ import warnings
 import attr
 
 from commoncode import fileutils
-from commoncode.text import as_unicode
 from commoncode.system import on_linux
+from commoncode.text import as_unicode
 
 from extractcode import ExtractErrorFailedToExtract
 
