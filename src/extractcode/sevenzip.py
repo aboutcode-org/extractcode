@@ -7,12 +7,16 @@
 # See https://aboutcode.org for more information about nexB OSS projects.
 #
 
-from collections import defaultdict
 import io
 import logging
 import os
 import pprint
 import re
+import warnings
+
+from collections import defaultdict
+from shlex import quote as shlex_quote
+from shutil import which
 
 import attr
 
@@ -27,8 +31,6 @@ from commoncode.system import on_windows
 import extractcode
 from extractcode import ExtractErrorFailedToExtract
 from extractcode import ExtractWarningIncorrectEntry
-
-from shlex import quote as shlex_quote
 
 """
 Low level support for p/7zip-based archive extraction.
@@ -86,12 +88,23 @@ def get_command_location(_cache=[]):
         cmd = '7z.exe' if on_windows else '7z'
         cmd_loc = command.find_in_path(cmd)
 
+        if not cmd_loc:
+            cmd_loc = which(cmd)
+
+        if cmd_loc:
+            warnings.warn(
+                'Using "7z" 7zip command found in the PATH. '
+                'Install instead a extractcode-7z plugin for best support.'
+            )
+
     if not cmd_loc or not os.path.isfile(cmd_loc):
         raise Exception(
             'CRITICAL: 7zip executable is not installed. '
             'Unable to continue: you need to install a valid extractcode-7z '
             'plugin with a valid executable available. '
-            'OR set the EXTRACTCODE_7ZIP_PATH environment variable.'
+            f'OR set the {EXTRACTCODE_7ZIP_PATH_ENVVAR} environment variable. '
+            'OR install 7zip as a system package. '
+            'OR ensure 7zip is available in the system PATH.'
     )
     _cache.append(cmd_loc)
     return cmd_loc

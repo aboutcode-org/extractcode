@@ -12,7 +12,9 @@ import locale
 import logging
 import mmap
 import os
+import warnings
 
+import ctypes.util
 from ctypes import c_char_p, c_wchar_p
 from ctypes import c_int, c_longlong
 from ctypes import c_size_t, c_ssize_t
@@ -77,6 +79,8 @@ EXTRACTCODE_LIBARCHIVE_DLL = 'extractcode.libarchive.dll'
 
 EXTRACTCODE_LIBARCHIVE_PATH_ENVVAR = 'EXTRACTCODE_LIBARCHIVE_PATH'
 
+_LIBRARY_NAME = 'libarchive'
+
 
 def load_lib():
     """
@@ -95,17 +99,35 @@ def load_lib():
     if not dll_loc:
         dll_loc = get_location(EXTRACTCODE_LIBARCHIVE_DLL)
 
+    # try the standard locations with find_library
+    if not dll_loc:
+        libarch_loc = ctypes.util.find_library(_LIBRARY_NAME)
+        libarchive = ctypes.cdll.LoadLibrary(libarch_loc)
+        if libarchive:
+            warnings.warn(
+                'Using "libarchive" library found in a system location. '
+                'Install instead a extractcode-libarchive plugin for best support.'
+            )
+            return libarchive
+
     # try the PATH
     if not dll_loc:
         dll = 'libarchive.dll' if on_windows else 'libarchive.so'
         dll_loc = command.find_in_path(dll)
+        if dll_loc:
+            warnings.warn(
+                'Using "libarchive" library found in the PATH. '
+                'Install instead a extractcode-libarchive plugin for best support.'
+            )
 
     if not dll_loc or not os.path.isfile(dll_loc):
         raise Exception(
             'CRITICAL: libarchive DLL is not installed. '
             'Unable to continue: you need to install a valid extractcode-libarchive '
             'plugin with a valid libarchive DLL available. '
-            f'OR set the {EXTRACTCODE_LIBARCHIVE_PATH_ENVVAR} environment variable.'
+            f'OR set the {EXTRACTCODE_LIBARCHIVE_PATH_ENVVAR} environment variable. '
+            'OR install libarchive as a system package. '
+            'OR ensure libarchive is available in the system PATH.'
     )
     return command.load_shared_library(dll_loc)
 
