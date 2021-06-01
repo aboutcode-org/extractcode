@@ -1,22 +1,10 @@
-
 #
-# Copyright (c) nexB Inc. and others.
-# SPDX-License-Identifier: Apache-2.0
-#
-# Visit https://aboutcode.org and https://github.com/nexB/ for support and download.
+# Copyright (c) nexB Inc. and others. All rights reserved.
 # ScanCode is a trademark of nexB Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
+# See http://www.apache.org/licenses/LICENSE-2.0 for the license text.
+# See https://github.com/nexB/extractcode for support or download.
+# See https://aboutcode.org for more information about nexB OSS projects.
 #
 
 import os
@@ -44,6 +32,8 @@ def run_extract(options, expected_rc=None, cwd=None):
     Run extractcode as a plain subprocess. Return rc, stdout, stderr.
     """
     bin_dir = 'Scripts' if on_windows else 'bin'
+    # note: this assumes that we are using a standard directory layout as set
+    # with the configure script
     cmd_loc = os.path.join(project_root, 'tmp', bin_dir, 'extractcode')
     assert os.path.exists(cmd_loc + ('.exe' if on_windows else ''))
     args = [cmd_loc] + options
@@ -82,13 +72,17 @@ def test_extractcode_command_does_extract_verbose():
     result = run_extract(['--verbose', test_dir], expected_rc=1)
 
     assert os.path.exists(os.path.join(test_dir, 'some.tar.gz-extract'))
-    assert 'Extracting archives...' in result.stderr
-    assert 'some.tar.gz' in result.stdout
-    assert 'broken.tar.gz' in result.stderr
-    assert 'tarred_gzipped.tgz' in result.stdout
-    assert 'ERROR extracting' in result.stderr
-    assert "broken.tar.gz: Unrecognized archive format" in result.stderr
-    assert 'Extracting done.' in result.stderr
+    try:
+        assert 'some.tar.gz' in result.stdout
+        assert 'tarred_gzipped.tgz' in result.stdout
+
+        assert 'Extracting archives...' in result.stderr
+        assert 'ERROR extracting' in result.stderr
+        assert 'broken.tar.gz' in result.stderr
+        assert "broken.tar.gz: Unrecognized archive format" in result.stderr
+        assert 'Extracting done.' in result.stderr
+    except:
+        assert [result.stderr, result.stdout] == []
 
 
 def test_extractcode_command_always_shows_something_if_not_using_a_tty_verbose_or_not():

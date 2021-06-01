@@ -1,25 +1,15 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) nexB Inc. and others.
-# SPDX-License-Identifier: Apache-2.0
-#
-# Visit https://aboutcode.org and https://github.com/nexB/ for support and download.
+# Copyright (c) nexB Inc. and others. All rights reserved.
 # ScanCode is a trademark of nexB Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
+# See http://www.apache.org/licenses/LICENSE-2.0 for the license text.
+# See https://github.com/nexB/extractcode for support or download.
+# See https://aboutcode.org for more information about nexB OSS projects.
 #
 
 import os
+from pathlib import Path
 
 import pytest
 
@@ -58,6 +48,7 @@ For each archive type --when possible-- we are testing extraction of:
 """
 
 project_root = os.path.dirname(os.path.dirname(__file__))
+
 
 class TestGetExtractorTest(BaseArchiveTestCase):
 
@@ -215,6 +206,18 @@ class TestGetExtractorTest(BaseArchiveTestCase):
         expected = []
         self.check_get_extractors(test_file, expected, kinds=extractcode.default_kinds)
 
+    def test_get_extractor_qcow2(self):
+        test_file = self.extract_test_tar('vmimage/foobar.qcow2.tar.gz')
+        test_file = str(Path(test_file) / 'foobar.qcow2')
+
+        expected = []
+        self.check_get_extractors(test_file, expected, kinds=extractcode.default_kinds)
+
+        expected = [archive.extract_vm_image]
+        self.check_get_extractors(test_file, expected, kinds=())
+        self.check_get_extractors(test_file, expected, kinds=(extractcode.file_system,))
+        self.check_get_extractors(test_file, expected, kinds=extractcode.all_kinds)
+
     def test_get_extractor_for_dia(self):
         test_file = self.get_test_loc('archive/dia/dia.dia', copy=True)
 
@@ -294,7 +297,7 @@ class TestGetExtractorTest(BaseArchiveTestCase):
         from extractcode.sevenzip import extract
 
         test_file = self.get_test_loc('archive/relative_path/basic.zip', copy=True)
-        
+
         project_tmp = join(project_root, 'tmp')
         fileutils.create_dir(project_tmp)
         project_root_abs = abspath(project_root)
@@ -2209,12 +2212,16 @@ class TestZstd(BaseArchiveTestCase):
 class ExtractArchiveWithIllegalFilenamesTestCase(BaseArchiveTestCase):
 
     def check_extract_weird_names(
-            self, test_function, test_file, expected_suffix,
-            expected_warnings=None,
-            expected_exception=None,
-            check_warnings=True, check_only_warnings=False,
-            regen=False,
-            ):
+        self,
+        test_function,
+        test_file,
+        expected_suffix,
+        expected_warnings=None,
+        expected_exception=None,
+        check_warnings=True,
+        check_only_warnings=False,
+        regen=False,
+    ):
         """
         Run the extraction `test_function` on `test_file` checking that the paths
         listed in the `test_file.excepted` file exist in the extracted target

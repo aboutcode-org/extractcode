@@ -1,29 +1,21 @@
 #
-# Copyright (c) nexB Inc. and others.
-# SPDX-License-Identifier: Apache-2.0
-#
-# Visit https://aboutcode.org and https://github.com/nexB/ for support and download.
+# Copyright (c) nexB Inc. and others. All rights reserved.
 # ScanCode is a trademark of nexB Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
+# See http://www.apache.org/licenses/LICENSE-2.0 for the license text.
+# See https://github.com/nexB/extractcode for support or download.
+# See https://aboutcode.org for more information about nexB OSS projects.
 #
 
-from collections import defaultdict
 import io
 import logging
 import os
 import pprint
 import re
+import warnings
+
+from collections import defaultdict
+from shlex import quote as shlex_quote
 from shutil import which
 
 import attr
@@ -40,8 +32,6 @@ import extractcode
 from extractcode import ExtractErrorFailedToExtract
 from extractcode import ExtractWarningIncorrectEntry
 
-from shlex import quote as shlex_quote
-
 """
 Low level support for p/7zip-based archive extraction.
 """
@@ -57,9 +47,10 @@ if TRACE or TRACE_DEEP or TRACE_ENTRIES:
     logging.basicConfig(stream=sys.stdout)
     logger.setLevel(logging.DEBUG)
 
-# keys for plugin-provided locations
-EXTRACTCODE_7ZIP_LIBDIR = 'extractcode.sevenzip.libdir'
+# key of a plugin-provided location
 EXTRACTCODE_7ZIP_EXE = 'extractcode.sevenzip.exe'
+
+EXTRACTCODE_7ZIP_PATH_ENVVAR = 'EXTRACTCODE_7Z_PATH'
 
 sevenzip_errors = [
     ('unsupported method', 'Unsupported archive or broken archive'),
@@ -72,27 +63,51 @@ sevenzip_errors = [
 UNKNOWN_ERROR = 'Unknown extraction error'
 
 
-def get_bin_locations():
+def get_command_location(_cache=[]):
     """
-    Return a tuple of (lib_dir, cmd_loc) for 7zip loaded from plugin-provided path.
+    Return the location of a 7zip loaded from either:
+    - an environment variable ``EXTRACTCODE_7Z_PATH``,
+    - a plugin-provided path,
+    - the system PATH.
+    Raise an Exception if no 7Zip command can be found.
     """
+    if _cache:
+        return _cache[0]
+
     from plugincode.location_provider import get_location
 
-    cmd_loc = get_location(EXTRACTCODE_7ZIP_EXE)
-    libdir = get_location(EXTRACTCODE_7ZIP_LIBDIR)
-    if not (cmd_loc and libdir) or not os.path.isfile(cmd_loc) or not os.path.isdir(libdir):
-        sevenzip = which('7z')
-        if not sevenzip:
-            raise ImportError(
-                'CRITICAL: 7zip executable is not installed. '
-                'Unable to continue: you need to install a valid extractcode-7z '
-                'plugin with a valid executable available '
-                'or install p7zip in your system, so that a "7z" program is available on your PATH'
-            )
-        logger.warning('Cannot to use plugin for libarchive, defaulting to system binary at ' + sevenzip)
-        return '', sevenzip
+    # try the environment first
+    cmd_loc = os.environ.get(EXTRACTCODE_7ZIP_PATH_ENVVAR)
 
-    return libdir, cmd_loc
+    # try a plugin-provided path second
+    if not cmd_loc:
+        cmd_loc = get_location(EXTRACTCODE_7ZIP_EXE)
+
+    # try the PATH
+    if not cmd_loc:
+        cmd = '7z.exe' if on_windows else '7z'
+        cmd_loc = command.find_in_path(cmd)
+
+        if not cmd_loc:
+            cmd_loc = which(cmd)
+
+        if cmd_loc:
+            warnings.warn(
+                'Using "7z" 7zip command found in the PATH. '
+                'Install instead a extractcode-7z plugin for best support.'
+            )
+
+    if not cmd_loc or not os.path.isfile(cmd_loc):
+        raise Exception(
+            'CRITICAL: 7zip executable is not installed. '
+            'Unable to continue: you need to install a valid extractcode-7z '
+            'plugin with a valid executable available. '
+            f'OR set the {EXTRACTCODE_7ZIP_PATH_ENVVAR} environment variable. '
+            'OR install 7zip as a system package. '
+            'OR ensure 7zip is available in the system PATH.'
+    )
+    _cache.append(cmd_loc)
+    return cmd_loc
 
 
 def get_7z_errors(stdout, stderr):
@@ -133,8 +148,8 @@ def get_7z_errors(stdout, stderr):
 
 def get_7z_warnings(stdout):
     """
-    Return a mapping of {path: warning_message} of 7zip warnings extracted from a
-    `stdout` text.
+    Return a mapping of {path: warning_message} of 7zip warnings extracted from
+    a `stdout` text.
     """
     # FIXME: we should use only one pass over stdout for errors and warnings
     cannot_open = 'can not open output file'
@@ -163,6 +178,7 @@ def convert_warnings_to_list(warnings):
 def list_extracted_7z_files(stdout):
     """
     List all files extracted by 7zip based on the stdout analysis.
+
     Based on 7zip Client7z.cpp:
         static const char *kExtractingString =  "Extracting  ";
     """
@@ -182,54 +198,69 @@ def is_rar(location):
     return T.filetype_file.lower().startswith('rar archive')
 
 
-def extract(location, target_dir, arch_type='*', file_by_file=on_mac, skip_symlinks=True):
+def extract(
+    location,
+    target_dir,
+    arch_type='*',
+    file_by_file=on_mac,
+    skip_symlinks=True,
+):
     """
-    Extract all files from a 7zip-supported archive file at location in the
-    target_dir directory. `skip_symlinks` by default.
-    Return a list of warning messages.
-    Raise exception on errors.
+    Extract all files from a 7zip-supported archive file at ``location`` in the
+    ``target_dir`` directory. ``skip_symlinks`` by default.
 
-    The extraction will either be done all-files-at-once (default on most OSes)
-    or one-file-at-a-time after collecting a directory listing (for some
-    problematic OSes such as recent macOS)
+    Return a list of warning messages. Raise exception on errors.
 
-    `arch_type` is the type of 7zip archive passed to the -t 7zip option. Can be
-    None.
+    ``arch_type`` is the type of 7zip archive passed to the -t 7zip option. Can
+    be None.
+
+    Based on ``file_by_file`` the extraction will either be done all-files-at-
+    once (default on most OSes) or one-file-at-a-time after collecting a
+    directory listing (for some problematic OSes such as recent macOS)
     """
     assert location
     abs_location = os.path.abspath(os.path.expanduser(location))
     if not os.path.exists(abs_location):
         raise ExtractErrorFailedToExtract(
-            'The system cannot find the path specified: {}'.format(repr(abs_location)))
+            f'The system cannot find the path specified: {abs_location}')
 
     if is_rar(location):
         raise ExtractErrorFailedToExtract(
-            'RAR extraction disactivated: {}'.format(repr(location)))
+            f'RAR extraction deactivated: {location}')
 
     assert target_dir
     abs_target_dir = os.path.abspath(os.path.expanduser(target_dir))
     if not os.path.exists(abs_target_dir):
         raise ExtractErrorFailedToExtract(
-            'The system cannot find the target path specified: {}'.format(repr(target_dir)))
+            f'The system cannot find the target path specified: {target_dir}')
 
-    extractor = extract_file_by_file if file_by_file else extract_all_files_at_once
+    if file_by_file:
+        extractor = extract_file_by_file
+    else:
+        extractor = extract_all_files_at_once
+
     return extractor(
         location=abs_location,
         target_dir=abs_target_dir,
         arch_type=arch_type,
-        skip_symlinks=skip_symlinks)
+        skip_symlinks=skip_symlinks,
+    )
 
 
-def extract_all_files_at_once(location, target_dir, arch_type='*', skip_symlinks=True):
+def extract_all_files_at_once(
+    location,
+    target_dir,
+    arch_type='*',
+    skip_symlinks=True,
+):
     """
-    Extract all files from a 7zip-supported archive file at `location` in the
-    `target_dir` directory.
+    Extract all files from a 7zip-supported archive file at ``location`` in the
+    ``target_dir`` directory.
 
-    Return a list of warning messages.
-    Raise exception on errors.
+    Return a list of warning messages. Raise exception on errors.
 
-    `arch_type` is the type of 7zip archive passed to the -t 7zip option. Can be
-    None.
+    ``arch_type`` is the type of 7zip archive passed to the -t 7zip option. Can
+    be None.
     """
     abs_location = os.path.abspath(os.path.expanduser(location))
     abs_target_dir = os.path.abspath(os.path.expanduser(target_dir))
@@ -239,7 +270,7 @@ def extract_all_files_at_once(location, target_dir, arch_type='*', skip_symlinks
     ex_args = build_7z_extract_command(
         location=location, target_dir=target_dir, arch_type=arch_type)
 
-    rc, stdout, stderr = command.execute2(**ex_args)
+    rc, stdout, stderr = command.execute(**ex_args)
 
     if rc != 0:
         if TRACE:
@@ -254,13 +285,18 @@ def extract_all_files_at_once(location, target_dir, arch_type='*', skip_symlinks
     return convert_warnings_to_list(get_7z_warnings(stdout))
 
 
-def build_7z_extract_command(location, target_dir, single_entry=None, arch_type='*'):
+def build_7z_extract_command(
+    location,
+    target_dir,
+    single_entry=None,
+    arch_type='*',
+):
     """
     Return a mapping of 7z command line aguments to extract the archive at
-    `location` to `target_dir`.
+    ``location`` to ``target_dir``.
 
-    If `single_entry` contains an Entry, provide the command to extract only
-    that single entry "path" in the current directory without any leading path.
+    If ``single_entry`` contains an Entry, return the command to extract only
+    this single entry "path" in the current directory without any leading path.
     """
 
     # 7z arguments
@@ -281,7 +317,8 @@ def build_7z_extract_command(location, target_dir, single_entry=None, arch_type=
     # pass an empty password  so that extraction with passwords WILL fail
     password = '-p'
 
-    # renaming may not behave the same way on all OSes in particular Mac and Windows
+    # renaming may not behave the same way on all OSes in particular Mac and
+    # Windows
     auto_rename_dupe_names = '-aou'
 
     # Ensure that we treat the FS as case insensitive if that's what it is
@@ -300,13 +337,14 @@ def build_7z_extract_command(location, target_dir, single_entry=None, arch_type=
     #   output_as_utf = '-sccUTF-8'
     #   working_tmp_dir = '-w<path>'
 
-    # NB: we force running in the GMT timezone, because 7z is unable to set
-    # the TZ correctly when the archive does not contain TZ info. This does
-    # not work on Windows, because 7z is not using the TZ env var there.
+    # NB: we force running in the GMT timezone, because 7z is unable to set the
+    # TZ correctly when the archive does not contain TZ info. This does not work
+    # on Windows, because 7z is not using the TZ env var there.
     timezone = dict(os.environ)
     timezone.update({u'TZ': u'GMT'})
     timezone = command.get_env(timezone)
-    # Note: 7z does extract in the current directory so we cwd to the target dir first
+    # Note: 7z does extract in the current directory so we cwd to the target dir
+    # first
     args = [
         extract,
         yes_to_all,
@@ -321,12 +359,11 @@ def build_7z_extract_command(location, target_dir, single_entry=None, arch_type=
     if single_entry:
         args += [shlex_quote(single_entry.path)]
 
-    lib_dir, cmd_loc = get_bin_locations()
+    cmd_loc = get_command_location()
 
     ex_args = dict(
         cmd_loc=cmd_loc,
         args=args,
-        lib_dir=lib_dir,
         cwd=target_dir,
         env=timezone,
     )
@@ -338,15 +375,20 @@ def build_7z_extract_command(location, target_dir, single_entry=None, arch_type=
     return ex_args
 
 
-def extract_file_by_file(location, target_dir, arch_type='*', skip_symlinks=True):
+def extract_file_by_file(
+    location,
+    target_dir,
+    arch_type='*',
+    skip_symlinks=True,
+):
     """
     Extract all files using a one-by-one process from a 7zip-supported archive
-    file at location in the `target_dir` directory.
+    file at ``location`` in the ``target_dir`` directory.
 
     Return a list of warning messages if any or an empty list.
     Raise exception on errors.
 
-    `arch_type` is the type of 7zip archive passed to the -t 7zip option.
+    ``arch_type`` is the type of 7zip archive passed to the -t 7zip option.
     Can be None.
     """
     abs_location = os.path.abspath(os.path.expanduser(location))
@@ -393,7 +435,7 @@ def extract_file_by_file(location, target_dir, arch_type='*', skip_symlinks=True
             single_entry=entry,
             arch_type=arch_type,
         )
-        rc, stdout, stderr = command.execute2(**ex_args)
+        rc, stdout, stderr = command.execute(**ex_args)
 
         error = get_7z_errors(stdout, stderr)
         if error or rc != 0:
@@ -414,7 +456,8 @@ def extract_file_by_file(location, target_dir, arch_type='*', skip_symlinks=True
             else:
                 warnings[entry.path] = wmsg
 
-        # finally move that extracted file to its target location, possibly renamed
+        # finally move that extracted file to its target location, possibly
+        # renamed
         source_file_name = fileutils.file_name(entry.path)
         source_file_loc = os.path.join(tmp_extract_dir, source_file_name)
         if not os.path.exists(source_file_loc):
@@ -449,10 +492,10 @@ def extract_file_by_file(location, target_dir, arch_type='*', skip_symlinks=True
 
 def list_entries(location, arch_type='*'):
     """
-    Return a tuple of (iterator of Entry, error_messages). The generator contains
-    each entry found in a 7zip-supported archive file at `location`. Use the
-    provided 7zip `arch_type` CLI archive type code (e.g. with the "-t* 7z" cli
-    type option) (can be None).
+    Return a tuple of (iterator of Entry, error_messages). The generator
+    contains each entry found in a 7zip-supported archive file at `location`.
+    Use the provided 7zip `arch_type` CLI archive type code (e.g. with the "-t*
+    7z" cli type option) (can be None).
     """
     assert location
     abs_location = os.path.abspath(os.path.expanduser(location))
@@ -477,9 +520,9 @@ def list_entries(location, arch_type='*'):
     if on_windows:
         output_as_utf = '-sccUTF-8'
 
-    # NB: we force running in the GMT timezone, because 7z is unable to set
-    # the TZ correctly when the archive does not contain TZ info. This does
-    # not work on Windows, because 7z is not using the TZ env var there.
+    # NB: we force running in the GMT timezone, because 7z is unable to set the
+    # TZ correctly when the archive does not contain TZ info. This does not work
+    # on Windows, because 7z is not using the TZ env var there.
     timezone = dict(os.environ)
     timezone.update({u'TZ': u'GMT'})
     timezone = command.get_env(timezone)
@@ -494,12 +537,11 @@ def list_entries(location, arch_type='*'):
         abs_location,
     ]
 
-    lib_dir, cmd_loc = get_bin_locations()
+    cmd_loc = get_command_location()
 
-    rc, stdout, stderr = command.execute2(
+    rc, stdout, stderr = command.execute(
         cmd_loc=cmd_loc,
         args=args,
-        lib_dir=lib_dir,
         env=timezone,
         to_files=True)
 
@@ -513,48 +555,46 @@ def list_entries(location, arch_type='*'):
     if rc != 0:
         error_messages = get_7z_errors(stdout, stderr) or UNKNOWN_ERROR
 
-    # the listing was produced as UTF on windows to avoid damaging binary
-    # paths in console outputs
-    utf = bool(output_as_utf)
-
-    return parse_7z_listing(stdout, utf), error_messages
+    return parse_7z_listing(stdout), error_messages
 
 
-def parse_7z_listing(location, utf=False):
+def parse_7z_listing(location):
     """
     Return a list Entry objects from parsing a long format 7zip listing from a
     file at `location`.
 
-    If `utf` is True or if on Python 3, the console output will treated as
-    utf-8-encoded text. Otherwise it is treated as bytes.
-
     The 7zip -slt format looks like this:
 
     1. a header with:
+    -----------------
     - copyright and version details
     - '--' line
-        - archive header info, varying based on the archive types and subtype
-              - lines of key=value pairs
-              - ERRORS: followed by one or more message lines
-              - WARNINGS: followed by one or more message lines
+      - archive header info, varying based on the archive types and subtype
+        - lines of key=value pairs
+        - ERRORS: followed by one or more message lines
+        - WARNINGS: followed by one or more message lines
     - blank line
 
     2. blocks of path aka. entry data, one for each path with:
+    ----------------------------------------------------------
 
     - '----------' line once as the indicator of path blocks starting
     - for each archive member:
       - lines of either
-          - key = value pairs, with a possible twist that the Path may
-            contain a line return since a filename may. The first key is the Path.
-          - Errors: followed by one or more message lines
-          - Warnings: followed by one or more message lines
-          - Open Warning: : followed by one or more message lines
+        - key = value pairs, with a possible twist that the Path may
+          contain a line return since a filename may. The first key is the
+          Path.
+        - Errors: followed by one or more message lines
+        - Warnings: followed by one or more message lines
+        - Open Warning: : followed by one or more message lines
       - blank line
 
     3. a footer
+    -----------
+
     - blank line
-    - footer sometimes with lines with summary stats
-        such as Warnings: 1 Errors: 1
+    - footer sometimes with lines with summary stats such as:
+      Warnings: 1 Errors: 1
     - a line with two or more dashes or an empty line
 
     We ignore the header and footer in a listing.
@@ -588,7 +628,10 @@ def parse_7z_listing(location, utf=False):
     # then we have a global footer
     two_empty_lines = '\n\n'
     path_key = 'Path'
-    path_blocks = [pb for pb in paths.split(two_empty_lines) if pb and path_key in pb]
+    path_blocks = [
+        pb for pb in paths.split(two_empty_lines)
+        if pb and path_key in pb
+    ]
 
     key_value_sep = '='
 
@@ -596,12 +639,19 @@ def parse_7z_listing(location, utf=False):
 
     for path_block in path_blocks:
         # we ignore empty lines as well as lines that do not contain a key
-        lines = [line.strip() for line in path_block.splitlines(False) if line.strip()]
+        lines = [
+            line.strip() for line in path_block.splitlines(False)
+            if line.strip()
+        ]
         if not lines:
             continue
         # we have a weird case of path with line returns in the file name
         # we concatenate these in the first Path line
-        while len(lines) > 1 and lines[0].startswith(path_key) and key_value_sep not in lines[1]:
+        while (
+            len(lines) > 1
+            and lines[0].startswith(path_key)
+            and key_value_sep not in lines[1]
+        ):
             first_line = lines[0]
             second_line = lines.pop(1)
             first_line = '\n'.join([first_line, second_line])
@@ -610,7 +660,10 @@ def parse_7z_listing(location, utf=False):
         dangling_lines = [line  for line in lines if key_value_sep not in line]
         entry_errors = []
         if dangling_lines:
-            emsg = 'Invalid 7z listing path block missing "=" as key/value separator: {}'.format(repr(path_block))
+            emsg = (
+                'Invalid 7z listing path block missing "=" as key/value '
+                'separator: {}'.format(repr(path_block))
+            )
             entry_errors.append(emsg)
 
         entry_attributes = {}
@@ -621,7 +674,8 @@ def parse_7z_listing(location, utf=False):
             v = v.strip()
             entry_attributes[k] = v
 
-        entries.append(Entry.from_dict(infos=entry_attributes, errors=entry_errors))
+        ntry = Entry.from_dict(infos=entry_attributes, errors=entry_errors)
+        entries.append(ntry)
 
     if TRACE_ENTRIES:
         logger.debug('parse_7z_listing: entries# {}\n'.format(len(entries)))
@@ -670,7 +724,8 @@ class Entry(object):
     @classmethod
     def from_dict(cls, infos, errors=None):
         """
-        Return an Entry built from a 7zip path listing data in the `infos` mapping.
+        Return an Entry built from a 7zip path listing data in the `infos`
+        mapping.
         """
         is_symlink = False
         is_hardlink = False

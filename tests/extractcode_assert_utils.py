@@ -1,22 +1,10 @@
-
 #
-# Copyright (c) nexB Inc. and others.
-# SPDX-License-Identifier: Apache-2.0
-#
-# Visit https://aboutcode.org and https://github.com/nexB/ for support and download.
+# Copyright (c) nexB Inc. and others. All rights reserved.
 # ScanCode is a trademark of nexB Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
+# See http://www.apache.org/licenses/LICENSE-2.0 for the license text.
+# See https://github.com/nexB/extractcode for support or download.
+# See https://aboutcode.org for more information about nexB OSS projects.
 #
 
 import json
@@ -116,11 +104,11 @@ def check_no_error(result):
 
 def is_posixpath(location):
     """
-    Return True if the `location` path is likely a POSIX-like path using POSIX path
-    separators (slash or "/")or has no path separator.
+    Return True if the `location` path is likely a POSIX-like path using POSIX
+    path separators (slash or "/")or has no path separator.
 
-    Return False if the `location` path is likely a Windows-like path using backslash
-    as path separators (e.g. "\").
+    Return False if the `location` path is likely a Windows-like path using
+    backslash as path separators (e.g. "\").
     """
     has_slashes = '/' in location
     has_backslashes = '\\' in location
@@ -140,10 +128,11 @@ def is_posixpath(location):
 
 def to_posix(path):
     """
-    Return a path using the posix path separator given a path that may contain posix
-    or windows separators, converting \\ to /. NB: this path will still be valid in
-    the windows explorer (except as a UNC or share name). It will be a valid path
-    everywhere in Python. It will not be valid for windows command line operations.
+    Return a path using the posix path separator given a path that may contain
+    posix or windows separators, converting \\ to /. NB: this path will still be
+    valid in the windows explorer (except as a UNC or share name). It will be a
+    valid path everywhere in Python. It will not be valid for windows command
+    line operations.
     """
     is_unicode = isinstance(path, str)
     ntpath_sep = is_unicode and u'\\' or '\\'
@@ -193,7 +182,14 @@ class BaseArchiveTestCase(FileBasedTesting):
                 excName = str(excClass)
             raise self.failureException('%s not raised' % excName)
 
-    def check_extract(self, test_function, test_file, expected, expected_warnings=None, check_all=False):
+    def check_extract(
+        self,
+        test_function,
+        test_file,
+        expected,
+        expected_warnings=None,
+        check_all=False,
+    ):
         """
         Run the extraction `test_function` on `test_file` checking that a map of
         expected paths --> size exist in the extracted target directory.
@@ -209,8 +205,14 @@ class BaseArchiveTestCase(FileBasedTesting):
 
         if check_all:
             len_test_dir = len(test_dir)
-            extracted = {path[len_test_dir:]: filetype.get_size(path) for path in fileutils.resource_iter(test_dir, with_dirs=False)}
-            expected = {os.path.join(test_dir, exp_path): exp_size for exp_path, exp_size in expected.items()}
+            extracted = {
+                path[len_test_dir:]: filetype.get_size(path)
+                for path in fileutils.resource_iter(test_dir, with_dirs=False)
+            }
+            expected = {
+                os.path.join(test_dir, exp_path): exp_size
+                for exp_path, exp_size in expected.items()
+            }
             assert sorted(expected.items()) == sorted(extracted.items())
         else:
             for exp_path, exp_size in expected.items():
@@ -248,9 +250,10 @@ class BaseArchiveTestCase(FileBasedTesting):
         except Exception as e:
             if text not in str(e):
                 raise self.failureException(
-                       'Exception %(e)r raised, '
-                       'it should contain the text %(text)r '
-                       'and does not' % locals())
+                    'Exception %(e)r raised, '
+                    'it should contain the text %(text)r '
+                    'and does not' % locals()
+                )
         else:
             raise self.failureException(
                    'Exception containing %(text)r not raised' % locals())

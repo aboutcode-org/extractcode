@@ -1,22 +1,10 @@
-
 #
-# Copyright (c) nexB Inc. and others.
-# SPDX-License-Identifier: Apache-2.0
-#
-# Visit https://aboutcode.org and https://github.com/nexB/ for support and download.
+# Copyright (c) nexB Inc. and others. All rights reserved.
 # ScanCode is a trademark of nexB Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
+# See http://www.apache.org/licenses/LICENSE-2.0 for the license text.
+# See https://github.com/nexB/extractcode for support or download.
+# See https://aboutcode.org for more information about nexB OSS projects.
 #
 
 import os
@@ -96,26 +84,85 @@ Try 'extractcode --help' for help on options and arguments.'''
 @click.command(name='extractcode', epilog=epilog_text, cls=ExtractCommand)
 @click.pass_context
 
-@click.argument('input', metavar='<input>', type=click.Path(exists=True, readable=True))
+@click.argument(
+    'input',
+    metavar='<input>',
+    type=click.Path(exists=True, readable=True),
+)
 
-@click.option('--verbose', is_flag=True, default=False, help='Print verbose file-by-file progress messages.')
-@click.option('--quiet', is_flag=True, default=False, help='Do not print any summary or progress message.')
-@click.option('--shallow', is_flag=True, default=False, help='Do not extract recursively nested archives (e.g. not archives in archives).')
-@click.option('--replace-originals', is_flag=True, default=False, help='Replace extracted archives by the extracted content.')
-@click.option('--ignore', default=[], multiple=True, help='Ignore files/directories following a glob-pattern.')
+@click.option(
+    '--verbose',
+    is_flag=True,
+    help='Print verbose file-by-file progress messages.',
+)
+@click.option(
+    '--quiet',
+    is_flag=True,
+    help='Do not print any summary or progress message.',
+)
+@click.option(
+    '--shallow',
+    is_flag=True,
+    help='Do not extract recursively nested archives in archives.',
+)
+@click.option(
+    '--replace-originals',
+    is_flag=True,
+    help='Replace extracted archives by the extracted content.',
+)
+@click.option(
+    '--ignore',
+    default=[],
+    multiple=True,
+    help='Ignore files/directories matching this glob pattern.',
+)
+
+@click.option(
+    '--all-formats',
+    is_flag=True,
+    help='Extract archives from all known formats.',
+)
 
 @click.help_option('-h', '--help')
-@click.option('--about', is_flag=True, is_eager=True, callback=print_about, help='Show information about ExtractCode and licensing and exit.')
-@click.option('--version', is_flag=True, is_eager=True, callback=print_version, help='Show the version and exit.')
-def extractcode(ctx, input, verbose, quiet, shallow, replace_originals, ignore, *args, **kwargs):  # NOQA
-    """extract archives and compressed files found in the <input> file or directory tree.
+@click.option(
+    '--about',
+    is_flag=True,
+    is_eager=True,
+    callback=print_about,
+    help='Show information about ExtractCode and its licensing and exit.',
+)
+@click.option(
+    '--version',
+    is_flag=True,
+    is_eager=True,
+    callback=print_version,
+    help='Show the version and exit.',
+)
+def extractcode(
+    ctx,
+    input,  # NOQA
+    verbose,
+    quiet,
+    shallow,
+    replace_originals,
+    ignore,
+    all_formats,
+    *args,
+    **kwargs,
+):
+    """extract archives and compressed files in the <input> file or directory tree.
 
     Archives found inside an extracted archive are extracted recursively.
+    Use --shallow for a shallow extraction.
     Extraction for each archive is done in-place in a new directory named
     '<archive file name>-extract' created side-by-side with an archive.
     """
 
-    abs_location = fileutils.as_posixpath(os.path.abspath(os.path.expanduser(input)))
+    abs_location = fileutils.as_posixpath(
+        os.path.abspath(
+            os.path.expanduser(input)
+        )
+    )
 
     def extract_event(item):
         """
@@ -125,17 +172,26 @@ def extractcode(ctx, input, verbose, quiet, shallow, replace_originals, ignore, 
             return ''
         if not item:
             return ''
+
         source = item.source
         if not isinstance(source, str):
             source = toascii(source, translit=True).decode('utf-8', 'replace')
+
         if verbose:
             if item.done:
                 return ''
-            line = source and get_relative_path(path=source, len_base_path=len_base_path, base_is_dir=base_is_dir) or ''
+            line = source and get_relative_path(
+                path=source,
+                len_base_path=len_base_path,
+                base_is_dir=base_is_dir,
+            ) or ''
+
         else:
             line = source and fileutils.file_name(source) or ''
+
         if not isinstance(line, str):
             line = toascii(line, translit=True).decode('utf-8', 'replace')
+
         return 'Extracting: %(line)s' % locals()
 
     def display_extract_summary():
@@ -149,13 +205,27 @@ def extractcode(ctx, input, verbose, quiet, shallow, replace_originals, ignore, 
             has_errors = has_errors or bool(xev.errors)
             has_warnings = has_warnings or bool(xev.warnings)
             source = fileutils.as_posixpath(xev.source)
+
             if not isinstance(source, str):
                 source = toascii(source, translit=True).decode('utf-8', 'replace')
-                source = get_relative_path(path=source, len_base_path=len_base_path, base_is_dir=base_is_dir)
+
+                source = get_relative_path(
+                    path=source,
+                    len_base_path=len_base_path,
+                    base_is_dir=base_is_dir,
+                )
+
             for e in xev.errors:
-                echo_stderr('ERROR extracting: %(source)s: %(e)s' % locals(), fg='red')
+                echo_stderr(
+                    'ERROR extracting: %(source)s: %(e)s' % locals(),
+                    fg='red'
+                )
+
             for warn in xev.warnings:
-                echo_stderr('WARNING extracting: %(source)s: %(warn)s' % locals(), fg='yellow')
+                echo_stderr(
+                    'WARNING extracting: %(source)s: %(warn)s' % locals(),
+                    fg='yellow'
+                )
 
         summary_color = 'green'
         if has_warnings:
@@ -174,10 +244,16 @@ def extractcode(ctx, input, verbose, quiet, shallow, replace_originals, ignore, 
     has_extract_errors = False
 
     extractibles = extract_archives(
-        abs_location, recurse=not shallow, replace_originals=replace_originals, ignore_pattern=ignore)
+        abs_location,
+        recurse=not shallow,
+        replace_originals=replace_originals,
+        ignore_pattern=ignore,
+        all_formats=all_formats,
+    )
 
     if not quiet:
         echo_stderr('Extracting archives...', fg='green')
+
         with cliutils.progressmanager(extractibles,
             item_show_func=extract_event, verbose=verbose) as extraction_events:
 
@@ -187,7 +263,9 @@ def extractcode(ctx, input, verbose, quiet, shallow, replace_originals, ignore, 
                     if repr(xev) not in unique_extract_events_with_errors:
                         extract_result_with_errors.append(xev)
                         unique_extract_events_with_errors.add(repr(xev))
+
         display_extract_summary()
+
     else:
         for xev in extractibles:
             if xev.done and (xev.warnings or xev.errors):
@@ -199,9 +277,9 @@ def extractcode(ctx, input, verbose, quiet, shallow, replace_originals, ignore, 
 
 def get_relative_path(path, len_base_path, base_is_dir):
     """
-    Return a posix relative path from the posix 'path' relative to a
-    base path of `len_base_path` length where the base is a directory if
-    `base_is_dir` True or a file otherwise.
+    Return a posix relative path from the posix 'path' relative to a base path
+    of `len_base_path` length where the base is a directory if `base_is_dir`
+    True or a file otherwise.
     """
     path = os.fsdecode(path)
     if base_is_dir:

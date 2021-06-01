@@ -1,21 +1,10 @@
 #
-# Copyright (c) nexB Inc. and others.
-# SPDX-License-Identifier: Apache-2.0
-#
-# Visit https://aboutcode.org and https://github.com/nexB/ for support and download.
+# Copyright (c) nexB Inc. and others. All rights reserved.
 # ScanCode is a trademark of nexB Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
+# See http://www.apache.org/licenses/LICENSE-2.0 for the license text.
+# See https://github.com/nexB/extractcode for support or download.
+# See https://aboutcode.org for more information about nexB OSS projects.
 #
 
 import logging
@@ -37,12 +26,10 @@ from commoncode.text import toascii
 from commoncode.system import on_linux
 
 logger = logging.getLogger(__name__)
-DEBUG = False
-# import sys
-# logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
-# logger.setLevel(logging.DEBUG)
-
-root_dir = join(dirname(__file__), 'bin')
+TRACE = False
+if TRACE:
+    logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
+    logger.setLevel(logging.DEBUG)
 
 # Suffix added to extracted target_dir paths
 EXTRACT_SUFFIX = '-extract'
@@ -66,13 +53,26 @@ kind_labels = {
     7: 'special_package',
 }
 
-# note: do not include special_package in all by default
-all_kinds = (regular, regular_nested, package, file_system, docs, patches, special_package)
-default_kinds = (regular, regular_nested, package)
+# note: we do not include special_package in all_kinds by default
+all_kinds = (
+    regular,
+    regular_nested,
+    package,
+    file_system,
+    docs,
+    patches,
+    special_package,
+)
+
+default_kinds = (
+    regular,
+    regular_nested,
+    package,
+)
 
 # map user-visible extract types to tuples of "kinds"
 extract_types = {
-    'default': (regular, regular_nested, package,),
+    'default': default_kinds,
     'all': all_kinds,
     'package': (package,),
     'filesystem': (file_system,),
@@ -137,11 +137,11 @@ def remove_backslashes_and_dotdots(directory):
 def new_name(location, is_dir=False):
     """
     Return a new non-existing location from a `location` usable to write a file
-    or create directory without overwriting existing files or directories in the same
-    parent directory, ignoring the case of the filename.
+    or create directory without overwriting existing files or directories in the
+    same parent directory, ignoring the case of the filename.
 
-    The case of the filename is ignored to ensure that similar results are returned
-    across case sensitive (*nix) and case insensitive file systems.
+    The case of the filename is ignored to ensure that similar results are
+    returned across case sensitive (*nix) and case insensitive file systems.
 
     To find a new unique filename, this tries new names this way:
      * pad a directory name with _X where X is an incremented number.

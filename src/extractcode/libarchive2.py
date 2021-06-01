@@ -1,21 +1,10 @@
 #
-# Copyright (c) nexB Inc. and others.
-# SPDX-License-Identifier: Apache-2.0
-#
-# Visit https://aboutcode.org and https://github.com/nexB/ for support and download.
+# Copyright (c) nexB Inc. and others. All rights reserved.
 # ScanCode is a trademark of nexB Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
+# See http://www.apache.org/licenses/LICENSE-2.0 for the license text.
+# See https://github.com/nexB/extractcode for support or download.
+# See https://aboutcode.org for more information about nexB OSS projects.
 #
 
 from functools import partial
@@ -23,6 +12,7 @@ import locale
 import logging
 import mmap
 import os
+import warnings
 
 import ctypes.util
 from ctypes import c_char_p, c_wchar_p
@@ -38,6 +28,7 @@ from commoncode import command
 from commoncode import fileutils
 from commoncode import paths
 from commoncode import text
+from commoncode.system import on_windows
 
 import extractcode
 from extractcode import ExtractError
@@ -54,29 +45,29 @@ if TRACE or TRACE_DEEP:
     logger.setLevel(logging.DEBUG)
 
 """
-libarchive2 is a minimal and specialized wrapper around a vendored libarchive archive
-extraction library. It only deals with archive extraction and does not know how to
-create archives.
+libarchive2 is a minimal and specialized wrapper around a vendored libarchive
+archive extraction library. It only deals with archive extraction and does not
+know how to create archives.
 
-Its main purpose is to try hard to extract files from archives on multiple OSes and
-makes some compromises in doing so:
+Its main purpose is to try hard to extract files from archives on multiple OSes
+and makes some compromises in doing so:
 
 - special files and links may be skipped entirely and not extracted at all.
 
-- relative paths are resolved to ensure that files are always extracted under a root
-  extraction directory.
+- relative paths are resolved to ensure that files are always extracted under a
+  root extraction directory.
 
 - files and directories may be renamed if they are not unique (ignoring case) in
   their extraction directory.
 
-- files and directories are renamed by "transliterating" their names to plain ASCII
-  if their name contain non-ASCI characters.
+- files and directories are renamed by "transliterating" their names to plain
+  ASCII if their name contain non-ASCI characters.
 
-- files and directories are renamed if they contain characters or names that are not
-  portable on common OSes (e.g. COM1, ":", "*", etc)
+- files and directories are renamed if they contain characters or names that are
+  not portable on common OSes (e.g. COM1, ":", "*", etc)
 
-- permissions and modes are ignored entirely when extracting files to esnure that
-  extracted files are always readable.
+- permissions and modes are ignored entirely when extracting files to ensure
+  that extracted files are always readable.
 
 It is inspired from several libarchive bindings such as libarchive_c and
 python-libarchive for Python and other similar wrappers for Ruby such as
@@ -84,33 +75,61 @@ ffi-libarchive.
 """
 
 # keys for plugin-provided locations
-EXTRACTCODE_LIBARCHIVE_LIBDIR = 'extractcode.libarchive.libdir'
 EXTRACTCODE_LIBARCHIVE_DLL = 'extractcode.libarchive.dll'
+
+EXTRACTCODE_LIBARCHIVE_PATH_ENVVAR = 'EXTRACTCODE_LIBARCHIVE_PATH'
+
 _LIBRARY_NAME = 'libarchive'
 
 
 def load_lib():
     """
-    Return the loaded libarchive shared library object from plugin-provided path.
+    Return the libarchive shared library object loaded from either:
+    - an environment variable ``EXTRACTCODE_LIBARCHIVE_PATH``
+    - a plugin-provided path,
+    - the system PATH.
+    Raise an Exception if no libarchive can be found.
     """
     from plugincode.location_provider import get_location
 
-    dll = get_location(EXTRACTCODE_LIBARCHIVE_DLL)
-    libdir = get_location(EXTRACTCODE_LIBARCHIVE_LIBDIR)
-    if not (dll and libdir) or not os.path.isfile(dll) or not os.path.isdir(libdir):
-        filepath = ctypes.util.find_library(_LIBRARY_NAME)
-        libarchive = ctypes.cdll.LoadLibrary(filepath)
-        if not libarchive:
-            raise ImportError(
-                'CRITICAL: libarchive DLL is not installed. '
-                'Unable to continue: you need to install a valid extractcode-libarchive '
-                'plugin with a valid libarchive DLL available '
-                'or to have "libarchive" library installed in your system.'
-        )
-        logger.warning('Cannot to use plugin for libarchive, defaulting to system library at ' + filepath)
-        return libarchive
-    return command.load_shared_library(dll, libdir)
-    
+    # try the environment first
+    dll_loc = os.environ.get(EXTRACTCODE_LIBARCHIVE_PATH_ENVVAR)
+
+    # try a plugin-provided path second
+    if not dll_loc:
+        dll_loc = get_location(EXTRACTCODE_LIBARCHIVE_DLL)
+
+    # try the standard locations with find_library
+    if not dll_loc:
+        libarch_loc = ctypes.util.find_library(_LIBRARY_NAME)
+        libarchive = ctypes.cdll.LoadLibrary(libarch_loc)
+        if libarchive:
+            warnings.warn(
+                'Using "libarchive" library found in a system location. '
+                'Install instead a extractcode-libarchive plugin for best support.'
+            )
+            return libarchive
+
+    # try the PATH
+    if not dll_loc:
+        dll = 'libarchive.dll' if on_windows else 'libarchive.so'
+        dll_loc = command.find_in_path(dll)
+        if dll_loc:
+            warnings.warn(
+                'Using "libarchive" library found in the PATH. '
+                'Install instead a extractcode-libarchive plugin for best support.'
+            )
+
+    if not dll_loc or not os.path.isfile(dll_loc):
+        raise Exception(
+            'CRITICAL: libarchive DLL is not installed. '
+            'Unable to continue: you need to install a valid extractcode-libarchive '
+            'plugin with a valid libarchive DLL available. '
+            f'OR set the {EXTRACTCODE_LIBARCHIVE_PATH_ENVVAR} environment variable. '
+            'OR install libarchive as a system package. '
+            'OR ensure libarchive is available in the system PATH.'
+    )
+    return command.load_shared_library(dll_loc)
 
 
 def set_env_with_tz():
@@ -177,7 +196,8 @@ def extract(location, target_dir, skip_symlinks=True):
                 logger.debug('skipping: {}'.format(entry))
 
             if entry.issym and not skip_symlinks:
-                raise NotImplemented('extraction of symlinks with libarchive is not yet implemented.')
+                raise NotImplemented(
+                    'extraction of symlinks with libarchive is not yet implemented.')
             continue
 
         if TRACE:
@@ -207,23 +227,24 @@ class Archive(object):
     Represent an iterable archive containing a list of Entry objects.
 
     Archive is designed to be used as a context manager with the "with" syntax:
+
         with Archive('some.tgz') as archive:
             for entry in archive:
-                # dome something with entry
+                # do something with entry
     """
 
     def __init__(self, location, uncompress=True, extract=True, block_size=10240):
         """
         Build an Archive object from file at `location`.
 
-        If `uncompress` is True, the archive will be uncompressed first if compressed.
-        (e.g. a tar.gz will be ungzipped).
+        If `uncompress` is True, the archive will be uncompressed first if
+        compressed. (e.g. a tar.gz will be ungzipped).
 
-        If `extract` is True, the archive will be extracted if this is an archive.
-        (e.g. a cpio will be extracted).
+        If `extract` is True, the archive will be extracted if this is an
+        archive. (e.g. a cpio will be extracted).
 
-        If both are True, the archive will be uncompressed then extracted as needed.
-        (e.g. a tar.xz will be unxzed then untarred at once).
+        If both are True, the archive will be uncompressed then extracted as
+        needed. (e.g. a tar.xz will be unxzed then untarred at once).
         """
         msg = 'At least one of `uncompress` or `extract` flag is required.'
         assert uncompress or extract, msg
@@ -236,9 +257,9 @@ class Archive(object):
 
     def open(self):
         """
-        Open the archive for reading.
-        You must call close() when done to free up resources and avoid leaks.
-        Or use instead the Archive class as a context manager with the "with" keyword.
+        Open the archive for reading. You must call close() when done to free up
+        resources and avoid leaks. Or use instead the Archive class as a context
+        manager with the "with" keyword.
         """
         # first close any existing opened struct for this file
         self.close()
@@ -256,9 +277,9 @@ class Archive(object):
 
     def close(self):
         """
-        Release any memory held by the underlying librachive for this archive. You
-        must call close() when done with an archive to free up resources and avoid
-        leaks.
+        Release any memory held by the underlying librachive for this archive.
+        You must call close() when done with an archive to free up resources and
+        avoid leaks.
         """
         if self.archive_struct:
             free_archive(self.archive_struct)
@@ -266,7 +287,7 @@ class Archive(object):
 
     def iter(self):
         """
-        Yield Entry for this archive.
+        Yield Entry(ies) for this archive.
         """
         assert self.archive_struct, 'Archive must be used as a context manager.'
         entry_struct = new_entry()
@@ -314,7 +335,7 @@ class Entry(object):
     by design to ensure extracted files are readable/writable and owned by the
     extracting user.
     """
-    # TODO: re-check if users and groups may have some value for origin determination?
+    # TODO: re-check if users/groups may have some value for origin determination?
 
     # an archive object
     archive = attr.ib(repr=False)
@@ -396,10 +417,10 @@ class Entry(object):
 
     def write(self, target_dir, transform_path=lambda x: x, skip_links=True):
         """
-        Write entry to a file or directory saved relatively to the `target_dir` and
-        return the path where the file or directory was written or None if nothing
-        was written to disk. `transform_path` is a callable taking a path and
-        returning a transformed path such as resolving relative paths,
+        Write entry to a file or directory saved relatively to the `target_dir`
+        and return the path where the file or directory was written or None if
+        nothing was written to disk. `transform_path` is a callable taking a
+        path and returning a transformed path such as resolving relative paths,
         transliterating non-portable characters or other path transformations.
         The default is a no-op lambda.
         """
@@ -442,7 +463,10 @@ class Entry(object):
         # TODO: return some warning when original path has been renamed?
         unique_path = extractcode.new_name(target_path, is_dir=False)
         if TRACE:
-            logger.debug('path: \ntarget_path: {}\nunique_path: {}'.format(target_path, unique_path))
+            logger.debug(
+                f'path: \ntarget_path: {target_path}\n'
+                f'unique_path: {unique_path}',
+            )
 
         with open(unique_path, 'wb') as target:
             for content in self.get_content():
@@ -469,7 +493,13 @@ class Entry(object):
 
 class ArchiveException(ExtractError):
 
-    def __init__(self, rc=None, archive_struct=None, archive_func=None, root_ex=None):
+    def __init__(
+        self,
+        rc=None,
+        archive_struct=None,
+        archive_func=None,
+        root_ex=None,
+    ):
         self.root_ex = root_ex
         if root_ex and isinstance(root_ex, ArchiveException):
             self.rc = root_ex.rc
@@ -488,8 +518,9 @@ class ArchiveException(ExtractError):
 
     def __str__(self):
         if TRACE:
-            msg = (u'%(msg)r: in function %(func)r with rc=%(rc)r, errno=%(errno)r, '
-                    'root_ex=%(root_ex)r')
+            msg = (
+                '%(msg)r: in function %(func)r with rc=%(rc)r, '
+                'errno=%(errno)r, root_ex=%(root_ex)r')
             return msg % self.__dict__
         return self.msg or ''
 
@@ -514,7 +545,10 @@ class ArchiveErrorFailedToWriteEntry(ArchiveException):
     pass
 
 
-class ArchiveErrorPasswordProtected(ArchiveException, ExtractErrorPasswordProtected):
+class ArchiveErrorPasswordProtected(
+    ArchiveException,
+    ExtractErrorPasswordProtected,
+):
     pass
 
 
@@ -528,7 +562,8 @@ class ArchiveErrorIllegalOperationOnClosedArchive(ArchiveException):
 
 def errcheck(rc, archive_func, args, null=False):
     """
-    ctypes error check handler for functions returning int, or null if null is True.
+    ctypes error check handler for functions returning int, or null if null is
+    True.
     """
     if null:
         if rc is None:
@@ -575,17 +610,19 @@ AE_IFMT = 0o0170000  # Format mask
 #####################################
 # libarchive C functions declarations
 #####################################
-# NOTE: these declaration come with verbose doc to help with debugging and tracing
-# lower level errors and issues. Some comments and the function signatures are
-# copied from libarchve.
+
+# NOTE: these declaration come with verbose doc to help with debugging and
+# tracing lower level errors and issues. Some comments and the function
+# signatures are copied from libarchve.
 #
-# NOTE: String data in librachive can be set or accessed as wide character strings or
-# narrow char strings. The functions that use wide character strings are suffixed
-# with _w. These are different representations of the same data: For example, if you
-# store a narrow string and read the corresponding wide string, the object will
-# transparently convert formats using the current locale. Similarly, if you store a
-# wide string and then store a narrow string for the same data, the previously-set
-# wide string will be discarded in favor of the new data.
+# NOTE: String data in libarchive can be set or accessed as wide character
+# strings or narrow char strings. The functions that use wide character strings
+# are suffixed with _w. These are different representations of the same data:
+# For example, if you store a narrow string and read the corresponding wide
+# string, the object will transparently convert formats using the current
+# locale. Similarly, if you store a wide string and then store a narrow string
+# for the same data, the previously-set wide string will be discarded in favor
+# of the new data.
 
 """
 To read an archive, you must first obtain an initialized struct archive object

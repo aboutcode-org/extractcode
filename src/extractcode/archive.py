@@ -1,21 +1,10 @@
 #
-# Copyright (c) nexB Inc. and others.
-# SPDX-License-Identifier: Apache-2.0
-#
-# Visit https://aboutcode.org and https://github.com/nexB/ for support and download.
+# Copyright (c) nexB Inc. and others. All rights reserved.
 # ScanCode is a trademark of nexB Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
+# See http://www.apache.org/licenses/LICENSE-2.0 for the license text.
+# See https://github.com/nexB/extractcode for support or download.
+# See https://aboutcode.org for more information about nexB OSS projects.
 #
 
 from collections import namedtuple
@@ -26,7 +15,6 @@ from commoncode import fileutils
 from commoncode import filetype
 from commoncode import functional
 from commoncode.ignore import is_ignored
-
 from typecode import contenttype
 
 from extractcode import all_kinds
@@ -38,9 +26,11 @@ from extractcode import file_system
 from extractcode import patches
 from extractcode import special_package
 
+from extractcode import libarchive2
 from extractcode import patch
 from extractcode import sevenzip
-from extractcode import libarchive2
+from extractcode import vmimage
+
 from extractcode.uncompress import uncompress_gzip
 from extractcode.uncompress import uncompress_bzip2
 
@@ -79,8 +69,19 @@ For background on archive and compressed file formats see:
  - http://en.wikipedia.org/wiki/List_of_file_formats#Archive_and_compressed
 """
 
-# if strict, all hanlders criteria must be matched for it to be selected
-Handler = namedtuple('Handler', ['name', 'filetypes', 'mimetypes', 'extensions', 'kind', 'extractors', 'strict'])
+# if strict, all handlers criteria must be matched for a handler to be selected
+Handler = namedtuple(
+    'Handler',
+    [
+        'name',
+        'filetypes',
+        'mimetypes',
+        'extensions',
+        'kind',
+        'extractors',
+        'strict',
+    ]
+)
 
 
 def can_extract(location):
@@ -96,32 +97,53 @@ def can_extract(location):
 
 def should_extract(location, kinds, ignore_pattern=()):
     """
-    Return True if this location should be extracted based on the provided
-    kinds
+    Return True if this location should be extracted based on the provided kinds
     """
     location = os.path.abspath(os.path.expanduser(location))
-    ignore_pattern = {extension : 'User ignore: Supplied by --ignore' for extension in ignore_pattern}
+    ignore_pattern = {extension : 'User ignore: Supplied by --ignore'
+        for extension in ignore_pattern}
     should_ignore = is_ignored(location, ignore_pattern)
-    if get_extractor(location, kinds) and not should_ignore:
+    extractor = get_extractor(location, kinds=kinds)
+
+    if TRACE_DEEP:
+        logger.debug(
+            f'  should_extract: extractor: {extractor}, '
+            f'should_ignore: {should_ignore}'
+        )
+
+    if extractor and not should_ignore:
         return True
 
 
 def get_extractor(location, kinds=all_kinds):
     """
-    Return an extraction callable that can extract the file at location or
-    an None if no extract function is found.
+    Return an extraction callable that can extract the file at ``location`` or
+    None if no extraction callable function is found.
+    Limit the search for an extractor to the ``kinds`` list of archive kinds.
+    See  extractcode.all_kinds for details.
+
+    An extraction callable should accept these arguments:
+    - location of the file to extract
+    - target_dir where to extract
+    It should extract files from the `location` in the `target_dir` directory.
+    It must return a list of warning messages if any or an empty list.
+    It must raise Exceptions on errors.
     """
     assert location
     location = os.path.abspath(os.path.expanduser(location))
-    extractors = get_extractors(location, kinds)
+    extractors = get_extractors(location, kinds=kinds)
     if not extractors:
+        if TRACE_DEEP:
+            logger.debug(f'  get_extractor: not extractors: {extractors}')
         return None
 
     if len(extractors) == 2:
         extractor1, extractor2 = extractors
-        nested_extractor = functional.partial(extract_twice,
-                                             extractor1=extractor1,
-                                             extractor2=extractor2)
+        nested_extractor = functional.partial(
+            extract_twice,
+            extractor1=extractor1,
+            extractor2=extractor2,
+        )
         return nested_extractor
     elif len(extractors) == 1:
         return extractors[0]
@@ -135,23 +157,38 @@ def get_extractors(location, kinds=all_kinds):
     location or an empty list.
     """
     handler = get_best_handler(location, kinds)
+    if TRACE_DEEP:
+        logger.debug(f'  get_extractors: handler: {handler}')
+
     return handler and handler.extractors or []
 
 
 def get_best_handler(location, kinds=all_kinds):
     """
-    Return the best handler of None for the file at location.
+    Return the best handler for the file at `location` or None .
     """
     location = os.path.abspath(os.path.expanduser(location))
     if not filetype.is_file(location):
         return
+
     handlers = list(get_handlers(location))
     if TRACE_DEEP:
-        logger.debug('get_best_handler: handlers: %(handlers)r ' % locals())
+        logger.debug(f'    get_best_handler: handlers: {handlers}')
+    if not handlers:
+        return
 
-    if handlers:
-        candidates = score_handlers(handlers)
-        return candidates and pick_best_handler(candidates, kinds)
+    candidates = list(score_handlers(handlers))
+    if TRACE_DEEP:
+        logger.debug(f'    get_best_handler: candidates: {candidates}')
+    if not candidates:
+        if TRACE_DEEP:
+            logger.debug(f'    get_best_handler: candidates: {candidates}')
+        return
+
+    picked = pick_best_handler(candidates, kinds=kinds)
+    if TRACE_DEEP:
+        logger.debug(f'    get_best_handler: picked: {picked}')
+    return picked
 
 
 def get_handlers(location):
@@ -166,7 +203,9 @@ def get_handlers(location):
         mtype = T.mimetype_file
 
         if TRACE_DEEP:
-            logger.debug('get_handlers: processing %(location)s: ftype: %(ftype)s, mtype: %(mtype)s ' % locals())
+            logger.debug(
+                'get_handlers: processing %(location)s: '
+                'ftype: %(ftype)s, mtype: %(mtype)s ' % locals())
         for handler in archive_handlers:
             if not handler.extractors:
                 continue
@@ -177,16 +216,29 @@ def get_handlers(location):
 
             # default to False
             type_matched = handler.filetypes and any(t in ftype for t in handler.filetypes)
+            if TRACE_DEEP:
+                logger.debug(f'    get_handlers: handler.filetypes={handler.filetypes}')
             mime_matched = handler.mimetypes and any(m in mtype for m in handler.mimetypes)
             exts = handler.extensions
             if exts:
                 extension_matched = exts and location.lower().endswith(exts)
 
             if TRACE_DEEP:
-                logger.debug('  get_handlers: matched type: %(type_matched)s, mime: %(mime_matched)s, ext: %(extension_matched)s' % locals())
+                print(
+                    f'  get_handlers: matched type: {type_matched}, '
+                    f'mime: {mime_matched}, ext: {extension_matched}' % locals()
+                  )
 
-            if handler.strict and not all([type_matched, mime_matched, extension_matched]):
-                logger.debug('  get_handlers: skip strict' % locals())
+            if (
+                handler.strict
+                and not (
+                    type_matched
+                    and mime_matched
+                    and extension_matched
+                )
+            ):
+                if TRACE_DEEP:
+                    print(f'  get_handlers: skip strict: {handler.name}')
                 continue
 
             if type_matched or mime_matched or extension_matched:
@@ -201,10 +253,18 @@ def score_handlers(handlers):
     Score candidate handlers. Higher score is better.
     """
     for handler, type_matched, mime_matched, extension_matched in handlers:
+        if TRACE_DEEP:
+            logger.debug(
+                f'     score_handlers: handler={handler}, '
+                f'type_matched={type_matched}, '
+                f'mime_matched={mime_matched}, '
+                f'extension_matched={extension_matched}'
+            )
         score = 0
         # increment kind value: higher kinds numerical values are more
         # specific by design
         score += handler.kind
+        if TRACE_DEEP: logger.debug(f'     score_handlers: score += handler.kind {score}')
 
         # increment score based on matched criteria
         if type_matched and mime_matched and extension_matched:
@@ -255,6 +315,10 @@ def pick_best_handler(candidates, kinds):
     """
     # sort by increasing scores
     scored = sorted(candidates, reverse=True)
+
+    if TRACE_DEEP:
+        logger.debug(f'  pick_best_handler: scored: {scored}')
+
     if not scored:
         return
 
@@ -396,17 +460,30 @@ extract_patch = patch.extract
 
 extract_deb = libarchive2.extract
 
-# sevenzip is best for windows lib formats and works fine otherwise. libarchive works on standard ar formats.
-extract_ar = functional.partial(extract_with_fallback, extractor1=libarchive2.extract, extractor2=sevenzip.extract)
+# sevenzip is best for windows lib formats and works fine otherwise. libarchive
+# works on standard ar formats.
+extract_ar = functional.partial(
+    extract_with_fallback,
+    extractor1=libarchive2.extract,
+    extractor2=sevenzip.extract,
+)
 
 extract_msi = sevenzip.extract
 extract_cpio = libarchive2.extract
 
 # sevenzip should be best at extracting 7zip but most often libarchive is better first
-extract_7z = functional.partial(extract_with_fallback, extractor1=libarchive2.extract, extractor2=sevenzip.extract)
+extract_7z = functional.partial(
+    extract_with_fallback,
+    extractor1=libarchive2.extract,
+    extractor2=sevenzip.extract,
+)
 
 # libarchive is best for the run of the mill zips, but sevenzip sometimes is better
-extract_zip = functional.partial(extract_with_fallback, extractor1=libarchive2.extract, extractor2=sevenzip.extract)
+extract_zip = functional.partial(
+    extract_with_fallback,
+    extractor1=libarchive2.extract,
+    extractor2=sevenzip.extract,
+)
 
 extract_springboot = functional.partial(try_to_extract, extractor=extract_zip)
 
@@ -420,6 +497,7 @@ extract_rpm = sevenzip.extract
 extract_xz = sevenzip.extract
 extract_lzma = sevenzip.extract
 extract_squashfs = sevenzip.extract
+extract_vm_image = vmimage.extract
 extract_cab = sevenzip.extract
 extract_nsis = sevenzip.extract
 extract_ishield = sevenzip.extract
@@ -461,7 +539,12 @@ ZipHandler = Handler(
 
 OfficeDocHandler = Handler(
     name='Office doc',
-    filetypes=('zip archive', 'microsoft word 2007+', 'microsoft excel 2007+', 'microsoft powerpoint 2007+'),
+    filetypes=(
+        'zip archive',
+        'microsoft word 2007+',
+        'microsoft excel 2007+',
+        'microsoft powerpoint 2007+',
+    ),
     mimetypes=('application/zip', 'application/vnd.openxmlformats',),
     # Extensions of office documents that are zip files too
     extensions=(
@@ -499,7 +582,7 @@ AndroidAppHandler = Handler(
     strict=True
 )
 
-    # see http://tools.android.com/tech-docs/new-build-system/aar-formats
+# see http://tools.android.com/tech-docs/new-build-system/aar-formats
 AndroidLibHandler = Handler(
     name='Android library',
     filetypes=('zip archive',),
@@ -773,8 +856,16 @@ TarBzipHandler = Handler(
     name='Tar bzip2',
     filetypes=('bzip2 compressed',),
     mimetypes=('application/x-bzip2',),
-    extensions=('.tar.bz2', '.tar.bz', '.tar.bzip', '.tar.bzip2',
-          '.tbz', '.tbz2', '.tb2', '.tarbz2',),
+    extensions=(
+        '.tar.bz2',
+        '.tar.bz',
+        '.tar.bzip',
+        '.tar.bzip2',
+        '.tbz',
+        '.tbz2',
+        '.tb2',
+        '.tarbz2',
+    ),
     kind=regular_nested,
     extractors=[extract_tar],
     strict=False
@@ -822,10 +913,11 @@ InstallShieldHandler = Handler(
 
 NugetHandler = Handler(
     name='Nuget',
-    # weirdly enough the detection by libmagic is sometimes wrong
-    # TODO file a bug upstream
-    # this is due to this: https://en.wikipedia.org/wiki/Open_Packaging_Conventions#File_formats_using_the_OPC
+    # TODO: file a bug upstream
+    # Weirdly enough the detection by libmagic is sometimes wrong
+    # this is due to this issue:
     # being recognized by libmagic as an OOXML file
+    # https://en.wikipedia.org/wiki/Open_Packaging_Conventions#File_formats_using_the_OPC
     filetypes=('zip archive', 'microsoft ooxml',),
     mimetypes=('application/zip', 'application/octet-stream',),
     extensions=('.nupkg',),
@@ -867,7 +959,10 @@ StaticLibHandler = Handler(
 DebHandler = Handler(
     name='Debian package',
     filetypes=('debian binary package',),
-    mimetypes=('application/vnd.debian.binary-package', 'application/x-archive',),
+    mimetypes=(
+        'application/vnd.debian.binary-package',
+        'application/x-archive',
+    ),
     extensions=('.deb', '.udeb',),
     kind=package,
     extractors=[extract_deb],
@@ -985,13 +1080,44 @@ IsoImageHandler = Handler(
 )
 
 SquashfsHandler = Handler(
-    name='squashfs FS',
+    name='SquashFS disk image',
     filetypes=('squashfs',),
     mimetypes=(),
     extensions=(),
     kind=file_system,
     extractors=[extract_squashfs],
     strict=False
+)
+
+QCOWHandler = Handler(
+    # note that there are v1, v2 and v3 formats.
+    name='QEMU QCOW2 disk image',
+    filetypes=('qemu qcow2 image', 'qemu qcow image',),
+    mimetypes=('application/octet-stream',),
+    extensions=('.qcow2', '.qcow', '.qcow2c', '.img',),
+    kind=file_system,
+    extractors=[extract_vm_image],
+    strict=True,
+)
+
+VMDKHandler = Handler(
+    name='VMDK disk image',
+    filetypes=('vmware4 disk image',),
+    mimetypes=('application/octet-stream',),
+    extensions=('.vmdk',),
+    kind=file_system,
+    extractors=[extract_vm_image],
+    strict=True,
+)
+
+VirtualBoxHandler = Handler(
+    name='VirtualBox disk image',
+    filetypes=('virtualbox disk image',),
+    mimetypes=('application/octet-stream',),
+    extensions=('.vdi',),
+    kind=file_system,
+    extractors=[extract_vm_image],
+    strict=True,
 )
 
 PatchHandler = Handler(
@@ -1062,5 +1188,8 @@ archive_handlers = [
     AppleDmgHandler,
     IsoImageHandler,
     SquashfsHandler,
-    PatchHandler
+    QCOWHandler,
+    VMDKHandler,
+    VirtualBoxHandler,
+    PatchHandler,
 ]

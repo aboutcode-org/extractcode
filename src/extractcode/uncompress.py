@@ -1,21 +1,10 @@
 #
-# Copyright (c) nexB Inc. and others.
-# SPDX-License-Identifier: Apache-2.0
-#
-# Visit https://aboutcode.org and https://github.com/nexB/ for support and download.
+# Copyright (c) nexB Inc. and others. All rights reserved.
 # ScanCode is a trademark of nexB Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
+# See http://www.apache.org/licenses/LICENSE-2.0 for the license text.
+# See https://github.com/nexB/extractcode for support or download.
+# See https://aboutcode.org for more information about nexB OSS projects.
 #
 
 import bz2
@@ -42,6 +31,7 @@ def uncompress(location, target_dir, decompressor, suffix=EXTRACT_SUFFIX):
     Uncompress a compressed file at location in the target_dir using the
     `decompressor` object. The uncompressed file is named after the original
     archive with a `suffix` added.
+
     Return a list of warning messages. Raise Exceptions on errors.
     """
     # FIXME: do not create a sub-directory and instead strip the "compression"
@@ -122,5 +112,11 @@ def get_compressed_file_content(location, decompressor):
     return content, warnings
 
 
-get_gz_compressed_file_content = partial(get_compressed_file_content, decompressor=gzip.GzipFile)
-get_bz2_compressed_file_content = partial(get_compressed_file_content, decompressor=bz2.BZ2File)
+get_gz_compressed_file_content = partial(
+    get_compressed_file_content,
+    decompressor=gzip.GzipFile,
+)
+get_bz2_compressed_file_content = partial(
+    get_compressed_file_content,
+    decompressor=bz2.BZ2File,
+)
