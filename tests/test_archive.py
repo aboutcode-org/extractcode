@@ -2212,12 +2212,16 @@ class TestZstd(BaseArchiveTestCase):
 class ExtractArchiveWithIllegalFilenamesTestCase(BaseArchiveTestCase):
 
     def check_extract_weird_names(
-            self, test_function, test_file, expected_suffix,
-            expected_warnings=None,
-            expected_exception=None,
-            check_warnings=True, check_only_warnings=False,
-            regen=False,
-            ):
+        self,
+        test_function,
+        test_file,
+        expected_suffix,
+        expected_warnings=None,
+        expected_exception=None,
+        check_warnings=True,
+        check_only_warnings=False,
+        regen=False,
+    ):
         """
         Run the extraction `test_function` on `test_file` checking that the paths
         listed in the `test_file.excepted` file exist in the extracted target

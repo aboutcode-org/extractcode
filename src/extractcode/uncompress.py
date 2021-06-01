@@ -31,6 +31,7 @@ def uncompress(location, target_dir, decompressor, suffix=EXTRACT_SUFFIX):
     Uncompress a compressed file at location in the target_dir using the
     `decompressor` object. The uncompressed file is named after the original
     archive with a `suffix` added.
+
     Return a list of warning messages. Raise Exceptions on errors.
     """
     # FIXME: do not create a sub-directory and instead strip the "compression"
@@ -111,5 +112,11 @@ def get_compressed_file_content(location, decompressor):
     return content, warnings
 
 
-get_gz_compressed_file_content = partial(get_compressed_file_content, decompressor=gzip.GzipFile)
-get_bz2_compressed_file_content = partial(get_compressed_file_content, decompressor=bz2.BZ2File)
+get_gz_compressed_file_content = partial(
+    get_compressed_file_content,
+    decompressor=gzip.GzipFile,
+)
+get_bz2_compressed_file_content = partial(
+    get_compressed_file_content,
+    decompressor=bz2.BZ2File,
+)

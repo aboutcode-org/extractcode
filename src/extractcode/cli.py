@@ -84,20 +84,73 @@ Try 'extractcode --help' for help on options and arguments.'''
 @click.command(name='extractcode', epilog=epilog_text, cls=ExtractCommand)
 @click.pass_context
 
-@click.argument('input', metavar='<input>', type=click.Path(exists=True, readable=True))
+@click.argument(
+    'input',
+    metavar='<input>',
+    type=click.Path(exists=True, readable=True),
+)
 
-@click.option('--verbose', is_flag=True, default=False, help='Print verbose file-by-file progress messages.')
-@click.option('--quiet', is_flag=True, default=False, help='Do not print any summary or progress message.')
-@click.option('--shallow', is_flag=True, default=False, help='Do not extract recursively nested archives (e.g. not archives in archives).')
-@click.option('--replace-originals', is_flag=True, default=False, help='Replace extracted archives by the extracted content.')
-@click.option('--ignore', default=[], multiple=True, help='Ignore files/directories following a glob-pattern.')
-@click.option('--all-formats', is_flag=True, default=False, help='Extract archives from all known formats.')
+@click.option(
+    '--verbose',
+    is_flag=True,
+    help='Print verbose file-by-file progress messages.',
+)
+@click.option(
+    '--quiet',
+    is_flag=True,
+    help='Do not print any summary or progress message.',
+)
+@click.option(
+    '--shallow',
+    is_flag=True,
+    help='Do not extract recursively nested archives in archives.',
+)
+@click.option(
+    '--replace-originals',
+    is_flag=True,
+    help='Replace extracted archives by the extracted content.',
+)
+@click.option(
+    '--ignore',
+    default=[],
+    multiple=True,
+    help='Ignore files/directories matching this glob pattern.',
+)
+
+@click.option(
+    '--all-formats',
+    is_flag=True,
+    help='Extract archives from all known formats.',
+)
 
 @click.help_option('-h', '--help')
-@click.option('--about', is_flag=True, is_eager=True, callback=print_about, help='Show information about ExtractCode and licensing and exit.')
-@click.option('--version', is_flag=True, is_eager=True, callback=print_version, help='Show the version and exit.')
-def extractcode(ctx, input, verbose, quiet, shallow, replace_originals, ignore, all_formats, *args, **kwargs):  # NOQA
-    """extract archives and compressed files found in the <input> file or directory tree.
+@click.option(
+    '--about',
+    is_flag=True,
+    is_eager=True,
+    callback=print_about,
+    help='Show information about ExtractCode and its licensing and exit.',
+)
+@click.option(
+    '--version',
+    is_flag=True,
+    is_eager=True,
+    callback=print_version,
+    help='Show the version and exit.',
+)
+def extractcode(
+    ctx,
+    input,  # NOQA
+    verbose,
+    quiet,
+    shallow,
+    replace_originals,
+    ignore,
+    all_formats,
+    *args,
+    **kwargs,
+):
+    """extract archives and compressed files in the <input> file or directory tree.
 
     Archives found inside an extracted archive are extracted recursively.
     Use --shallow for a shallow extraction.
@@ -105,7 +158,11 @@ def extractcode(ctx, input, verbose, quiet, shallow, replace_originals, ignore, 
     '<archive file name>-extract' created side-by-side with an archive.
     """
 
-    abs_location = fileutils.as_posixpath(os.path.abspath(os.path.expanduser(input)))
+    abs_location = fileutils.as_posixpath(
+        os.path.abspath(
+            os.path.expanduser(input)
+        )
+    )
 
     def extract_event(item):
         """
@@ -159,10 +216,16 @@ def extractcode(ctx, input, verbose, quiet, shallow, replace_originals, ignore, 
                 )
 
             for e in xev.errors:
-                echo_stderr('ERROR extracting: %(source)s: %(e)s' % locals(), fg='red')
+                echo_stderr(
+                    'ERROR extracting: %(source)s: %(e)s' % locals(),
+                    fg='red'
+                )
 
             for warn in xev.warnings:
-                echo_stderr('WARNING extracting: %(source)s: %(warn)s' % locals(), fg='yellow')
+                echo_stderr(
+                    'WARNING extracting: %(source)s: %(warn)s' % locals(),
+                    fg='yellow'
+                )
 
         summary_color = 'green'
         if has_warnings:
@@ -190,6 +253,7 @@ def extractcode(ctx, input, verbose, quiet, shallow, replace_originals, ignore, 
 
     if not quiet:
         echo_stderr('Extracting archives...', fg='green')
+
         with cliutils.progressmanager(extractibles,
             item_show_func=extract_event, verbose=verbose) as extraction_events:
 
@@ -199,7 +263,9 @@ def extractcode(ctx, input, verbose, quiet, shallow, replace_originals, ignore, 
                     if repr(xev) not in unique_extract_events_with_errors:
                         extract_result_with_errors.append(xev)
                         unique_extract_events_with_errors.add(repr(xev))
+
         display_extract_summary()
+
     else:
         for xev in extractibles:
             if xev.done and (xev.warnings or xev.errors):
@@ -211,9 +277,9 @@ def extractcode(ctx, input, verbose, quiet, shallow, replace_originals, ignore, 
 
 def get_relative_path(path, len_base_path, base_is_dir):
     """
-    Return a posix relative path from the posix 'path' relative to a
-    base path of `len_base_path` length where the base is a directory if
-    `base_is_dir` True or a file otherwise.
+    Return a posix relative path from the posix 'path' relative to a base path
+    of `len_base_path` length where the base is a directory if `base_is_dir`
+    True or a file otherwise.
     """
     path = os.fsdecode(path)
     if base_is_dir:

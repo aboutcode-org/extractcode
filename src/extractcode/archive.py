@@ -15,7 +15,6 @@ from commoncode import fileutils
 from commoncode import filetype
 from commoncode import functional
 from commoncode.ignore import is_ignored
-
 from typecode import contenttype
 
 from extractcode import all_kinds
@@ -204,7 +203,9 @@ def get_handlers(location):
         mtype = T.mimetype_file
 
         if TRACE_DEEP:
-            logger.debug('get_handlers: processing %(location)s: ftype: %(ftype)s, mtype: %(mtype)s ' % locals())
+            logger.debug(
+                'get_handlers: processing %(location)s: '
+                'ftype: %(ftype)s, mtype: %(mtype)s ' % locals())
         for handler in archive_handlers:
             if not handler.extractors:
                 continue
@@ -223,9 +224,19 @@ def get_handlers(location):
                 extension_matched = exts and location.lower().endswith(exts)
 
             if TRACE_DEEP:
-                print(f'  get_handlers: matched type: {type_matched}, mime: {mime_matched}, ext: {extension_matched}' % locals())
+                print(
+                    f'  get_handlers: matched type: {type_matched}, '
+                    f'mime: {mime_matched}, ext: {extension_matched}' % locals()
+                  )
 
-            if handler.strict and not (type_matched and mime_matched and extension_matched):
+            if (
+                handler.strict
+                and not (
+                    type_matched
+                    and mime_matched
+                    and extension_matched
+                )
+            ):
                 if TRACE_DEEP:
                     print(f'  get_handlers: skip strict: {handler.name}')
                 continue
@@ -449,17 +460,30 @@ extract_patch = patch.extract
 
 extract_deb = libarchive2.extract
 
-# sevenzip is best for windows lib formats and works fine otherwise. libarchive works on standard ar formats.
-extract_ar = functional.partial(extract_with_fallback, extractor1=libarchive2.extract, extractor2=sevenzip.extract)
+# sevenzip is best for windows lib formats and works fine otherwise. libarchive
+# works on standard ar formats.
+extract_ar = functional.partial(
+    extract_with_fallback,
+    extractor1=libarchive2.extract,
+    extractor2=sevenzip.extract,
+)
 
 extract_msi = sevenzip.extract
 extract_cpio = libarchive2.extract
 
 # sevenzip should be best at extracting 7zip but most often libarchive is better first
-extract_7z = functional.partial(extract_with_fallback, extractor1=libarchive2.extract, extractor2=sevenzip.extract)
+extract_7z = functional.partial(
+    extract_with_fallback,
+    extractor1=libarchive2.extract,
+    extractor2=sevenzip.extract,
+)
 
 # libarchive is best for the run of the mill zips, but sevenzip sometimes is better
-extract_zip = functional.partial(extract_with_fallback, extractor1=libarchive2.extract, extractor2=sevenzip.extract)
+extract_zip = functional.partial(
+    extract_with_fallback,
+    extractor1=libarchive2.extract,
+    extractor2=sevenzip.extract,
+)
 
 extract_springboot = functional.partial(try_to_extract, extractor=extract_zip)
 
@@ -515,7 +539,12 @@ ZipHandler = Handler(
 
 OfficeDocHandler = Handler(
     name='Office doc',
-    filetypes=('zip archive', 'microsoft word 2007+', 'microsoft excel 2007+', 'microsoft powerpoint 2007+'),
+    filetypes=(
+        'zip archive',
+        'microsoft word 2007+',
+        'microsoft excel 2007+',
+        'microsoft powerpoint 2007+',
+    ),
     mimetypes=('application/zip', 'application/vnd.openxmlformats',),
     # Extensions of office documents that are zip files too
     extensions=(
@@ -553,7 +582,7 @@ AndroidAppHandler = Handler(
     strict=True
 )
 
-    # see http://tools.android.com/tech-docs/new-build-system/aar-formats
+# see http://tools.android.com/tech-docs/new-build-system/aar-formats
 AndroidLibHandler = Handler(
     name='Android library',
     filetypes=('zip archive',),
@@ -827,8 +856,16 @@ TarBzipHandler = Handler(
     name='Tar bzip2',
     filetypes=('bzip2 compressed',),
     mimetypes=('application/x-bzip2',),
-    extensions=('.tar.bz2', '.tar.bz', '.tar.bzip', '.tar.bzip2',
-          '.tbz', '.tbz2', '.tb2', '.tarbz2',),
+    extensions=(
+        '.tar.bz2',
+        '.tar.bz',
+        '.tar.bzip',
+        '.tar.bzip2',
+        '.tbz',
+        '.tbz2',
+        '.tb2',
+        '.tarbz2',
+    ),
     kind=regular_nested,
     extractors=[extract_tar],
     strict=False
@@ -876,10 +913,11 @@ InstallShieldHandler = Handler(
 
 NugetHandler = Handler(
     name='Nuget',
-    # weirdly enough the detection by libmagic is sometimes wrong
-    # TODO file a bug upstream
-    # this is due to this: https://en.wikipedia.org/wiki/Open_Packaging_Conventions#File_formats_using_the_OPC
+    # TODO: file a bug upstream
+    # Weirdly enough the detection by libmagic is sometimes wrong
+    # this is due to this issue:
     # being recognized by libmagic as an OOXML file
+    # https://en.wikipedia.org/wiki/Open_Packaging_Conventions#File_formats_using_the_OPC
     filetypes=('zip archive', 'microsoft ooxml',),
     mimetypes=('application/zip', 'application/octet-stream',),
     extensions=('.nupkg',),
@@ -921,7 +959,10 @@ StaticLibHandler = Handler(
 DebHandler = Handler(
     name='Debian package',
     filetypes=('debian binary package',),
-    mimetypes=('application/vnd.debian.binary-package', 'application/x-archive',),
+    mimetypes=(
+        'application/vnd.debian.binary-package',
+        'application/x-archive',
+    ),
     extensions=('.deb', '.udeb',),
     kind=package,
     extractors=[extract_deb],

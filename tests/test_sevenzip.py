@@ -24,7 +24,13 @@ from extractcode import sevenzip
 class TestSevenZip(FileBasedTesting):
     test_data_dir = os.path.join(os.path.dirname(__file__), 'data')
 
-    def check_results_with_expected_json(self, results, expected_loc, clean_dates=False, regen=False):
+    def check_results_with_expected_json(
+        self,
+        results,
+        expected_loc,
+        clean_dates=False,
+        regen=False,
+    ):
         if regen:
             with open(expected_loc, 'w') as ex:
                 json.dump(results, ex, indent=2, separators=(',', ':'))
@@ -170,7 +176,7 @@ class TestSevenParseListing(TestSevenZip):
 
     def check_parse_7z_listing(self, test_loc, regen=False):
         test_loc = self.get_test_loc(test_loc)
-        results = [e.to_dict(full=True) for e in sevenzip.parse_7z_listing(location=test_loc, utf=True)]
+        results = [e.to_dict(full=True) for e in sevenzip.parse_7z_listing(location=test_loc)]
         expected_loc = test_loc + '-expected.json'
         self.check_results_with_expected_json(
             results=results, expected_loc=expected_loc, regen=regen)

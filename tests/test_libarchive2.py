@@ -36,12 +36,13 @@ class TestExtractorTest(BaseArchiveTestCase):
         project_tmp = join(project_root, 'tmp')
         fileutils.create_dir(project_tmp)
         project_root_abs = abspath(project_root)
-        test_src_dir = tempfile.mkdtemp(dir=project_tmp).replace(project_root_abs, '').strip('\\/')
-        test_tgt_dir = tempfile.mkdtemp(dir=project_tmp).replace(project_root_abs, '').strip('\\/')
+        test_src_dir = tempfile.mkdtemp(
+            dir=project_tmp).replace(project_root_abs, '').strip('\\/')
+        test_tgt_dir = tempfile.mkdtemp(
+            dir=project_tmp).replace(project_root_abs, '').strip('\\/')
         shutil.copy(test_file, test_src_dir)
         test_src_file = join(test_src_dir, 'basic.zip')
         result = list(extract(test_src_file, test_tgt_dir))
         assert [] == result
         expected = ['c/a/a.txt', 'c/b/a.txt', 'c/c/a.txt']
         check_files(test_tgt_dir, expected)
-

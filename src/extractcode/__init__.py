@@ -137,11 +137,11 @@ def remove_backslashes_and_dotdots(directory):
 def new_name(location, is_dir=False):
     """
     Return a new non-existing location from a `location` usable to write a file
-    or create directory without overwriting existing files or directories in the same
-    parent directory, ignoring the case of the filename.
+    or create directory without overwriting existing files or directories in the
+    same parent directory, ignoring the case of the filename.
 
-    The case of the filename is ignored to ensure that similar results are returned
-    across case sensitive (*nix) and case insensitive file systems.
+    The case of the filename is ignored to ensure that similar results are
+    returned across case sensitive (*nix) and case insensitive file systems.
 
     To find a new unique filename, this tries new names this way:
      * pad a directory name with _X where X is an incremented number.

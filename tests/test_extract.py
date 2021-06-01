@@ -18,7 +18,6 @@ from commoncode import fileutils
 from commoncode.fileutils import as_posixpath
 from commoncode.system import on_linux
 from commoncode.system import on_windows
-from commoncode.testcase import FileBasedTesting
 
 import extractcode
 from extractcode import extract

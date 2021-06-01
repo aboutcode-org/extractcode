@@ -23,8 +23,10 @@ from extractcode import ExtractErrorFailedToExtract
 
 """
 Support to extract Virtual Machine image formats and the filesystem(s) they
-contain. This is based on libguestfs-tools and is tested only on Linux.
-Works only if libguestfs tool guestfish is in the path.
+contain. This is based on libguestfs-tools and is tested only on Linux. Works
+only if libguestfs tool guestfish:
+- has its path in the "EXTRACTCODE_GUESTFISH_PATH" environment variable.
+- or is in the system PATH.
 
 See https://libguestfs.org/
 """
@@ -41,7 +43,7 @@ if TRACE:
 GUESTFISH_NOT_FOUND = (
     'WARNING: guestfish executable is not installed. '
     'Unable to extract virtual machine image: you need to install the '
-    'guestfish tool from libguestfs and extra FS drivers if needed. '
+    'guestfish tool from libguestfs and extra FS drivers as needed. '
     'See the ExtractCode README.rst at '
     'https://github.com/nexB/extractcode/blob/main/README.rst '
     'and https://libguestfs.org/ for details.'
@@ -50,8 +52,7 @@ GUESTFISH_NOT_FOUND = (
 GUESTFISH_KERNEL_NOT_READABLE = (
 '''libguestfs requires the kernel executable to be readable.
 This is the case by default on most Linux distributions except on Ubuntu.
-Please follow the instructions in ExtractCode installation guide to make this happen.
-See deatils in the ExtractCode README.rst at:
+Please follow the ExtractCode installation instructions in the README.rst at:
 https://github.com/nexB/extractcode/blob/main/README.rst '
 ''')
 
@@ -69,6 +70,7 @@ def get_command(env_var=EXTRACTCODE_GUESTFISH_PATH_ENVVAR, command='guestfish'):
     cmd_loc = shutil.which(command) or None
     if not cmd_loc:
         warnings.warn(GUESTFISH_NOT_FOUND)
+
     return cmd_loc
 
 
@@ -78,9 +80,9 @@ def check_linux_kernel_is_readable():
     guestfish and libguestfs and this is an oddity mostly on Ubuntu.
 
     See:
-        - https://bugs.launchpad.net/ubuntu/+source/linux/+bug/759725
-        - https://bugzilla.redhat.com/show_bug.cgi?id=1670790
-        - https://bugs.launchpad.net/ubuntu/+source/libguestfs/+bug/1813662
+      - https://bugs.launchpad.net/ubuntu/+source/linux/+bug/759725
+      - https://bugzilla.redhat.com/show_bug.cgi?id=1670790
+      - https://bugs.launchpad.net/ubuntu/+source/libguestfs/+bug/1813662
     """
 
     if on_linux:
@@ -90,7 +92,9 @@ def check_linux_kernel_is_readable():
         for kern in kernels:
             if not os.access(kern, os.R_OK):
                 raise ExtractErrorFailedToExtract(
-                    f'Unable to read kernel at: {kern}.\n{GUESTFISH_KERNEL_NOT_READABLE}')
+                    f'Unable to read kernel at: {kern}.\n'
+                    f'{GUESTFISH_KERNEL_NOT_READABLE}'
+                )
 
 
 @attr.s
@@ -106,7 +110,8 @@ class VmImage:
         Raise excptions on errors.
         """
         if not on_linux:
-            raise ExtractErrorFailedToExtract('VM Image extraction only supported on Linux.')
+            raise ExtractErrorFailedToExtract(
+                'VM Image extraction only supported on Linux.')
 
         check_linux_kernel_is_readable()
 
@@ -130,7 +135,8 @@ class VmImage:
         image_format = supported_gfs_formats_by_extension.get(extension)
 
         if not image_format:
-            raise ExtractErrorFailedToExtract(f'Unsupported VM image format: {location}')
+            raise ExtractErrorFailedToExtract(
+                f'Unsupported VM image format: {location}')
 
         cmd_loc = get_command()
         if not cmd_loc:
@@ -144,8 +150,10 @@ class VmImage:
 
     def listfs(self, skip_partitions=('swap',)):
         """
-        Return a list of (filesystem /partition/ device path, filesystem type) for each
-        filesystem found in this image .
+        Return a list of (filesystem /partition/ device path, filesystem type)
+        for each filesystem found in this image.
+
+        Skip the partitions names list ``skip_partitions``.
 
         We run guestfish for this:
             $ guestfish --ro add foo.qcow2 : run : list-filesystems
@@ -182,8 +190,8 @@ class VmImage:
 
     def extract_image(self, target_tarball):
         """
-        Extract all files from this VM image in the `target_tarball` file as a
-        gzipped-compressed tarball (.tar.gz). Raise exception on errors.
+        Extract all files from this VM image to the ``target_tarball`` file as a
+        gzipped-compressed tarball (.tar.gz). Raise Exception on errors.
         """
         args = [
             '--ro',
@@ -197,8 +205,8 @@ class VmImage:
 
     def extract_partition(self, partition, target_tarball):
         """
-        Extract all files from a single partition of this VM image to the
-        `target_tarball` file as a gzipped-compressed tarball (.tar.gz). Raise
+        Extract all files from a single ``partition`` of this VM image to the
+        ``target_tarball`` file as a gzipped-compressed tarball (.tar.gz). Raise
         exception on errors.
         """
         # TODO: there could be devices/partitions we do not want to extract?
@@ -216,8 +224,8 @@ class VmImage:
 
     def run_guestfish(self, args, timeout=None):
         """
-        Run guestfish with `args` arguments.
-        Return stdout as unicode string. Raise exception on error
+        Run guestfish with ``args`` arguments and am optional ``timeout`` in
+        seconds. Return stdout as a unicode string. Raise Exception on error.
         """
         import subprocess
         full_args = [self.guestfish_command] + args
@@ -242,15 +250,15 @@ class VmImage:
 def extract(location, target_dir, as_tarballs=False, skip_symlinks=True):
     """
     Extract all files from a guestfish-supported VM image archive file at
-    location in the target_dir directory.
+    ``location`` in the ``target_dir`` directory.
     Return a list of warning messages if any or an empty list.
+    Raise Exception on errors.
 
-    Optionally only extract the intermediate tarballs if `as_tarball` is True.
+    Optionally only extract the intermediate tarballs if ``as_tarball`` is True.
     Otherwise, extract to intermediate tarballs and then extract each tarballs
     to the final directory.
 
-    Optionally skip extracting symlinks.
-    Raise exception on errors.
+    Optionally skip extracting symlinks with ``skip_symlinks``.
 
     This works only on Linux.
     """
@@ -258,7 +266,8 @@ def extract(location, target_dir, as_tarballs=False, skip_symlinks=True):
     abs_target_dir = os.path.abspath(os.path.expanduser(target_dir))
     if not os.path.exists(abs_target_dir) or not os.path.isdir(abs_target_dir):
         raise ExtractErrorFailedToExtract(
-            f'The system cannot find the target directory path specified: {target_dir}')
+            f'The system cannot find the target directory path '
+            f'specified: {target_dir}')
 
     vmimage = VmImage.from_file(location)
 
@@ -270,7 +279,8 @@ def extract(location, target_dir, as_tarballs=False, skip_symlinks=True):
     try:
 
         if not as_tarballs:
-            intermediate_dir = fileutils.get_temp_dir(prefix='extractcode-vmimage')
+            intermediate_dir = fileutils.get_temp_dir(
+                prefix='extractcode-vmimage')
             tdir = intermediate_dir
         else:
             tdir = target_dir
@@ -290,7 +300,8 @@ def extract(location, target_dir, as_tarballs=False, skip_symlinks=True):
     except ExtractErrorFailedToExtract as e:
         print('Cannot extract VM Image filesystems as a single file tree.')
 
-        warnings.append(f'Cannot extract VM Image filesystems as a single file tree:\n{e}')
+        warnings.append(
+            f'Cannot extract VM Image filesystems as a single file tree:\n{e}')
         # fall back to file system extraction, one partition at a time
         partitions = vmimage.listfs()
         if not partitions:
@@ -305,7 +316,10 @@ def extract(location, target_dir, as_tarballs=False, skip_symlinks=True):
                 tdir = target_dir
 
             target_tarball = os.path.join(tdir, f'{filename}.tar.gz')
-            vmimage.extract_partition(partition=partition, target_tarball=target_tarball)
+            vmimage.extract_partition(
+                partition=partition,
+                target_tarball=target_tarball,
+            )
 
             if not as_tarballs:
                 # extract the temp tarball to the final location
@@ -327,8 +341,14 @@ def extract(location, target_dir, as_tarballs=False, skip_symlinks=True):
                 else:
                     tdir = target_dir
 
-                partition_tarball = os.path.join(tdir, f'{filename}-{base_name}.tar.gz')
-                vmimage.extract_partition(partition=partition, target_tarball=partition_tarball)
+                partition_tarball = os.path.join(
+                    tdir,
+                    f'{filename}-{base_name}.tar.gz',
+                )
+                vmimage.extract_partition(
+                    partition=partition,
+                    target_tarball=partition_tarball,
+                )
 
                 if not as_tarballs:
                     # extract the temp tarball to the final location
@@ -345,10 +365,11 @@ def extract(location, target_dir, as_tarballs=False, skip_symlinks=True):
     return warnings
 
 
-def extract_image_tarball(tarball, target_dir, skip_symlinks=False):
+def extract_image_tarball(tarball, target_dir, skip_symlinks=True):
     """
-    Extract an intermediate image tarball to its final directory.
-    Return a list of warning messages
+    Extract an intermediate image ``tarball`` to its final ``target_dir``
+    directory. Optionally skip extracting symlinks with ``skip_symlinks``.
+    Return a list of warning messages. Raise Exception on errors.
     """
     from extractcode.libarchive2 import extract
     return extract(

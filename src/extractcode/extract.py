@@ -31,15 +31,15 @@ if TRACE:
     logger.setLevel(logging.DEBUG)
 
 """
-Extract archives and compressed files recursively to get the file content available for
-further processing. This the high level extraction entry point.
+Extract archives and compressed files recursively to get the file content
+available for further processing. This the high level extraction entry point.
 
 This is NOT a general purpose un-archiver. The code tries hard to do the right
 thing, BUT the extracted files are not meant to be something that can be
-faithfully re-archived to get an equivalent archive. The purpose instead is
-to extract the content of the archives as faithfully and safely as possible to
-make this content available for scanning: some paths may be altered. Some files
-may be altered or skipped entirely.
+faithfully re-archived to get an equivalent archive. The purpose instead is to
+extract the content of the archives as faithfully and safely as possible to make
+this content available for scanning: some paths may be altered. Some files may
+be altered or skipped entirely.
 
 In particular:
 
@@ -127,14 +127,17 @@ def extract(
         if replace_originals:
             processed_events_append(event)
 
-    # move files around
+    # move files around when done
     if replace_originals:
         for xevent in reversed(processed_events):
             if xevent.done:
                 source = xevent.source
                 target = xevent.target
                 if TRACE:
-                    logger.debug('extract:replace_originals: replace %(source)r by %(target)r' % locals())
+                    logger.debug(
+                        'extract:replace_originals: replace '
+                        '%(source)r by %(target)r' % locals()
+                    )
                 fileutils.delete(source)
                 fileutils.copytree(target, source)
                 fileutils.delete(target)
@@ -164,7 +167,8 @@ def extract_files(
     abs_location = abspath(expanduser(location))
     for top, dirs, files in fileutils.walk(abs_location, ignored):
         if TRACE:
-            logger.debug('extract:walk: top:  %(top)r dirs: %(dirs)r files: r(files)r' % locals())
+            logger.debug(
+                'extract:walk: top:  %(top)r dirs: %(dirs)r files: r(files)r' % locals())
 
         if not recurse:
             if TRACE:
@@ -173,7 +177,10 @@ def extract_files(
                 if extractcode.is_extraction_path(d):
                     dirs.remove(d)
             if TRACE:
-                logger.debug('extract:walk: not recurse: removed dirs:' + repr(drs.symmetric_difference(set(dirs))))
+                logger.debug(
+                    'extract:walk: not recurse: removed dirs:'
+                    +repr(drs.symmetric_difference(set(dirs)))
+                )
 
         for f in files:
             loc = join(top, f)
@@ -223,8 +230,8 @@ def extract_file(
     all_formats=False,
 ):
     """
-    Extract a single archive at `location` in the `target` directory if it is
-    of a kind supported in the `kinds` kind tuple.
+    Extract a single archive at `location` in the `target` directory if it is of
+    a kind supported in the `kinds` kind tuple.
     """
     warnings = []
     errors = []
@@ -232,10 +239,20 @@ def extract_file(
     if TRACE:
         emodule = getattr(extractor, '__module__', '')
         ename = getattr(extractor, '__name__', '')
-        logger.debug(f'extract_file: extractor: for: {location} with kinds: {kinds}: {emodule}.{ename}')
+        logger.debug(
+            f'extract_file: extractor: for: {location} with kinds: '
+            f'{kinds}: {emodule}.{ename}'
+        )
 
     if extractor:
-        yield ExtractEvent(location, target, done=False, warnings=[], errors=[])
+        yield ExtractEvent(
+            source=location,
+            target=target,
+            done=False,
+            warnings=[],
+            errors=[],
+        )
+
         try:
             # extract first to a temp directory: if there is an error,  the
             # extracted files will not be moved to target
@@ -251,7 +268,14 @@ def extract_file(
                 errors.append(traceback.format_exc())
             if TRACE:
                 tb = traceback.format_exc()
-                logger.debug('extract_file: ERROR: %(location)r: %(errors)r\n%(e)r\n%(tb)s' % locals())
+                logger.debug(
+                    'extract_file: ERROR: %(location)r: %(errors)r\n%(e)r\n%(tb)s' % locals())
 
         finally:
-            yield ExtractEvent(location, target, done=True, warnings=warnings, errors=errors)
+            yield ExtractEvent(
+                source=location,
+                target=target,
+                done=True,
+                warnings=warnings,
+                errors=errors,
+            )
