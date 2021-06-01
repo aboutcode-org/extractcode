@@ -53,9 +53,11 @@ obtain the actual archived content when other tools may fail.
 
 It can also extract recursively any type of (nested) archives-in-archives
 
-As a downside, the extracted content may not be exactly what would be expected
-to use the contained files: for instance  ... but this it is perfectly OK for
-file content analysis for software composition or forensic analysis.
+As a downside, the extracted content may not be exactly what would be extracted
+for a typical usage of the contained files: for instance some file may be
+renamed, special files and symlinks are skipped, permissions and owners are
+changed but this it is fine for prmary the use case which is analysis of file
+content for software composition or forensic analysis.
 
 Behind the scene, ExtractCode uses multiple tools such as:
 
