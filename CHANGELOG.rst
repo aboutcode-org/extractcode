@@ -5,7 +5,7 @@ v (next)
 --------
 
 
-v21.5.31
+v21.6.1
 --------
 
 - Add support for VMDK, QCOW and VDI VM image filesystems extraction
