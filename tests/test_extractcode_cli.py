@@ -32,6 +32,8 @@ def run_extract(options, expected_rc=None, cwd=None):
     Run extractcode as a plain subprocess. Return rc, stdout, stderr.
     """
     bin_dir = 'Scripts' if on_windows else 'bin'
+    # note: this assumes that we are using a standard directory layout as set
+    # with the configure script
     cmd_loc = os.path.join(project_root, 'tmp', bin_dir, 'extractcode')
     assert os.path.exists(cmd_loc + ('.exe' if on_windows else ''))
     args = [cmd_loc] + options
