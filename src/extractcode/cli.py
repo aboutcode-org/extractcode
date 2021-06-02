@@ -292,8 +292,11 @@ def extractcode(
     if not quiet:
         echo_stderr('Extracting archives...', fg='green')
 
-        with cliutils.progressmanager(extractibles,
-            item_show_func=extract_event, verbose=verbose) as extraction_events:
+        with cliutils.progressmanager(
+            extractibles,
+            item_show_func=extract_event, 
+            verbose=verbose
+        ) as extraction_events:
 
             for xev in extraction_events:
                 if xev.done and (xev.warnings or xev.errors):

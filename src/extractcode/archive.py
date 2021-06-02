@@ -7,9 +7,9 @@
 # See https://aboutcode.org for more information about nexB OSS projects.
 #
 
-from collections import namedtuple
 import logging
 import os
+from collections import namedtuple
 
 from commoncode import fileutils
 from commoncode import filetype
@@ -97,11 +97,14 @@ def can_extract(location):
 
 def should_extract(location, kinds, ignore_pattern=()):
     """
-    Return True if this location should be extracted based on the provided kinds
+    Return True if this ``location`` should be extracted based on the provided
+    ``kinds`` tuple and an ``ignore_pattern`` list of glob patterns.
     """
     location = os.path.abspath(os.path.expanduser(location))
-    ignore_pattern = {extension : 'User ignore: Supplied by --ignore'
-        for extension in ignore_pattern}
+    ignore_pattern = {
+        extension : 'User ignore: Supplied by --ignore'
+        for extension in ignore_pattern
+    }
     should_ignore = is_ignored(location, ignore_pattern)
     extractor = get_extractor(location, kinds=kinds)
 

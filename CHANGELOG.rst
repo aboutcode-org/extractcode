@@ -9,6 +9,8 @@ v21.6.2
 -------
 
 - Add new --list-formats command line option to list supported archive formats
+- Add new exttractcode.api.extract_archive() API function to extract a single
+  archive file of any supported format, non recursively.
 
 
 v21.6.1

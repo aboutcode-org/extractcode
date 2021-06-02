@@ -24,6 +24,7 @@ from extractcode import extract
 from extractcode_assert_utils import check_files
 from extractcode_assert_utils import check_no_error
 from extractcode_assert_utils import BaseArchiveTestCase
+from extractcode import all_kinds
 
 project_root = os.path.dirname(os.path.dirname(__file__))
 
@@ -891,3 +892,79 @@ class TestExtract(BaseArchiveTestCase):
         result = list(extract.extract(test_dir, recurse=True, ignore_pattern=('b*.zip',)))
         check_no_error(result)
         check_files(test_dir, expected)
+
+    def test_extract_file_ignores_archives_not_of_default_kinds(self):
+        test_dir = self.get_test_loc('extract/all_formats/doc.docx', copy=True)
+        base = fileutils.parent_directory(test_dir)
+        expected = []
+        cleaned_test_file = test_dir.replace(base, '')
+        expected_events = []
+
+        target = extractcode.get_extraction_path(test_dir)
+        result = list(extract.extract_file(test_dir, target))
+        result = [
+            r._replace(
+                source=cleaned_test_file,
+                target=extractcode.get_extraction_path(cleaned_test_file))
+            for r in result
+        ]
+        assert result == expected_events
+        check_files(target, expected)
+
+    def test_extract_file_handles_archives_of_default_kinds(self):
+        test_dir = self.get_test_loc('extract/all_formats/c.zip', copy=True)
+        base = fileutils.parent_directory(test_dir)
+        expected = [
+            'c/a/a.txt',
+            'c/b/a.txt',
+            'c/c/a.txt',
+        ]
+        cleaned_test_file = test_dir.replace(base, '')
+        expected_events = [
+            extract.ExtractEvent(
+                source=cleaned_test_file,
+                target=extractcode.get_extraction_path(cleaned_test_file),
+                done=False, warnings=[], errors=[]
+            ),
+            extract.ExtractEvent(
+                source=cleaned_test_file,
+                target=extractcode.get_extraction_path(cleaned_test_file),
+                done=True, warnings=[], errors=[]
+            )
+        ]
+
+        target = extractcode.get_extraction_path(test_dir)
+        result = list(extract.extract_file(test_dir, target))
+        result = [
+            r._replace(
+                source=cleaned_test_file,
+                target=extractcode.get_extraction_path(cleaned_test_file))
+            for r in result
+        ]
+        assert result == expected_events
+        check_files(target, expected)
+
+    def test_extract_file_works_with_all_kinds(self):
+        test_dir = self.get_test_loc('extract/all_formats/doc.docx', copy=True)
+        base = fileutils.parent_directory(test_dir)
+        expected = [
+            'c/a/a.txt',
+            'c/b/a.txt',
+            'c/c/a.txt',
+        ]
+        cleaned_test_file = test_dir.replace(base, '')
+        expected_events = [
+            extract.ExtractEvent(source='doc.docx', target='doc.docx-extract', done=False, warnings=[], errors=[]),
+            extract.ExtractEvent(source='doc.docx', target='doc.docx-extract', done=True, warnings=[], errors=[]),
+        ]
+
+        target = extractcode.get_extraction_path(test_dir)
+        result = list(extract.extract_file(test_dir, target, kinds=all_kinds))
+        result = [
+            r._replace(
+                source=cleaned_test_file,
+                target=extractcode.get_extraction_path(cleaned_test_file))
+            for r in result
+        ]
+        assert result == expected_events
+        check_files(target, expected)
