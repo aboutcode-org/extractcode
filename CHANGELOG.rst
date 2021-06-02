@@ -28,13 +28,13 @@ v21.6.1
 - Update to use latest skeleton
 
 
-v2021-2-24
+v21-2-24
 ----------
 
 - Fix incorrect documentation link
 
 
-v2021-1-21
+v21-1-21
 ----------
 
 - Fix bug related to CommonCode libraries loading
@@ -44,7 +44,7 @@ v2021-1-21
 - Reorganize tests files
 
 
-v2021-1-15
+v21-1-15
 ----------
 
 - Drop support for Python 2
