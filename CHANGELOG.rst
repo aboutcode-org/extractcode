@@ -5,8 +5,14 @@ v (next)
 --------
 
 
+v21.6.2
+-------
+
+- Add new --list-formats command line option to list supported archive formats
+
+
 v21.6.1
---------
+-------
 
 - Add support for VMDK, QCOW and VDI VM image filesystems extraction
 - Add new configuration mechanism to get third-party binary paths:

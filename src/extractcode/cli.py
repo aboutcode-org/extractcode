@@ -20,7 +20,7 @@ from commoncode.text import toascii
 
 from extractcode.api import extract_archives
 
-__version__ = '2020.09.21'
+__version__ = '2021.6.1'
 
 echo_stderr = functools.partial(click.secho, err=True)
 
@@ -29,6 +29,34 @@ def print_version(ctx, param, value):
     if not value or ctx.resilient_parsing:
         return
     echo_stderr('ExtractCode version ' + __version__)
+    ctx.exit()
+
+
+def print_archive_formats(ctx, param, value):
+    from itertools import groupby
+    from extractcode import kind_labels
+    from extractcode.archive import archive_handlers
+
+    if not value or ctx.resilient_parsing:
+        return
+
+    kindkey = lambda x:x.kind
+
+    by_kind = groupby(sorted(archive_handlers, key=kindkey), key=kindkey)
+
+    for kind, handlers in by_kind:
+        click.echo('--------------------------------------------')
+        click.echo(f'Archives of kind: {kind_labels[kind]}')
+        for handler in handlers:
+            exts = ', '.join(handler.extensions)
+            mimes = ', '.join(handler.mimetypes)
+            types = ', '.join(handler.filetypes)
+            click.echo(f'  name: {handler.name}')
+            click.echo(f'    extensions: {exts}')
+            click.echo(f'    filetypes : {types}')
+            click.echo(f'    mimetypes : {mimes}')
+            click.echo('')
+
     ctx.exit()
 
 
@@ -120,9 +148,19 @@ Try 'extractcode --help' for help on options and arguments.'''
 @click.option(
     '--all-formats',
     is_flag=True,
-    help='Extract archives from all known formats.',
+    help=
+    'Extract archives from all known formats. '
+    'The default is to extract only the common format of these kinds: '
+    '"regular", "regular_nested" and "package". '
+    'To show all supported formats use the option --list-formats .',
 )
-
+@click.option(
+    '--list-formats',
+    is_flag=True,
+    is_eager=True,
+    callback=print_archive_formats,
+    help='Show the list of supported archive and compressed file formats and exit.',
+)
 @click.help_option('-h', '--help')
 @click.option(
     '--about',
@@ -288,3 +326,4 @@ def get_relative_path(path, len_base_path, base_is_dir):
         rel_path = fileutils.file_name(path)
 
     return rel_path.lstrip('/')
+
