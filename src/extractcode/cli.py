@@ -45,16 +45,16 @@ def print_archive_formats(ctx, param, value):
     by_kind = groupby(sorted(archive_handlers, key=kindkey), key=kindkey)
 
     for kind, handlers in by_kind:
-        click.echo('--------------------------------------------')
-        click.echo(f'Archives of kind: {kind_labels[kind]}')
+        click.echo(f'Archive format kind: {kind_labels[kind]}')
+        click.echo('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
         for handler in handlers:
             exts = ', '.join(handler.extensions)
             mimes = ', '.join(handler.mimetypes)
             types = ', '.join(handler.filetypes)
             click.echo(f'  name: {handler.name}')
-            click.echo(f'    extensions: {exts}')
-            click.echo(f'    filetypes : {types}')
-            click.echo(f'    mimetypes : {mimes}')
+            click.echo(f'     - extensions: {exts}')
+            click.echo(f'     - filetypes : {types}')
+            click.echo(f'     - mimetypes : {mimes}')
             click.echo('')
 
     ctx.exit()
