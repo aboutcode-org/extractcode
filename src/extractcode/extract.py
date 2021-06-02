@@ -108,9 +108,11 @@ def extract(
     If `replace_originals` is True, the extracted archives are replaced by the
     extracted content.
 
-    Note that while the original file system is walked top-down, breadth-first,
-    if recurse and a nested archive is found, it is extracted to full depth
-    first before resuming the file system walk.
+    ``ignore_pattern`` is a list of glob patterns to ignore.
+
+    Note that while the original filesystem is walked top-down, breadth-first,
+    if ``recurse`` and a nested archive is found, it is extracted at full depth
+    first before resuming the filesystem walk.
     """
 
     extract_events = extract_files(
@@ -159,16 +161,18 @@ def extract_files(
 
     If `recurse` is false, then do not extract further an already
     extracted archive identified by the corresponding extract suffix location.
+
+    ``ignore_pattern`` is a list of glob patterns to ignore.
     """
     ignored = partial(ignore.is_ignored, ignores=ignore.default_ignores, unignores={})
     if TRACE:
-        logger.debug('extract:start: %(location)r  recurse: %(recurse)r\n' % locals())
+        logger.debug('extract:start: %(location)r recurse: %(recurse)r\n' % locals())
 
     abs_location = abspath(expanduser(location))
     for top, dirs, files in fileutils.walk(abs_location, ignored):
         if TRACE:
             logger.debug(
-                'extract:walk: top:  %(top)r dirs: %(dirs)r files: r(files)r' % locals())
+                'extract:walk: top: %(top)r dirs: %(dirs)r files: r(files)r' % locals())
 
         if not recurse:
             if TRACE:
@@ -177,21 +181,25 @@ def extract_files(
                 if extractcode.is_extraction_path(d):
                     dirs.remove(d)
             if TRACE:
-                logger.debug(
-                    'extract:walk: not recurse: removed dirs:'
-                    +repr(drs.symmetric_difference(set(dirs)))
-                )
+                rd = repr(drs.symmetric_difference(set(dirs)))
+                logger.debug(f'extract:walk: not recurse: removed dirs: {rd}')
 
         for f in files:
             loc = join(top, f)
             if not recurse and extractcode.is_extraction_path(loc):
                 if TRACE:
-                    logger.debug('extract:walk not recurse: skipped  file: %(loc)r' % locals())
+                    logger.debug(
+                        'extract:walk not recurse: skipped  file: %(loc)r' % locals())
                 continue
 
-            if not extractcode.archive.should_extract(loc, kinds, ignore_pattern):
+            if not extractcode.archive.should_extract(
+                location=loc,
+                kinds=kinds,
+                ignore_pattern=ignore_pattern
+            ):
                 if TRACE:
-                    logger.debug('extract:walk: skipped file: not should_extract: %(loc)r' % locals())
+                    logger.debug(
+                        'extract:walk: skipped file: not should_extract: %(loc)r' % locals())
                 continue
 
             target = join(abspath(top), extractcode.get_extraction_path(loc))
@@ -227,15 +235,21 @@ def extract_file(
     target,
     kinds=extractcode.default_kinds,
     verbose=False,
-    all_formats=False,
+    *args,
+    **kwargs,
 ):
     """
-    Extract a single archive at `location` in the `target` directory if it is of
-    a kind supported in the `kinds` kind tuple.
+    Extract a single archive file at ``location`` to the ``target`` directory if
+    this file is of a kind supported in the ``kinds`` kind tuple. Yield
+    ExtractEvents. Does not extract recursively.
     """
     warnings = []
     errors = []
-    extractor = extractcode.archive.get_extractor(location, kinds)
+    extractor = extractcode.archive.get_extractor(
+        location=location,
+        kinds=kinds,
+    )
+
     if TRACE:
         emodule = getattr(extractor, '__module__', '')
         ename = getattr(extractor, '__name__', '')
@@ -254,14 +268,15 @@ def extract_file(
         )
 
         try:
-            # extract first to a temp directory: if there is an error,  the
-            # extracted files will not be moved to target
+            # Extract first to a temp directory: if there is an error, the
+            # extracted files will not be moved to the target.
             tmp_tgt = fileutils.get_temp_dir(prefix='extractcode-extract-')
             abs_location = abspath(expanduser(location))
             warns = extractor(abs_location, tmp_tgt) or []
             warnings.extend(warns)
             fileutils.copytree(tmp_tgt, target)
             fileutils.delete(tmp_tgt)
+
         except Exception as e:
             errors = [str(e).strip(' \'"')]
             if verbose:
@@ -269,7 +284,7 @@ def extract_file(
             if TRACE:
                 tb = traceback.format_exc()
                 logger.debug(
-                    'extract_file: ERROR: %(location)r: %(errors)r\n%(e)r\n%(tb)s' % locals())
+                    f'extract_file: ERROR: {location}: {errors}\n{e}\n{tb}')
 
         finally:
             yield ExtractEvent(

@@ -62,6 +62,7 @@ def check_files(test_dir, expected, regen=False):
             result.append(path)
 
     expected_is_json_file = False
+
     if not isinstance(expected, (list, tuple)) and expected.endswith('.json'):
         expected_is_json_file = True
         # this is a path to a JSON file
@@ -79,13 +80,13 @@ def check_files(test_dir, expected, regen=False):
     result = sorted(result)
 
     try:
-        assert expected_content == result
+        assert result == expected_content
     except AssertionError:
         files = [
             'test_dir: file://{}'.format(test_dir),
             'expected: file://{}'.format(expected if expected_is_json_file else ''),
         ]
-        assert files + expected_content == result
+        assert result == files + expected_content
 
     for location in locs:
         assert filetype.is_file(location)

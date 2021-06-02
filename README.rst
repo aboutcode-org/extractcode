@@ -23,6 +23,9 @@ Why another extractor?
 
 ExtractCode will extract things where other extractors may fail.
 
+ExtractCode supports one of largest number of archive formats listed in the
+long  `List of supported archive formats`_ found at the bottom of this document.
+
 - Say you want to extract the tarball of the Linux kernel source code on Windows.
   It contains paths that are the same when ignoring the case and therefore will
   not extract OK on Windows: some file may be munged or the extract may file.
@@ -51,7 +54,8 @@ ExtractCode will extract things where other extractors may fail.
 In all these cases, ExtractCode will extract and try hard do the right thing to
 obtain the actual archived content when other tools may fail.
 
-It can also extract recursively any type of (nested) archives-in-archives
+It can also extract recursively any type of (nested) archives-in-archives.
+
 
 As a downside, the extracted content may not be exactly what would be extracted
 for a typical usage of the contained files: for instance some file may be
@@ -143,7 +147,6 @@ The supported binary tools versions are:
 
 - libarchive  3.5.x
 - 7zip 16.5.x
-
 
 Development
 -----------
@@ -256,3 +259,297 @@ similar to ExtractCode but with different goals:
 
 - https://github.com/wummel/patool (wrapper on many CLI tools) (GPL license)
 - https://github.com/dtrx-py/dtrx (wrapper on a few CLI tools) (recently revived) (GPL license)
+
+
+
+
+List of supported archive formats
+-------------------------------------
+
+ExtractCode can extract the folowing archives formats:
+
+Archive format kind: docs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  name: Office doc
+     - extensions: .docx, .dotx, .docm, .xlsx, .xltx, .xlsm, .xltm, .pptx, .ppsx, .potx, .pptm, .potm, .ppsm, .odt, .odf, .sxw, .stw, .ods, .ots, .sxc, .stc, .odp, .otp, .odg, .otg, .sxi, .sti, .sxd, .sxg, .std, .sdc, .sda, .sdd, .smf, .sdw, .sxm, .stw, .oxt, .sldx, .epub
+     - filetypes : zip archive, microsoft word 2007+, microsoft excel 2007+, microsoft powerpoint 2007+
+     - mimetypes : application/zip, application/vnd.openxmlformats
+
+  name: Dia diagram doc
+     - extensions: .dia
+     - filetypes : gzip compressed
+     - mimetypes : application/gzip
+
+  name: Graffle diagram doc
+     - extensions: .graffle
+     - filetypes : gzip compressed
+     - mimetypes : application/gzip
+
+  name: SVG Compressed doc
+     - extensions: .svgz
+     - filetypes : gzip compressed
+     - mimetypes : application/gzip
+
+Archive format kind: regular
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  name: Tar
+     - extensions: .tar
+     - filetypes : .tar, tar archive
+     - mimetypes : application/x-tar
+
+  name: Zip
+     - extensions: .zip, .zipx
+     - filetypes : zip archive
+     - mimetypes : application/zip
+
+  name: Java archive
+     - extensions: .war, .sar, .ear
+     - filetypes : zip archive
+     - mimetypes : application/zip, application/java-archive
+
+  name: xz
+     - extensions: .xz
+     - filetypes : xz compressed
+     - mimetypes : application/x-xz
+
+  name: lzma
+     - extensions: .lzma
+     - filetypes : lzma compressed
+     - mimetypes : application/x-xz
+
+  name: Gzip
+     - extensions: .gz, .gzip, .wmz, .arz
+     - filetypes : gzip compressed, gzip compressed data
+     - mimetypes : application/gzip
+
+  name: bzip2
+     - extensions: .bz, .bz2, bzip2
+     - filetypes : bzip2 compressed
+     - mimetypes : application/x-bzip2
+
+  name: lzip
+     - extensions: .lzip
+     - filetypes : lzip compressed
+     - mimetypes : application/x-lzip
+
+  name: RAR
+     - extensions: .rar
+     - filetypes : rar archive
+     - mimetypes : application/x-rar
+
+  name: ar archive
+     - extensions: .ar
+     - filetypes : current ar archive
+     - mimetypes : application/x-archive
+
+  name: 7zip
+     - extensions: .7z
+     - filetypes : 7-zip archive
+     - mimetypes : application/x-7z-compressed
+
+  name: cpio
+     - extensions: .cpio
+     - filetypes : cpio archive
+     - mimetypes : application/x-cpio
+
+  name: Z
+     - extensions: .z
+     - filetypes : compress'd data
+     - mimetypes : application/x-compress
+
+Archive format kind: regular_nested
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  name: Tar xz
+     - extensions: .tar.xz, .txz, .tarxz
+     - filetypes : xz compressed
+     - mimetypes : application/x-xz
+
+  name: Tar lzma
+     - extensions: tar.lzma, .tlz, .tarlz, .tarlzma
+     - filetypes : lzma compressed
+     - mimetypes : application/x-lzma
+
+  name: Tar gzip
+     - extensions: .tgz, .tar.gz, .tar.gzip, .targz, .targzip, .tgzip
+     - filetypes : gzip compressed
+     - mimetypes : application/gzip
+
+  name: Tar lzip
+     - extensions: .tar.lz, .tar.lzip
+     - filetypes : lzip compressed
+     - mimetypes : application/x-lzip
+
+  name: Tar lz4
+     - extensions: .tar.lz4
+     - filetypes : lz4 compressed
+     - mimetypes : application/x-lz4
+
+  name: Tar zstd
+     - extensions: .tar.zst, .tar.zstd
+     - filetypes : zstandard compressed
+     - mimetypes : application/x-zstd
+
+  name: Tar bzip2
+     - extensions: .tar.bz2, .tar.bz, .tar.bzip, .tar.bzip2, .tbz, .tbz2, .tb2, .tarbz2
+     - filetypes : bzip2 compressed
+     - mimetypes : application/x-bzip2
+
+  name: lz4
+     - extensions: .lz4
+     - filetypes : lz4 compressed
+     - mimetypes : application/x-lz4
+
+  name: zstd
+     - extensions: .zst, .zstd
+     - filetypes : zstandard compressed
+     - mimetypes : application/x-zstd
+
+  name: Tar 7zip
+     - extensions: .tar.7z, .tar.7zip, .t7z
+     - filetypes : 7-zip archive
+     - mimetypes : application/x-7z-compressed
+
+  name: Tar Z
+     - extensions: .tz, .tar.z, .tarz
+     - filetypes : compress'd data
+     - mimetypes : application/x-compress
+
+Archive format kind: package
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  name: Ruby Gem package
+     - extensions: .gem
+     - filetypes : .tar, tar archive
+     - mimetypes : application/x-tar
+
+  name: Android app
+     - extensions: .apk
+     - filetypes : zip archive
+     - mimetypes : application/zip
+
+  name: Android library
+     - extensions: .aar
+     - filetypes : zip archive
+     - mimetypes : application/zip
+
+  name: Mozilla extension
+     - extensions: .xpi
+     - filetypes : zip archive
+     - mimetypes : application/zip
+
+  name: iOS app
+     - extensions: .ipa
+     - filetypes : zip archive
+     - mimetypes : application/zip
+
+  name: Springboot Java Jar package
+     - extensions: .jar
+     - filetypes : bourne-again shell script executable (binary data)
+     - mimetypes : text/x-shellscript
+
+  name: Java Jar package
+     - extensions: .jar, .zip
+     - filetypes : java archive
+     - mimetypes : application/java-archive
+
+  name: Java Jar package
+     - extensions: .jar
+     - filetypes : zip archive
+     - mimetypes : application/zip
+
+  name: Python package
+     - extensions: .egg, .whl, .pyz, .pex
+     - filetypes : zip archive
+     - mimetypes : application/zip
+
+  name: Microsoft cab
+     - extensions: .cab
+     - filetypes : microsoft cabinet
+     - mimetypes : application/vnd.ms-cab-compressed
+
+  name: Microsoft MSI Installer
+     - extensions: .msi
+     - filetypes : msi installer
+     - mimetypes : application/x-msi
+
+  name: Apple pkg or mpkg package installer
+     - extensions: .pkg, .mpkg
+     - filetypes : xar archive
+     - mimetypes : application/octet-stream
+
+  name: Xar archive v1
+     - extensions: .xar
+     - filetypes : xar archive
+     - mimetypes : application/octet-stream, application/x-xar
+
+  name: Nuget
+     - extensions: .nupkg
+     - filetypes : zip archive, microsoft ooxml
+     - mimetypes : application/zip, application/octet-stream
+
+  name: Static Library
+     - extensions: .a, .lib, .out, .ka
+     - filetypes : current ar archive, current ar archive random library
+     - mimetypes : application/x-archive
+
+  name: Debian package
+     - extensions: .deb, .udeb
+     - filetypes : debian binary package
+     - mimetypes : application/vnd.debian.binary-package, application/x-archive
+
+  name: RPM package
+     - extensions: .rpm, .srpm, .mvl, .vip
+     - filetypes : rpm 
+     - mimetypes : application/x-rpm
+
+  name: Apple dmg
+     - extensions: .dmg, .sparseimage
+     - filetypes : zlib compressed
+     - mimetypes : application/zlib
+
+Archive format kind: file_system
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  name: ISO CD image
+     - extensions: .iso, .udf, .img
+     - filetypes : iso 9660 cd-rom, high sierra cd-rom
+     - mimetypes : application/x-iso9660-image
+
+  name: SquashFS disk image
+     - extensions: 
+     - filetypes : squashfs
+     - mimetypes : 
+
+  name: QEMU QCOW2 disk image
+     - extensions: .qcow2, .qcow, .qcow2c, .img
+     - filetypes : qemu qcow2 image, qemu qcow image
+     - mimetypes : application/octet-stream
+
+  name: VMDK disk image
+     - extensions: .vmdk
+     - filetypes : vmware4 disk image
+     - mimetypes : application/octet-stream
+
+  name: VirtualBox disk image
+     - extensions: .vdi
+     - filetypes : virtualbox disk image
+     - mimetypes : application/octet-stream
+
+Archive format kind: patches
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  name: Patch
+     - extensions: .diff, .patch
+     - filetypes : diff, patch
+     - mimetypes : text/x-diff
+
+Archive format kind: special_package
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  name: InstallShield Installer
+     - extensions: .exe
+     - filetypes : installshield
+     - mimetypes : application/x-dosexec
+
+  name: Nullsoft Installer
+     - extensions: .exe
+     - filetypes : nullsoft installer
+     - mimetypes : application/x-dosexec
+
+

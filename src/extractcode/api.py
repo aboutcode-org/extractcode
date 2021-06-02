@@ -21,13 +21,20 @@ def extract_archives(
 ):
     """
     Yield ExtractEvent while extracting archive(s) and compressed files at
-    `location`.
+    ``location``.
 
-    If `recurse` is True, extract nested archives-in-archives recursively.
-    If `all_formats` is True, extract all supported archives formats.
+    If ``recurse`` is True, extract nested archives-in-archives recursively.
+    If ``all_formats`` is True, extract all supported archives formats. The
+    default is to only extract the common "extractcode.default_kinds"
 
-    Archives and compressed files are extracted in a directory named
-    "<file_name>-extract" created in the same directory as the archive.
+    Archives and compressed files are extracted in a new directory named
+    "<file_name>-extract" created in the same directory as each extracted
+    archive.
+
+    If ``replace_originals`` is True, the extracted archives are replaced by the
+    extracted content and removed when extraction is complete
+
+    ``ignore_pattern`` is a list of glob patterns to ignore.
 
     Note: this API is returning an iterable and NOT a sequence.
     """
@@ -46,3 +53,24 @@ def extract_archives(
         ignore_pattern=ignore_pattern,
     ):
         yield xevent
+
+
+def extract_archive(location, target, verbose=False):
+    """
+    Yield ExtractEvent while extracting a single archive or compressed file at
+    ``location`` to the ``target`` directory if the file is of any supported
+    archive format. Note: this API is returning an iterable and NOT a sequence
+    and does not extract recursively.
+
+    If ``verbose`` is True, ExtractEvent.errors will contain a full error
+    traceback if any.
+    """
+
+    from extractcode.extract import extract_file
+    from extractcode import all_kinds
+    return extract_file(
+        location=location,
+        target=target,
+        kinds=all_kinds,
+        verbose=verbose,
+    )
