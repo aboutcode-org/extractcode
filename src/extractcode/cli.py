@@ -20,7 +20,7 @@ from commoncode.text import toascii
 
 from extractcode.api import extract_archives
 
-__version__ = '2021.6.1'
+__version__ = '2021.6.2'
 
 echo_stderr = functools.partial(click.secho, err=True)
 
