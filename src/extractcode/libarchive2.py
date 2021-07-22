@@ -203,7 +203,7 @@ def extract(location, target_dir, skip_symlinks=True):
         if TRACE:
             logger.debug('  writing.....')
 
-        _target_path = entry.write(abs_target_dir, transform_path=paths.safe_path)
+        _target_path = entry.write(abs_target_dir, transform_path=partial(paths.safe_path, preserve_spaces=True))
 
     return warnings
 

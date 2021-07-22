@@ -394,10 +394,10 @@ class TestTarGzip(BaseArchiveTestCase):
         result = archive.extract_tar(test_file, test_dir)
         assert [] == result
         import json
-        exp_file = self.get_test_loc('archive/tgz/mixed_case_and_symlink.tgz.expected')
+        exp_file = self.get_test_loc('archive/tgz/mixed_case_and_symlink.tgz.expected.json')
         with open(exp_file) as ef:
             expected_files = json.load(ef)
-        check_files(test_dir, list(map(str, expected_files)))
+        check_files(test_dir, exp_file, regen=False)
 
     def test_extract_targz_symlinks(self):
         test_file = self.get_test_loc('archive/tgz/symlink.tar.gz')

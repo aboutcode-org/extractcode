@@ -203,7 +203,7 @@ def test_extractcode_command_can_extract_archive_with_unicode_names_verbose():
     expected = [
         '/unicodepath/Ho_',
         '/unicodepath/Ho_a',
-        '/unicodepath/koristenjem_Karkkainen_-_Sander.pdf'
+        '/unicodepath/koristenjem Karkkainen - Sander.pdf'
     ]
     assert sorted(expected) == sorted(file_result)
 
@@ -220,7 +220,7 @@ def test_extractcode_command_can_extract_archive_with_unicode_names():
     expected = [
         '/unicodepath/Ho_',
         '/unicodepath/Ho_a',
-        '/unicodepath/koristenjem_Karkkainen_-_Sander.pdf'
+        '/unicodepath/koristenjem Karkkainen - Sander.pdf'
     ]
     assert sorted(expected) == sorted(file_result)
 
