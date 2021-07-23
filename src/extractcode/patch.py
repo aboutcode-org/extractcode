@@ -54,7 +54,7 @@ def extract(location, target_dir):
 
         # make the path safe to use as a subfile path
         # ensure this a good and clean posix relative path
-        patch_subfile_path = paths.safe_path(patch_subfile_path)
+        patch_subfile_path = paths.safe_path(patch_subfile_path, preserve_spaces=True)
 
         # create directories
         parent_dir = posixpath.dirname(patch_subfile_path)
