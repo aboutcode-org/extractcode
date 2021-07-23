@@ -1,11 +1,11 @@
 Changelog
 =========
 
-v (next)
+v21.7.23
 --------
 
-- Spaces in filenames are no longer replaced by underscores when files are
-  extracted from archives.
+- Spaces in file and directory names are no longer replaced by underscores when
+  files and directories are extracted from archives.
 
 v21.6.2
 -------
