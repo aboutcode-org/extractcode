@@ -467,7 +467,7 @@ def extract_file_by_file(
                 errors[entry.path] = 'No file name extracted.'
             continue
 
-        safe_path = paths.safe_path(entry.path, posix=True)
+        safe_path = paths.safe_path(entry.path, posix=True, preserve_spaces=True)
         target_file_loc = os.path.join(target_dir, safe_path)
         target_file_dir = os.path.dirname(target_file_loc)
         fileutils.create_dir(target_file_dir)

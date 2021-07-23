@@ -4,6 +4,8 @@ Changelog
 v (next)
 --------
 
+- Spaces in filenames are no longer replaced by underscores when files are
+  extracted from archives.
 
 v21.6.2
 -------
