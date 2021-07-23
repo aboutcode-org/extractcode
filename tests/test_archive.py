@@ -2266,6 +2266,7 @@ class ExtractArchiveWithIllegalFilenamesTestCase(BaseArchiveTestCase):
 
         expected = json.loads(open(expected_file).read())
         expected = [p for p in expected if p.strip()]
+        expected = sorted(expected)
         try:
             assert expected == extracted
         except:
