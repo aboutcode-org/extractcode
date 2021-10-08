@@ -126,8 +126,16 @@ def extract(
     processed_events_append = processed_events.append
     for event in extract_events:
         yield event
+        if event.warnings or event.errors:
+            if TRACE:
+                logger.debug(
+                    f'extract:replace_originals: {event} has errors. '
+                    'not replacing originals'
+                )
+            continue
         if replace_originals:
             processed_events_append(event)
+
 
     # move files around when done
     if replace_originals:
