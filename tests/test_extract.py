@@ -273,6 +273,22 @@ class TestExtract(BaseArchiveTestCase):
         check_no_error(result)
         check_files(test_dir, expected)
 
+    def test_extract_with_replace_originals_does_not_fail_with_gz_with_trailing(self):
+        expected = (
+        )
+        test_dir = self.get_test_loc('extract/replace-originals/rake.1.gz', copy=True)
+        result = list(extract.extract(test_dir, recurse=True, replace_originals=True))
+        check_no_error(result)
+        check_files(test_dir, expected)
+
+    def test_extract_with_replace_originals_does_not_fail_with_corrupted_archive(self):
+        expected = (
+        )
+        test_dir = self.get_test_loc('extract/replace-originals/issue6550.gz', copy=True)
+        result = list(extract.extract(test_dir, recurse=True, replace_originals=True))
+        check_no_error(result)
+        check_files(test_dir, expected)
+
     def test_extract_tree_shallow_then_recursive(self):
         shallow = (
             'a/a.tar.gz',
