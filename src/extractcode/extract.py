@@ -88,31 +88,32 @@ def extract(
     ignore_pattern=(),
 ):
     """
-    Walk and extract any archives found at `location` (either a file or
-    directory). Extract only archives of a kind listed in the `kinds` kind tuple.
+    Walk and extract any archives found at ``location`` (either a file or
+    directory). Extract only archives of a kind listed in the ``kinds`` kind
+    tuple.
 
-    Return an iterable of ExtractEvent tuples for each extracted archive. This
-    can be used to track extraction progress:
+    Return an iterable of ExtractEvent for each extracted archive. This can be
+    used to track extraction progress:
 
      - one event is emitted just before extracting an archive. The ExtractEvent
-       warnings and errors are empty. The `done` flag is False.
+       warnings and errors are empty. The "done" flag is False.
 
      - one event is emitted right after extracting an archive. The ExtractEvent
-       warnings and errors contains warnings and errors if any. The `done` flag
+       warnings and errors contains warnings and errors if any. The "done" flag
        is True.
 
-    If `recurse` is True, extract recursively archives nested inside other
-    archives. If `recurse` is false, then do not extract further an already
+    If ``recurse`` is True, extract recursively archives nested inside other
+    archives. If ``recurse`` is false, then do not extract further an already
     extracted archive identified by the corresponding extract suffix location.
 
-    If `replace_originals` is True, the extracted archives are replaced by the
-    extracted content.
+    If ``replace_originals`` is True, the extracted archives are replaced by the
+    extracted content, only if the extraction was successful.
 
     ``ignore_pattern`` is a list of glob patterns to ignore.
 
     Note that while the original filesystem is walked top-down, breadth-first,
-    if ``recurse`` and a nested archive is found, it is extracted at full depth
-    first before resuming the filesystem walk.
+    if ``recurse`` and a nested archive is found, it is extracted first
+    recursively and at full depth-first before resuming the filesystem walk.
     """
 
     extract_events = extract_files(
@@ -126,27 +127,19 @@ def extract(
     processed_events_append = processed_events.append
     for event in extract_events:
         yield event
-        if event.warnings or event.errors:
-            if TRACE:
-                logger.debug(
-                    f'extract:replace_originals: {event} has errors. '
-                    'not replacing originals'
-                )
-            continue
         if replace_originals:
             processed_events_append(event)
 
-
-    # move files around when done
+    # move files around when done, unless there are errors
     if replace_originals:
         for xevent in reversed(processed_events):
-            if xevent.done:
+            if xevent.done and not (event.warnings or event.errors):
                 source = xevent.source
                 target = xevent.target
                 if TRACE:
                     logger.debug(
-                        'extract:replace_originals: replace '
-                        '%(source)r by %(target)r' % locals()
+                        f'extract:replace_originals: replacing '
+                        f'{source!r} by {target!r}'
                     )
                 fileutils.delete(source)
                 fileutils.copytree(target, source)
