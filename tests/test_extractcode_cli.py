@@ -34,7 +34,7 @@ def run_extract(options, expected_rc=None, cwd=None):
     bin_dir = 'Scripts' if on_windows else 'bin'
     # note: this assumes that we are using a standard directory layout as set
     # with the configure script
-    cmd_loc = os.path.join(project_root, 'tmp', bin_dir, 'extractcode')
+    cmd_loc = os.path.join(project_root, 'venv', bin_dir, 'extractcode')
     assert os.path.exists(cmd_loc + ('.exe' if on_windows else ''))
     args = [cmd_loc] + options
     result = subprocess.run(args,
@@ -259,6 +259,22 @@ def test_extractcode_command_can_ignore():
         '/a.zip-extract/c.tar',
     ]
     assert sorted(expected) == sorted(file_result)
+
+
+def test_extractcode_command_does_not_crash_with_replace_originals_and_corrupted_archives():
+    test_dir = test_env.get_test_loc('cli/replace-originals', copy=True)
+    result = run_extract(['--replace-originals', '--verbose', test_dir] , expected_rc=1)
+
+    assert not os.path.exists(os.path.join(test_dir, 'rake.1.gz-extract'))
+    assert 'rake.1.gz' in result.stdout
+
+    assert 'Extracting archives...' in result.stderr
+    assert 'ERROR extracting' in result.stderr
+    assert 'rake.1.gz' in result.stderr
+    assert 'Not a gzipped file ' in result.stderr
+    assert 'issue6550.gz' in result.stderr
+    assert ' too many length or distance symbols' in result.stderr
+    assert 'Extracting done.' in result.stderr
 
 
 @pytest.mark.skipif(on_windows, reason='FIXME: this test fails on Windows until we have support for long file names.')

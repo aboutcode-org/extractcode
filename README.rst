@@ -153,7 +153,8 @@ Development
 
 To set up the development environment::
 
-    source configure --dev
+    configure --dev
+    source venv/bin/activate
 
 
 To run unit tests::
@@ -262,7 +263,6 @@ similar to ExtractCode but with different goals:
 
 
 
-
 List of supported archive formats
 -------------------------------------
 
@@ -270,6 +270,7 @@ ExtractCode can extract the folowing archives formats:
 
 Archive format kind: docs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
   name: Office doc
      - extensions: .docx, .dotx, .docm, .xlsx, .xltx, .xlsm, .xltm, .pptx, .ppsx, .potx, .pptm, .potm, .ppsm, .odt, .odf, .sxw, .stw, .ods, .ots, .sxc, .stc, .odp, .otp, .odg, .otg, .sxi, .sti, .sxd, .sxg, .std, .sdc, .sda, .sdd, .smf, .sdw, .sxm, .stw, .oxt, .sldx, .epub
      - filetypes : zip archive, microsoft word 2007+, microsoft excel 2007+, microsoft powerpoint 2007+
@@ -292,6 +293,7 @@ Archive format kind: docs
 
 Archive format kind: regular
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
   name: Tar
      - extensions: .tar
      - filetypes : .tar, tar archive
@@ -359,6 +361,7 @@ Archive format kind: regular
 
 Archive format kind: regular_nested
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
   name: Tar xz
      - extensions: .tar.xz, .txz, .tarxz
      - filetypes : xz compressed
@@ -414,8 +417,10 @@ Archive format kind: regular_nested
      - filetypes : compress'd data
      - mimetypes : application/x-compress
 
+
 Archive format kind: package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
   name: Ruby Gem package
      - extensions: .gem
      - filetypes : .tar, tar archive
@@ -508,6 +513,7 @@ Archive format kind: package
 
 Archive format kind: file_system
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
   name: ISO CD image
      - extensions: .iso, .udf, .img
      - filetypes : iso 9660 cd-rom, high sierra cd-rom
@@ -535,6 +541,7 @@ Archive format kind: file_system
 
 Archive format kind: patches
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
   name: Patch
      - extensions: .diff, .patch
      - filetypes : diff, patch
@@ -542,6 +549,7 @@ Archive format kind: patches
 
 Archive format kind: special_package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
   name: InstallShield Installer
      - extensions: .exe
      - filetypes : installshield

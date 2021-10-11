@@ -1,6 +1,22 @@
 Changelog
 =========
 
+v30.0.0 (next)
+--------
+
+- Update to the latest skeleton. The virtualenv is now created under the venv
+  directory with the ./configure --dev
+- Switch back to semver versioning. Calver was not really needed here.
+- Do not crash if there is a corrupted archive with the --replace-originals
+  option
+
+Thank you to:
+
+- Jono Yang @JonoYang
+- Bryan Sutula @sutula
+- Smascer @Smascer
+- Chin-Yeung Li @chinyeungli
+
 v21.7.23
 --------
 
