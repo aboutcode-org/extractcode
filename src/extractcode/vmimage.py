@@ -113,7 +113,7 @@ class VmImage:
             raise ExtractErrorFailedToExtract(
                 'VM Image extraction only supported on Linux.')
 
-        check_linux_kernel_is_readable()
+        # check_linux_kernel_is_readable()
 
         assert location
         abs_location = os.path.abspath(os.path.expanduser(location))
