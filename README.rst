@@ -153,7 +153,7 @@ Development
 
 To set up the development environment::
 
-    configure --dev
+    ./configure --dev
     source venv/bin/activate
 
 
