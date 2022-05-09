@@ -17,6 +17,12 @@ from commoncode.text import as_unicode
 
 from extractcode import patch
 
+try:
+    import patch as _pythonpatch
+except ImportError:
+    import pytest
+    pytestmark = pytest.mark.skipif(True, reason="Run only if patch is installed.")
+
 
 class TestIsPatch(FileBasedTesting):
     test_data_dir = os.path.join(os.path.dirname(__file__), 'data')

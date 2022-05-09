@@ -11,8 +11,6 @@ import posixpath
 import logging
 import os.path
 
-import patch as pythonpatch
-
 from commoncode import paths
 from commoncode import fileutils
 from commoncode import text
@@ -136,6 +134,7 @@ def patch_info(location):
 
     Raise an exception if the file is not a patch file or cannot be parsed.
     """
+    import patch as pythonpatch
     patchset = pythonpatch.fromfile(location)
     if not patchset:
         msg = 'Unable to parse patch file: %(location)s' % locals()

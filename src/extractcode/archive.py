@@ -1194,5 +1194,11 @@ archive_handlers = [
     QCOWHandler,
     VMDKHandler,
     VirtualBoxHandler,
-    PatchHandler,
 ]
+
+# only support extracting patches if patch is installed. This is not a default
+try:
+    import patch as _pythonpatch
+    archive_handlers.append(PatchHandler)
+except:
+    pass
