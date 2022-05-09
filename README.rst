@@ -1,5 +1,6 @@
+============
 ExtractCode
-===========
+============
 
 - license: Apache-2.0
 - copyright: copyright (c) nexB. Inc. and others
@@ -21,7 +22,7 @@ Why another extractor?
 
 **it will extract!**
 
-ExtractCode will extract things where other extractors may fail.
+ExtractCode will extract things where other archive and compressed file extractors may fail.
 
 ExtractCode supports one of largest number of archive formats listed in the
 long  `List of supported archive formats`_ found at the bottom of this document.

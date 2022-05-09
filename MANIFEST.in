@@ -9,7 +9,9 @@ include *.rst
 include setup.*
 include configure*
 include requirements*
-include .git*
+include .giti*
+
+include extractcode*
 
 global-exclude *.py[co] __pycache__ *.*~
 

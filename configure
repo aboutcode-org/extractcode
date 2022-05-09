@@ -60,9 +60,8 @@ if [ -d "$CFG_ROOT_DIR/thirdparty" ]; then
 fi
 PIP_EXTRA_ARGS="$PIP_EXTRA_ARGS --find-links https://thirdparty.aboutcode.org/pypi/simple/links.html"
 
-
 ################################
-# Set the quiet flag to empty if not defined 
+# Set the quiet flag to empty if not defined
 if [[ "$CFG_QUIET" == "" ]]; then
     CFG_QUIET=" "
 fi
@@ -180,7 +179,7 @@ while getopts :-: optchar; do
                 dev   ) CFG_REQUIREMENTS="$DEV_REQUIREMENTS";;
                 docs   ) CFG_REQUIREMENTS="$DOCS_REQUIREMENTS";;
             esac;;
-esac
+    esac
 done
 
 PIP_EXTRA_ARGS="$PIP_EXTRA_ARGS"
