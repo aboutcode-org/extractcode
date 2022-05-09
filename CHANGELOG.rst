@@ -1,7 +1,13 @@
 Changelog
 =========
 
-v30.0.0 (next)
+v31.0.0
+--------
+
+- Do not install patch.py by default. Instead this is now an extra
+
+
+v30.0.0
 --------
 
 - Update to the latest skeleton. The virtualenv is now created under the venv
