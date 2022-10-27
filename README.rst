@@ -41,7 +41,7 @@ long  `List of supported archive formats`_ found at the bottom of this document.
 - Or the extracted files are such permissions that you cannot read them and are
   not owned by you.
 
-- Or the archive may contain weird paths inluding relative paths that may be
+- Or the archive may contain weird paths including relative paths that may be
   problematic to extract.
 
 - Or the archive may contain special file types (character/device files) that
@@ -61,7 +61,7 @@ It can also extract recursively any type of (nested) archives-in-archives.
 As a downside, the extracted content may not be exactly what would be extracted
 for a typical usage of the contained files: for instance some file may be
 renamed, special files and symlinks are skipped, permissions and owners are
-changed but this it is fine for prmary the use case which is analysis of file
+changed but this it is fine for primary the use case which is analysis of file
 content for software composition or forensic analysis.
 
 Behind the scene, ExtractCode uses multiple tools such as:
@@ -202,7 +202,7 @@ Adding support for VM images extraction
 ---------------------------------------
 
 Adding support for VM images requires the manual installation of the
-libguestfs-tools system package. This is suported only on Linux.
+libguestfs-tools system package. This is supported only on Linux.
 On Debian and Ubuntu you can use this command::
 
     sudo apt-get install libguestfs-tools
@@ -267,7 +267,7 @@ similar to ExtractCode but with different goals:
 List of supported archive formats
 -------------------------------------
 
-ExtractCode can extract the folowing archives formats:
+ExtractCode can extract the following archives formats:
 
 Archive format kind: docs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
