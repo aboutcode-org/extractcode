@@ -504,7 +504,7 @@ Archive format kind: package
 
   name: RPM package
      - extensions: .rpm, .srpm, .mvl, .vip
-     - filetypes : rpm 
+     - filetypes : rpm
      - mimetypes : application/x-rpm
 
   name: Apple dmg
@@ -521,9 +521,9 @@ Archive format kind: file_system
      - mimetypes : application/x-iso9660-image
 
   name: SquashFS disk image
-     - extensions: 
+     - extensions:
      - filetypes : squashfs
-     - mimetypes : 
+     - mimetypes :
 
   name: QEMU QCOW2 disk image
      - extensions: .qcow2, .qcow, .qcow2c, .img
