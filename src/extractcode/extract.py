@@ -18,6 +18,7 @@ from os.path import join
 
 from commoncode import fileutils
 from commoncode import ignore
+from commoncode import hash
 
 import extractcode  # NOQA
 import extractcode.archive
@@ -86,6 +87,7 @@ def extract(
     recurse=False,
     replace_originals=False,
     ignore_pattern=(),
+    known_archive_hashes=set()
 ):
     """
     Walk and extract any archives found at ``location`` (either a file or
@@ -121,6 +123,7 @@ def extract(
         kinds=kinds,
         recurse=recurse,
         ignore_pattern=ignore_pattern,
+        known_archive_hashes=known_archive_hashes
     )
 
     processed_events = []
@@ -151,6 +154,7 @@ def extract_files(
     kinds=extractcode.default_kinds,
     recurse=False,
     ignore_pattern=(),
+    known_archive_hashes=set()
 ):
     """
     Extract the files found at `location`.
@@ -190,7 +194,7 @@ def extract_files(
             if not recurse and extractcode.is_extraction_path(loc):
                 if TRACE:
                     logger.debug(
-                        'extract:walk not recurse: skipped  file: %(loc)r' % locals())
+                        'extract:walk: not recurse: skipped  file: %(loc)r' % locals())
                 continue
 
             if not extractcode.archive.should_extract(
@@ -201,6 +205,14 @@ def extract_files(
                 if TRACE:
                     logger.debug(
                         'extract:walk: skipped file: not should_extract: %(loc)r' % locals())
+                continue
+
+            file_hash = hash.sha256(loc)
+
+            if known_archive_hashes and file_hash in known_archive_hashes:
+                if TRACE:
+                    logger.debug(
+                        'extract:walk: skipped file: decompression bomb detected: %(loc)r' % locals())
                 continue
 
             target = join(abspath(top), extractcode.get_extraction_path(loc))
@@ -220,11 +232,16 @@ def extract_files(
             if recurse:
                 if TRACE:
                     logger.debug('extract:walk: recursing on target: %(target)r' % locals())
+
+                kah = set(known_archive_hashes)
+                kah.add(file_hash)
+
                 for xevent in extract(
                     location=target,
                     kinds=kinds,
                     recurse=recurse,
                     ignore_pattern=ignore_pattern,
+                    known_archive_hashes=kah
                 ):
                     if TRACE:
                         logger.debug('extract:walk:recurse:extraction event: %(xevent)r' % locals())
