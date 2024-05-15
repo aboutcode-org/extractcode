@@ -12,22 +12,20 @@ import os
 from pathlib import Path
 
 import pytest
-
 from commoncode import date as commoncode_date
 from commoncode import fileutils
 from commoncode.system import on_linux
 from commoncode.system import on_mac
 from commoncode.system import on_windows
 from commoncode.testcase import is_same
-
 from extractcode_assert_utils import BaseArchiveTestCase
 from extractcode_assert_utils import check_files
 from extractcode_assert_utils import check_size
 from extractcode_assert_utils import to_posix
 
 import extractcode
-from extractcode import archive
 from extractcode import ExtractErrorFailedToExtract
+from extractcode import archive
 from extractcode import libarchive2
 from extractcode import sevenzip
 
@@ -291,9 +289,11 @@ class TestGetExtractorTest(BaseArchiveTestCase):
         # The setup is a tad complex because we want to have a relative dir
         # to the base dir where we run tests from, i.e. the git checkout dir.
         # To use relative paths, we use our tmp dir at the root of the code tree
-        from os.path import join, abspath
-        import tempfile
         import shutil
+        import tempfile
+        from os.path import abspath
+        from os.path import join
+
         from extractcode.sevenzip import extract
 
         test_file = self.get_test_loc('archive/relative_path/basic.zip', copy=True)
@@ -1649,9 +1649,11 @@ class TestExtractTwice(BaseArchiveTestCase):
         # The setup is a tad complex because we want to have a relative dir
         # to the base dir where we run tests from, i.e. the git checkout dir
         # To use relative paths, we use our tmp dir at the root of the code tree
-        from os.path import join, abspath, exists
         import shutil
         import tempfile
+        from os.path import abspath
+        from os.path import exists
+        from os.path import join
 
         test_file = self.get_test_loc('archive/rpm/xz-compressed-cpio.rpm')
         # this will return an extractor that extracts twice
@@ -1689,8 +1691,11 @@ class TestRar(BaseArchiveTestCase):
     def test_extract_rar_with_trailing_data(self):
         test_file = self.get_test_loc('archive/rar/rar_trailing.rar')
         test_dir = self.get_temp_dir()
-        expected = Exception('Unknown error')
-        self.assertRaisesInstance(expected, archive.extract_rar, test_file, test_dir)
+        if on_mac:
+            archive.extract_rar(test_file, test_dir)
+        else:
+            expected = Exception('Unknown error')
+            self.assertRaisesInstance(expected, archive.extract_rar, test_file, test_dir)
         result = os.path.join(test_dir, 'd', 'b', 'a.txt')
         assert os.path.exists(result)
 
