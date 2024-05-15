@@ -13,6 +13,7 @@ from pathlib import Path
 import pytest
 
 from commoncode.system import on_linux
+from commoncode.system import on_ubuntu_22
 
 from extractcode_assert_utils import BaseArchiveTestCase
 from extractcode_assert_utils import check_files
@@ -20,31 +21,7 @@ from extractcode_assert_utils import check_files
 from extractcode import vmimage
 
 
-def get_etc_os_release_info(os_release_path='/etc/os-release'):
-    cfg_kv = {}
-    with open(os_release_path) as f:
-        for line in f:
-            split_line = line.split('=')
-            if not split_line:
-                continue
-            k = split_line[0].strip()
-            v = split_line[-1].strip()
-            cfg_kv[k] = v
-    return cfg_kv
-
-
-def is_on_ubuntu_22():
-    if not on_linux:
-        return False
-    os_release_info = get_etc_os_release_info()
-    return os_release_info['ID'] == 'ubuntu' and '22' in os_release_info['VERSION_ID']
-
-on_ubuntu_22 = is_on_ubuntu_22()
-
-del is_on_ubuntu_22
-
-
-@pytest.mark.skipif(not on_linux or on_ubuntu_22, reason='Only linux supports image extraction, kernel is unreadable on Ubuntu 22.04')
+@pytest.mark.skipif((not on_linux) or on_ubuntu_22, reason='Only linux supports image extraction, kernel is unreadable on Ubuntu 22.04')
 class TestExtractVmImage(BaseArchiveTestCase):
     test_data_dir = os.path.join(os.path.dirname(__file__), 'data')
 

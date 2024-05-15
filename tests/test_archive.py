@@ -9,7 +9,6 @@
 #
 
 import os
-import platform
 from pathlib import Path
 
 import pytest
@@ -17,6 +16,7 @@ from commoncode import date as commoncode_date
 from commoncode import fileutils
 from commoncode.system import on_linux
 from commoncode.system import on_mac
+from commoncode.system import on_macos_arm64
 from commoncode.system import on_windows
 from commoncode.testcase import is_same
 from extractcode_assert_utils import BaseArchiveTestCase
@@ -1692,7 +1692,7 @@ class TestRar(BaseArchiveTestCase):
     def test_extract_rar_with_trailing_data(self):
         test_file = self.get_test_loc('archive/rar/rar_trailing.rar')
         test_dir = self.get_temp_dir()
-        if on_mac and platform.machine() == 'arm64':
+        if on_macos_arm64:
             archive.extract_rar(test_file, test_dir)
         else:
             expected = Exception('Unknown error')
