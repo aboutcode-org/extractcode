@@ -9,6 +9,7 @@
 #
 
 import os
+import platform
 from pathlib import Path
 
 import pytest
@@ -1691,7 +1692,7 @@ class TestRar(BaseArchiveTestCase):
     def test_extract_rar_with_trailing_data(self):
         test_file = self.get_test_loc('archive/rar/rar_trailing.rar')
         test_dir = self.get_temp_dir()
-        if on_mac:
+        if on_mac and platform.machine() == 'arm64':
             archive.extract_rar(test_file, test_dir)
         else:
             expected = Exception('Unknown error')
