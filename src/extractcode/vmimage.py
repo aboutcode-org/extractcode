@@ -10,12 +10,10 @@
 import logging
 import os
 import pathlib
-import platform
 import shutil
 import warnings
 
 import attr
-import pytest
 
 from commoncode import fileutils
 from commoncode.system import on_linux
@@ -76,13 +74,6 @@ def get_command(env_var=EXTRACTCODE_GUESTFISH_PATH_ENVVAR, command='guestfish'):
     return cmd_loc
 
 
-is_ubuntu_2204 = False
-if on_linux:
-    freedesktop_os_release = platform.freedesktop_os_release()
-    is_ubuntu_2204 = freedesktop_os_release['ID'] == 'ubuntu' and freedesktop_os_release['VERSION_ID'] == '22.04'
-
-
-@pytest.mark.xfail(is_ubuntu_2204, reason='Kernel is not readable on Ubuntu 22.04')
 def check_linux_kernel_is_readable():
     """
     Return True if the kernel executable file can be read. This is required by
