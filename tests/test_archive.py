@@ -4,7 +4,7 @@
 # ScanCode is a trademark of nexB Inc.
 # SPDX-License-Identifier: Apache-2.0
 # See http://www.apache.org/licenses/LICENSE-2.0 for the license text.
-# See https://github.com/nexB/extractcode for support or download.
+# See https://github.com/aboutcode-org/extractcode for support or download.
 # See https://aboutcode.org for more information about nexB OSS projects.
 #
 
@@ -160,7 +160,8 @@ class TestGetExtractorTest(BaseArchiveTestCase):
 
     def test_get_extractor_with_kinds_rpm_2(self):
         test_file = 'archive/rpm/elfinfo-1.0-1.fc9.src.rpm'
-        kinds = (archive.regular, archive.file_system, archive.docs, archive.package)
+        kinds = (archive.regular, archive.file_system,
+                 archive.docs, archive.package)
         expected = [sevenzip.extract, libarchive2.extract]
         self.check_get_extractors(test_file, expected, kinds)
 
@@ -195,7 +196,8 @@ class TestGetExtractorTest(BaseArchiveTestCase):
         self.check_get_extractors(test_file, expected, (archive.docs,))
 
         expected = []
-        self.check_get_extractors(test_file, expected, kinds=extractcode.default_kinds)
+        self.check_get_extractors(
+            test_file, expected, kinds=extractcode.default_kinds)
 
     def test_get_extractor_for_compressed_svgz_docs(self):
         test_file = 'archive/svgz/insert-emptyframe.svgz'
@@ -204,32 +206,39 @@ class TestGetExtractorTest(BaseArchiveTestCase):
         self.check_get_extractors(test_file, expected, (archive.docs,))
 
         expected = []
-        self.check_get_extractors(test_file, expected, kinds=extractcode.default_kinds)
+        self.check_get_extractors(
+            test_file, expected, kinds=extractcode.default_kinds)
 
     def test_get_extractor_qcow2(self):
         test_file = self.extract_test_tar('vmimage/foobar.qcow2.tar.gz')
         test_file = str(Path(test_file) / 'foobar.qcow2')
 
         expected = []
-        self.check_get_extractors(test_file, expected, kinds=extractcode.default_kinds)
+        self.check_get_extractors(
+            test_file, expected, kinds=extractcode.default_kinds)
 
         expected = [archive.extract_vm_image]
         self.check_get_extractors(test_file, expected, kinds=())
-        self.check_get_extractors(test_file, expected, kinds=(extractcode.file_system,))
-        self.check_get_extractors(test_file, expected, kinds=extractcode.all_kinds)
+        self.check_get_extractors(
+            test_file, expected, kinds=(extractcode.file_system,))
+        self.check_get_extractors(
+            test_file, expected, kinds=extractcode.all_kinds)
 
     def test_get_extractor_for_dia(self):
         test_file = self.get_test_loc('archive/dia/dia.dia', copy=True)
 
         expected = [archive.uncompress_gzip]
-        self.check_get_extractors(test_file, expected, kinds=extractcode.all_kinds)
+        self.check_get_extractors(
+            test_file, expected, kinds=extractcode.all_kinds)
 
         expected = []
-        self.check_get_extractors(test_file, expected, kinds=extractcode.default_kinds)
+        self.check_get_extractors(
+            test_file, expected, kinds=extractcode.default_kinds)
 
     def test_get_handlers(self):
         test_data = [
-            ('archive/deb/adduser_3.112ubuntu1_all.deb', ['Tar', 'Debian package']),
+            ('archive/deb/adduser_3.112ubuntu1_all.deb',
+             ['Tar', 'Debian package']),
             ('archive/rpm/elfinfo-1.0-1.fc9.src.rpm', ['RPM package']),
             ('archive/ar/liby.a', ['ar archive', 'Static Library']),
             ('archive/tar/tarred.tar', ['Tar']),
@@ -246,14 +255,20 @@ class TestGetExtractorTest(BaseArchiveTestCase):
 
     def test_score_handlers(self):
         test_data = [
-            ('archive/deb/adduser_3.112ubuntu1_all.deb', [(31, 'Debian package'), (11, 'Tar')]),
+            ('archive/deb/adduser_3.112ubuntu1_all.deb',
+             [(31, 'Debian package'), (11, 'Tar')]),
             ('archive/rpm/elfinfo-1.0-1.fc9.src.rpm', [(32, 'RPM package')]),
-            ('archive/ar/liby.a', [(31, 'Static Library'), (17, 'ar archive')]),
+            ('archive/ar/liby.a',
+             [(31, 'Static Library'), (17, 'ar archive')]),
             ('archive/tar/tarred.tar', [(29, 'Tar')]),
-            ('archive/tar/gem/panchira-0.1.1.gem', [(31, 'Ruby Gem package'), (17, 'Tar')]),
-            ('archive/tbz/tarred_bzipped.tar.bz2', [(30, 'Tar bzip2'), (29, 'bzip2')]),
-            ('archive/tbz/tarred_bzipped.bz', [(29, 'bzip2'), (18, 'Tar bzip2')]),
-            ('archive/tgz/tarred_gzipped.gz', [(29, 'Gzip'), (18, 'Tar gzip')]),
+            ('archive/tar/gem/panchira-0.1.1.gem',
+             [(31, 'Ruby Gem package'), (17, 'Tar')]),
+            ('archive/tbz/tarred_bzipped.tar.bz2',
+             [(30, 'Tar bzip2'), (29, 'bzip2')]),
+            ('archive/tbz/tarred_bzipped.bz',
+             [(29, 'bzip2'), (18, 'Tar bzip2')]),
+            ('archive/tgz/tarred_gzipped.gz',
+             [(29, 'Gzip'), (18, 'Tar gzip')]),
             ('archive/gzip/mysql-arch.ARZ', [(29, 'Gzip'), (18, 'Tar gzip')]),
         ]
 
@@ -261,7 +276,8 @@ class TestGetExtractorTest(BaseArchiveTestCase):
             test_loc = self.get_test_loc(test_file)
             handlers = archive.get_handlers(test_loc)
             scored = archive.score_handlers(handlers)
-            assert expected == sorted([(h[0], h[1].name) for h in scored], reverse=True)
+            assert expected == sorted([(h[0], h[1].name)
+                                      for h in scored], reverse=True)
 
     def test_no_handler_is_selected_for_a_non_archive(self):
         # failed because of libmagic bug: http://bugs.gw.com/view.php?id=467
@@ -269,23 +285,29 @@ class TestGetExtractorTest(BaseArchiveTestCase):
         test_loc = self.get_test_loc('archive/not_archive/hashfile')
         assert [] == list(archive.get_handlers(test_loc))
         assert None == archive.get_extractor(test_loc)
-        assert None == archive.get_extractor(test_loc, kinds=extractcode.all_kinds)
-        assert not archive.should_extract(test_loc, kinds=extractcode.default_kinds)
+        assert None == archive.get_extractor(
+            test_loc, kinds=extractcode.all_kinds)
+        assert not archive.should_extract(
+            test_loc, kinds=extractcode.default_kinds)
 
     def test_no_handler_is_selected_for_a_non_archive2(self):
         # FWIW there is a related libmagic bug: http://bugs.gw.com/view.php?id=473
         test_loc = self.get_test_loc('archive/not_archive/wildtest.txt')
         assert [] == list(archive.get_handlers(test_loc))
         assert None == archive.get_extractor(test_loc)
-        assert None == archive.get_extractor(test_loc, kinds=extractcode.all_kinds)
-        assert not archive.should_extract(test_loc, kinds=extractcode.default_kinds)
+        assert None == archive.get_extractor(
+            test_loc, kinds=extractcode.all_kinds)
+        assert not archive.should_extract(
+            test_loc, kinds=extractcode.default_kinds)
 
     def test_no_handler_is_selected_for_a_non_archive3(self):
         test_loc = self.get_test_loc('archive/not_archive/savetransfer.c')
         assert [] == list(archive.get_handlers(test_loc))
         assert None == archive.get_extractor(test_loc)
-        assert None == archive.get_extractor(test_loc, kinds=extractcode.all_kinds)
-        assert not archive.should_extract(test_loc, kinds=extractcode.default_kinds)
+        assert None == archive.get_extractor(
+            test_loc, kinds=extractcode.all_kinds)
+        assert not archive.should_extract(
+            test_loc, kinds=extractcode.default_kinds)
 
     def test_7zip_extract_can_extract_to_relative_paths(self):
         # The setup is a tad complex because we want to have a relative dir
@@ -296,13 +318,16 @@ class TestGetExtractorTest(BaseArchiveTestCase):
         import shutil
         from extractcode.sevenzip import extract
 
-        test_file = self.get_test_loc('archive/relative_path/basic.zip', copy=True)
+        test_file = self.get_test_loc(
+            'archive/relative_path/basic.zip', copy=True)
 
         project_tmp = join(project_root, 'tmp')
         fileutils.create_dir(project_tmp)
         project_root_abs = abspath(project_root)
-        test_src_dir = tempfile.mkdtemp(dir=project_tmp).replace(project_root_abs, '').strip('\\/')
-        test_tgt_dir = tempfile.mkdtemp(dir=project_tmp).replace(project_root_abs, '').strip('\\/')
+        test_src_dir = tempfile.mkdtemp(dir=project_tmp).replace(
+            project_root_abs, '').strip('\\/')
+        test_tgt_dir = tempfile.mkdtemp(dir=project_tmp).replace(
+            project_root_abs, '').strip('\\/')
         shutil.copy(test_file, test_src_dir)
         test_src_file = join(test_src_dir, 'basic.zip')
         result = list(extract(test_src_file, test_tgt_dir))
@@ -341,7 +366,8 @@ class TestTarGzip(BaseArchiveTestCase):
         test_file = self.get_test_loc('archive/tgz/broken.tar.gz')
         test_dir = self.get_temp_dir()
         expected = Exception('Unrecognized archive format')
-        self.assertRaisesInstance(expected, archive.extract_tar, test_file, test_dir)
+        self.assertRaisesInstance(
+            expected, archive.extract_tar, test_file, test_dir)
 
     def test_extract_targz_with_absolute_path(self):
         non_result = '/tmp/subdir'
@@ -393,7 +419,8 @@ class TestTarGzip(BaseArchiveTestCase):
         test_dir = self.get_temp_dir()
         result = archive.extract_tar(test_file, test_dir)
         assert [] == result
-        exp_file = self.get_test_loc('archive/tgz/mixed_case_and_symlink.tgz.expected.json')
+        exp_file = self.get_test_loc(
+            'archive/tgz/mixed_case_and_symlink.tgz.expected.json')
         check_files(test_dir, exp_file, regen=False)
 
     def test_extract_targz_symlinks(self):
@@ -415,7 +442,8 @@ class TestTarGzip(BaseArchiveTestCase):
     def test_extract_targz_from_apache_should_not_return_errors(self):
         # from http://archive.apache.org/dist/commons/logging/source/commons-logging-1.1.2-src.tar.gz
         # failed with ReadError('not a bzip2 file',)
-        test_file = self.get_test_loc('archive/tgz/commons-logging-1.1.2-src.tar.gz')
+        test_file = self.get_test_loc(
+            'archive/tgz/commons-logging-1.1.2-src.tar.gz')
         test_dir = self.get_temp_dir()
         extractor = archive.get_extractor(test_file)
         assert archive.extract_tar == extractor
@@ -471,13 +499,15 @@ class TestUncompressGzip(BaseArchiveTestCase):
         test_file = self.get_test_loc('archive/gzip/leading_data.gz')
         test_dir = self.get_temp_dir()
         expected = Exception('Not a gzipped file')
-        self.assertRaisesInstance(expected, archive.uncompress_gzip, test_file, test_dir)
+        self.assertRaisesInstance(
+            expected, archive.uncompress_gzip, test_file, test_dir)
 
     def test_uncompress_gzip_with_random_data(self):
         test_file = self.get_test_loc('archive/gzip/random_binary.data')
         test_dir = self.get_temp_dir()
         expected = Exception('Not a gzipped file')
-        self.assertRaisesInstance(expected, archive.uncompress_gzip, test_file, test_dir)
+        self.assertRaisesInstance(
+            expected, archive.uncompress_gzip, test_file, test_dir)
 
     def test_uncompress_gzip_with_backslash_in_path(self):
         # weirdly enough, gzip keeps the original path/name
@@ -519,17 +549,20 @@ class TestTarBz2(BaseArchiveTestCase):
         assert os.path.exists(result)
 
     def test_extract_tar_bz2_with_trailing_data__and_wrong_extension(self):
-        test_file = self.get_test_loc('archive/tbz/single_file_trailing_data.tar.gz')
+        test_file = self.get_test_loc(
+            'archive/tbz/single_file_trailing_data.tar.gz')
         test_dir = self.get_temp_dir()
         archive.extract_tar(test_file, test_dir)
         result = os.path.join(test_dir, 'a.txt')
         assert os.path.exists(result)
 
     def test_extract_tar_bz2_broken(self):
-        test_file = self.get_test_loc('archive/tbz/tarred_bzipped_broken.tar.bz2')
+        test_file = self.get_test_loc(
+            'archive/tbz/tarred_bzipped_broken.tar.bz2')
         test_dir = self.get_temp_dir()
         expected = Exception('bzip decompression failed')
-        self.assertRaisesInstance(expected, archive.extract_tar, test_file, test_dir)
+        self.assertRaisesInstance(
+            expected, archive.extract_tar, test_file, test_dir)
 
     def test_extract_tar_bz2_absolute_path(self):
         assert not os.path.exists('/tmp/subdir')
@@ -550,14 +583,16 @@ class TestTarBz2(BaseArchiveTestCase):
             tar.add('b.txt', '../folder/subfolder/b_subfolder.txt')
             tar.close()
         """
-        test_file = self.get_test_loc('archive/tbz/bz2withtar_relative.tar.bz2')
+        test_file = self.get_test_loc(
+            'archive/tbz/bz2withtar_relative.tar.bz2')
         test_dir = self.get_temp_dir()
         archive.extract_tar(test_file, test_dir)
 
         non_result = os.path.join(test_dir, '../a_parent_folder.txt')
         assert not os.path.exists(non_result)
 
-        result = os.path.join(test_dir, 'dotdot/folder/subfolder/b_subfolder.txt')
+        result = os.path.join(
+            test_dir, 'dotdot/folder/subfolder/b_subfolder.txt')
         assert os.path.exists(result)
         result = os.path.join(test_dir, 'dotdot', 'a_parent_folder.txt')
         assert os.path.exists(result)
@@ -570,10 +605,12 @@ class TestTarBz2(BaseArchiveTestCase):
         assert os.path.exists(result)
 
     def test_extract_tar_bz2_multistream(self):
-        test_file = self.get_test_loc('archive/tbz/bzip2_multistream/example-file.csv.tar.bz2')
+        test_file = self.get_test_loc(
+            'archive/tbz/bzip2_multistream/example-file.csv.tar.bz2')
         test_dir = self.get_temp_dir()
         archive.extract_tar(test_file, test_dir)
-        expected = self.get_test_loc('archive/tbz/bzip2_multistream/example-file.csv')
+        expected = self.get_test_loc(
+            'archive/tbz/bzip2_multistream/example-file.csv')
         result = os.path.join(test_dir, 'example-file.csv')
         assert open(expected, 'rb').read() == open(result, 'rb').read()
 
@@ -588,17 +625,20 @@ class TestUncompressBz2(BaseArchiveTestCase):
         assert os.path.exists(result)
 
     def test_uncompress_bzip2_with_trailing_data(self):
-        test_file = self.get_test_loc('archive/bz2/single_file_trailing_data.bz2')
+        test_file = self.get_test_loc(
+            'archive/bz2/single_file_trailing_data.bz2')
         test_dir = self.get_temp_dir()
         archive.uncompress_bzip2(test_file, test_dir)
-        result = os.path.join(test_dir, 'single_file_trailing_data.bz2-extract')
+        result = os.path.join(
+            test_dir, 'single_file_trailing_data.bz2-extract')
         assert os.path.exists(result)
 
     def test_uncompress_bzip2_broken(self):
         test_file = self.get_test_loc('archive/bz2/bz2_not_tarred_broken.bz2')
         test_dir = self.get_temp_dir()
         expected = Exception('Invalid data stream')
-        self.assertRaisesInstance(expected, archive.uncompress_bzip2, test_file, test_dir)
+        self.assertRaisesInstance(
+            expected, archive.uncompress_bzip2, test_file, test_dir)
 
     def test_uncompress_bzip2_with_invalid_path(self):
         test_file = self.get_test_loc('archive/bz2/bz_invalidpath.bz2')
@@ -608,10 +648,12 @@ class TestUncompressBz2(BaseArchiveTestCase):
         assert os.path.exists(result)
 
     def test_uncompress_bzip2_multistream(self):
-        test_file = self.get_test_loc('archive/bz2/bzip2_multistream/example-file.csv.bz2')
+        test_file = self.get_test_loc(
+            'archive/bz2/bzip2_multistream/example-file.csv.bz2')
         test_dir = self.get_temp_dir()
         archive.uncompress_bzip2(test_file, test_dir)
-        expected = self.get_test_loc('archive/bz2/bzip2_multistream/expected.csv')
+        expected = self.get_test_loc(
+            'archive/bz2/bzip2_multistream/expected.csv')
         result = os.path.join(test_dir, 'example-file.csv.bz2-extract')
         assert open(expected, 'rb').read() == open(result, 'rb').read()
 
@@ -619,15 +661,17 @@ class TestUncompressBz2(BaseArchiveTestCase):
 class TestSevenzipBz2(BaseArchiveTestCase):
 
     def test_sevenzip_extract_can_handle_bz2_multistream_differently(self):
-        test_file = self.get_test_loc('archive/bz2/bzip2_multistream/example-file.csv.bz2')
+        test_file = self.get_test_loc(
+            'archive/bz2/bzip2_multistream/example-file.csv.bz2')
         test_dir = self.get_temp_dir()
         sevenzip.extract(test_file, test_dir)
-        expected = self.get_test_loc('archive/bz2/bzip2_multistream/expected.csv')
+        expected = self.get_test_loc(
+            'archive/bz2/bzip2_multistream/expected.csv')
         # the extraction dir is not created with suffix by 7z
         result = os.path.join(test_dir, 'example-file.csv')
         expected_extracted = open(expected, 'rb').read()
         expected_result = open(result, 'rb').read()
-        assert  expected_extracted == expected_result
+        assert expected_extracted == expected_result
 
 
 class TestShellArchives(BaseArchiveTestCase):
@@ -724,11 +768,12 @@ class TestZip(BaseArchiveTestCase):
         # f.write('/tmp/a.txt', ('../' * 12) +  ('sub/' * 12) + 'a_parent_folder_in_sub_3.txt')
         # f.close()
 
-        test_file = self.get_test_loc('archive/zip/relative_parent_folders.zip')
+        test_file = self.get_test_loc(
+            'archive/zip/relative_parent_folders.zip')
         test_dir = self.get_temp_dir()
         archive.extract_zip(test_file, test_dir)
 
-        abs_path = os.path.join(test_dir , '../a_parent_folder.txt')
+        abs_path = os.path.join(test_dir, '../a_parent_folder.txt')
         assert not os.path.exists(abs_path)
 
         result = self.collect_extracted_path(test_dir)
@@ -745,17 +790,20 @@ class TestZip(BaseArchiveTestCase):
         assert expected == result
 
     def test_extract_zip_with_relative_path_using_libarchive(self):
-        test_file = self.get_test_loc('archive/zip/relative_parent_folders.zip')
+        test_file = self.get_test_loc(
+            'archive/zip/relative_parent_folders.zip')
         test_dir = self.get_temp_dir()
         result = libarchive2.extract(test_file, test_dir)
         assert [] == result
-        abs_path = os.path.join(test_dir , '../a_parent_folder.txt')
+        abs_path = os.path.join(test_dir, '../a_parent_folder.txt')
         assert not os.path.exists(abs_path)
-        result = os.path.join(test_dir, 'dotdot/folder/subfolder/b_subfolder.txt')
+        result = os.path.join(
+            test_dir, 'dotdot/folder/subfolder/b_subfolder.txt')
         assert os.path.exists(result)
         result = os.path.join(test_dir, 'dotdot/a_parent_folder.txt')
         assert os.path.exists(result)
-        result = os.path.join(test_dir, 'dotdot/dotdot/another_folder/b_two_root.txt')
+        result = os.path.join(
+            test_dir, 'dotdot/dotdot/another_folder/b_two_root.txt')
         assert os.path.exists(result)
 
     expected_deeply_nested_relative_path = [
@@ -1024,7 +1072,8 @@ class TestZip(BaseArchiveTestCase):
         test_file = self.get_test_loc('archive/zip/backslash/boo-0.3-src.zip')
         test_dir = self.get_temp_dir()
         archive.extract_zip(test_file, test_dir)
-        result = os.path.join(test_dir, 'src/Boo.Lang.Compiler/TypeSystem/InternalCallableType.cs')
+        result = os.path.join(
+            test_dir, 'src/Boo.Lang.Compiler/TypeSystem/InternalCallableType.cs')
         assert os.path.exists(result)
 
     def test_get_best_handler_nuget_is_selected_over_zip(self):
@@ -1033,12 +1082,14 @@ class TestZip(BaseArchiveTestCase):
         assert archive.NugetHandler == handler
 
     def test_get_best_handler_nuget_is_selected_over_zip2(self):
-        test_file = self.get_test_loc('archive/zip/exceptionhero.javascript.1.0.5.nupkg')
+        test_file = self.get_test_loc(
+            'archive/zip/exceptionhero.javascript.1.0.5.nupkg')
         handler = archive.get_best_handler(test_file)
         assert archive.NugetHandler == handler
 
     def test_get_best_handler_nuget_is_selected_over_zip3(self):
-        test_file = self.get_test_loc('archive/zip/javascript-fastclass.1.1.729.121805.nupkg')
+        test_file = self.get_test_loc(
+            'archive/zip/javascript-fastclass.1.1.729.121805.nupkg')
         handler = archive.get_best_handler(test_file)
         assert archive.NugetHandler == handler
 
@@ -1058,7 +1109,8 @@ class TestZip(BaseArchiveTestCase):
         assert os.listdir(test_dir)
 
     def test_extract_zip_can_extract_zip_with_directory_not_marked_with_trailing_slash(self):
-        test_file = self.get_test_loc('archive/zip/directory-with-no-trailing-slash.zip')
+        test_file = self.get_test_loc(
+            'archive/zip/directory-with-no-trailing-slash.zip')
         test_dir = self.get_temp_dir()
         result = archive.extract_zip(test_file, test_dir)
         assert [] == result
@@ -1091,7 +1143,8 @@ class TestTar(BaseArchiveTestCase):
         archive.extract_tar(test_file, test_dir)
 
         assert not os.path.exists(non_result)
-        result = os.path.join(test_dir, 'home/li/Desktop/absolute_folder/absolute_file')
+        result = os.path.join(
+            test_dir, 'home/li/Desktop/absolute_folder/absolute_file')
         assert os.path.exists(result)
 
     def test_extract_tar_with_absolute_path2(self):
@@ -1160,7 +1213,8 @@ class TestTar(BaseArchiveTestCase):
         # https://hg.python.org/cpython/raw-file/bff88c866886/Lib/test/testtar.tar
         test_dir = self.get_temp_dir()
         result = archive.extract_tar(test_file, test_dir)
-        expected_warnings = [u"'pax/bad-pax-äöü': \nPathname can't be converted from UTF-8 to current locale."]
+        expected_warnings = [
+            u"'pax/bad-pax-äöü': \nPathname can't be converted from UTF-8 to current locale."]
 
         assert sorted(expected_warnings) == sorted(result)
 
@@ -1209,19 +1263,22 @@ class TestTar(BaseArchiveTestCase):
 class TestDebian(BaseArchiveTestCase):
 
     def test_extract_deb_package_1(self):
-        test_file = self.get_test_loc('archive/deb/adduser_3.112ubuntu1_all.deb')
+        test_file = self.get_test_loc(
+            'archive/deb/adduser_3.112ubuntu1_all.deb')
         test_dir = self.get_temp_dir()
         archive.extract_ar(test_file, test_dir)
         check_size(110198, os.path.join(test_dir, 'data.tar.gz'))
 
     def test_extract_deb_package_2(self):
-        test_file = self.get_test_loc('archive/deb/adduser_3.113+nmu3ubuntu3_all.deb')
+        test_file = self.get_test_loc(
+            'archive/deb/adduser_3.113+nmu3ubuntu3_all.deb')
         test_dir = self.get_temp_dir()
         archive.extract_ar(test_file, test_dir)
         check_size(158441, os.path.join(test_dir, 'data.tar.gz'))
 
     def test_get_best_handler_deb_package_is_an_archive(self):
-        test_file = self.get_test_loc('archive/deb/libjama-dev_1.2.4-2_all.deb')
+        test_file = self.get_test_loc(
+            'archive/deb/libjama-dev_1.2.4-2_all.deb')
         handler = archive.get_best_handler(test_file)
         assert archive.DebHandler == handler
 
@@ -1413,7 +1470,8 @@ class TestAr(BaseArchiveTestCase):
         test_file = self.get_test_loc('archive/ar/winlib/zlib.lib')
         test_dir = self.get_temp_dir()
         result = sevenzip.extract(test_file, test_dir)
-        expected = ['1.txt', '1.zlib.pyd', '2.txt', '2.zlib.pyd', '3.zlib.pyd', '4.zlib.pyd']
+        expected = ['1.txt', '1.zlib.pyd', '2.txt',
+                    '2.zlib.pyd', '3.zlib.pyd', '4.zlib.pyd']
         check_files(test_dir, expected)
         assert [] == result
 
@@ -1424,7 +1482,8 @@ class TestAr(BaseArchiveTestCase):
         # with 7zip
         # expected = ['1.txt', '1.zlib.pyd', '2.txt', '2.zlib.pyd', '3.zlib.pyd', '4.zlib.pyd']
         # with libarchive
-        expected = ['dot', 'dot_1', 'zlib.pyd', 'zlib_1.pyd', 'zlib_2.pyd', 'zlib_3.pyd']
+        expected = ['dot', 'dot_1', 'zlib.pyd',
+                    'zlib_1.pyd', 'zlib_2.pyd', 'zlib_3.pyd']
         check_files(test_dir, expected)
         assert [] == result
 
@@ -1433,14 +1492,16 @@ class TestAr(BaseArchiveTestCase):
         test_dir = self.get_temp_dir()
         result = libarchive2.extract(test_file, test_dir)
         assert [] == result
-        expected = ['dot', 'dot_1', 'zlib.pyd', 'zlib_1.pyd', 'zlib_2.pyd', 'zlib_3.pyd']
+        expected = ['dot', 'dot_1', 'zlib.pyd',
+                    'zlib_1.pyd', 'zlib_2.pyd', 'zlib_3.pyd']
         check_files(test_dir, expected)
 
 
 class TestCpio(BaseArchiveTestCase):
 
     def test_extract_cpio_basic(self):
-        test_file = self.get_test_loc('archive/cpio/elfinfo-1.0-1.fc9.src.cpio')
+        test_file = self.get_test_loc(
+            'archive/cpio/elfinfo-1.0-1.fc9.src.cpio')
         test_dir = self.get_temp_dir()
         archive.extract_cpio(test_file, test_dir)
         result = os.path.join(test_dir, 'elfinfo-1.0.tar.gz')
@@ -1456,7 +1517,8 @@ class TestCpio(BaseArchiveTestCase):
     def test_extract_cpio_broken_7z(self):
         test_file = self.get_test_loc('archive/cpio/cpio_broken.cpio')
         test_dir = self.get_temp_dir()
-        self.assertRaisesInstance(Exception('CRC Failed : elfinfo-1.0.tar'), sevenzip.extract, test_file, test_dir)
+        self.assertRaisesInstance(Exception(
+            'CRC Failed : elfinfo-1.0.tar'), sevenzip.extract, test_file, test_dir)
 
     def test_extract_cpio_broken2(self):
         test_file = self.get_test_loc('archive/cpio/cpio_broken.cpio')
@@ -1464,7 +1526,8 @@ class TestCpio(BaseArchiveTestCase):
         result = archive.extract_cpio(test_file, test_dir)
         expected = sorted(['elfinfo-1.0.tar.gz', 'elfinfo.spec'])
         assert expected == sorted(os.listdir(test_dir))
-        assert ["'elfinfo.spec': \nSkipped 72 bytes before finding valid header"] == result
+        assert [
+            "'elfinfo.spec': \nSkipped 72 bytes before finding valid header"] == result
 
     def test_extract_cpio_with_absolute_path(self):
         assert not os.path.exists('/tmp/subdir')
@@ -1472,7 +1535,8 @@ class TestCpio(BaseArchiveTestCase):
         test_file = self.get_test_loc('archive/cpio/cpio_absolute.cpio')
         archive.extract_cpio(test_file, test_dir)
         assert not os.path.exists('/tmp/subdir')
-        result = os.path.join(test_dir, 'home/li/Desktop/absolute_folder/absolute_file')
+        result = os.path.join(
+            test_dir, 'home/li/Desktop/absolute_folder/absolute_file')
         assert os.path.exists(result)
 
     def test_extract_cpio_with_relative_path(self):
@@ -1534,10 +1598,12 @@ class TestRpm(BaseArchiveTestCase):
         assert os.path.exists(result)
 
     def test_extract_rpm_nested_correctly(self):
-        test_file = self.get_test_loc('archive/rpm/extract_once/libsqueeze0.2_0-0.2.3-8mdv2010.0.i586.rpm')
+        test_file = self.get_test_loc(
+            'archive/rpm/extract_once/libsqueeze0.2_0-0.2.3-8mdv2010.0.i586.rpm')
         test_dir = self.get_temp_dir()
         archive.extract_rpm(test_file, test_dir)
-        result = os.path.join(test_dir, 'libsqueeze0.2_0-0.2.3-8mdv2010.0.i586.cpio.lzma')
+        result = os.path.join(
+            test_dir, 'libsqueeze0.2_0-0.2.3-8mdv2010.0.i586.cpio.lzma')
         assert os.path.exists(result)
 
     def test_extract_rpm_with_trailing_data(self):
@@ -1660,8 +1726,10 @@ class TestExtractTwice(BaseArchiveTestCase):
         project_tmp = join(project_root, 'tmp')
         fileutils.create_dir(project_tmp)
         project_root_abs = abspath(project_root)
-        test_src_dir = tempfile.mkdtemp(dir=project_tmp).replace(project_root_abs, '').strip('\\/')
-        test_tgt_dir = tempfile.mkdtemp(dir=project_tmp).replace(project_root_abs, '').strip('\\/')
+        test_src_dir = tempfile.mkdtemp(dir=project_tmp).replace(
+            project_root_abs, '').strip('\\/')
+        test_tgt_dir = tempfile.mkdtemp(dir=project_tmp).replace(
+            project_root_abs, '').strip('\\/')
         shutil.copy(test_file, test_src_dir)
         test_src_file = join(test_src_dir, 'xz-compressed-cpio.rpm')
 
@@ -1690,7 +1758,8 @@ class TestRar(BaseArchiveTestCase):
         test_file = self.get_test_loc('archive/rar/rar_trailing.rar')
         test_dir = self.get_temp_dir()
         expected = Exception('Unknown error')
-        self.assertRaisesInstance(expected, archive.extract_rar, test_file, test_dir)
+        self.assertRaisesInstance(
+            expected, archive.extract_rar, test_file, test_dir)
         result = os.path.join(test_dir, 'd', 'b', 'a.txt')
         assert os.path.exists(result)
 
@@ -1698,11 +1767,13 @@ class TestRar(BaseArchiveTestCase):
         test_file = self.get_test_loc('archive/rar/broken.rar')
         test_dir = self.get_temp_dir()
         expected = Exception('Header CRC error')
-        self.assertRaisesInstance(expected, archive.extract_rar, test_file, test_dir)
+        self.assertRaisesInstance(
+            expected, archive.extract_rar, test_file, test_dir)
 
     def test_extract_rar_with_relative_path(self):
         # FIXME: this file may not have a real relative path
-        test_file = self.get_test_loc('archive/rar/rar_relative.rar', copy=True)
+        test_file = self.get_test_loc(
+            'archive/rar/rar_relative.rar', copy=True)
         test_dir = self.get_temp_dir()
         archive.extract_rar(test_file, test_dir)
         result = os.path.abspath(test_file + '/../a_parent_folder.txt')
@@ -1717,19 +1788,21 @@ class TestRar(BaseArchiveTestCase):
     def test_extract_rar_with_absolute_path(self):
         # FIXME: this file may not have a real absolute path
         assert not os.path.exists('/home/li/Desktop/zip_folder')
-        test_file = self.get_test_loc('archive/rar/rar_absolute.rar', copy=True)
+        test_file = self.get_test_loc(
+            'archive/rar/rar_absolute.rar', copy=True)
         test_dir = self.get_temp_dir()
         archive.extract_rar(test_file, test_dir)
         assert not os.path.exists('/home/li/Desktop/absolute_folder')
         result = os.path.join(test_dir, 'home/li/Desktop',
-                                'absolute_folder/absolute_file')
+                              'absolute_folder/absolute_file')
         assert os.path.exists(result)
 
     def test_extract_rar_with_password(self):
         test_file = self.get_test_loc('archive/rar/rar_password.rar')
         test_dir = self.get_temp_dir()
         expected = Exception('Prefix found')
-        self.assertRaisesInstance(expected, archive.extract_rar, test_file, test_dir)
+        self.assertRaisesInstance(
+            expected, archive.extract_rar, test_file, test_dir)
 
     def test_extract_rar_with_non_ascii_path(self):
         test_file = self.get_test_loc('archive/rar/non_ascii_corrupted.rar')
@@ -1738,8 +1811,10 @@ class TestRar(BaseArchiveTestCase):
         test_dir = self.get_temp_dir()
         # raise an exception but still extracts some
         expected = Exception('Prefix found')
-        self.assertRaisesInstance(expected, archive.extract_rar, test_file, test_dir)
-        result = os.path.join(test_dir, 'EdoProject_java/WebContent/WEB-INF/lib/cos.jar')
+        self.assertRaisesInstance(
+            expected, archive.extract_rar, test_file, test_dir)
+        result = os.path.join(
+            test_dir, 'EdoProject_java/WebContent/WEB-INF/lib/cos.jar')
         assert os.path.exists(result)
 
 
@@ -1765,19 +1840,22 @@ class TestSevenZip(BaseArchiveTestCase):
         test_file = self.get_test_loc('archive/7z/corrupted7z.7z')
         test_dir = self.get_temp_dir()
         msg = 'There are data after the end of archive'
-        self.assertExceptionContains(msg, sevenzip.extract, test_file, test_dir)
+        self.assertExceptionContains(
+            msg, sevenzip.extract, test_file, test_dir)
 
     def test_extract_7z_with_broken_archive_does_not_fail_when_using_fallback(self):
         test_file = self.get_test_loc('archive/7z/corrupted7z.7z')
         test_dir = self.get_temp_dir()
         msg = 'There are data after the end of archive'
-        self.assertExceptionContains(msg, archive.extract_7z, test_file, test_dir)
+        self.assertExceptionContains(
+            msg, archive.extract_7z, test_file, test_dir)
 
     def test_extract_7z_with_non_existing_archive(self):
         test_file = 'archive/7z/I_DO_NOT_EXIST.zip'
         test_dir = self.get_temp_dir()
         msg = 'The system cannot find the path specified'
-        self.assertExceptionContains(msg, sevenzip.extract, test_file, test_dir)
+        self.assertExceptionContains(
+            msg, sevenzip.extract, test_file, test_dir)
 
     def test_extract_7z_with_invalid_path_using_7z(self):
         test_file = self.get_test_loc('archive/7z/7zip_invalidpath.7z')
@@ -1820,13 +1898,15 @@ class TestSevenZip(BaseArchiveTestCase):
         test_file = self.get_test_loc('archive/7z/7zip_password.7z')
         test_dir = self.get_temp_dir()
         expected = Exception('Password protected archive, unable to extract')
-        self.assertRaisesInstance(expected, sevenzip.extract, test_file, test_dir)
+        self.assertRaisesInstance(
+            expected, sevenzip.extract, test_file, test_dir)
 
     def test_extract_7z_with_password(self):
         test_file = self.get_test_loc('archive/7z/7zip_password.7z')
         test_dir = self.get_temp_dir()
         expected = Exception('Password protected archive, unable to extract')
-        self.assertRaisesInstance(expected, archive.extract_7z, test_file, test_dir)
+        self.assertRaisesInstance(
+            expected, archive.extract_7z, test_file, test_dir)
 
     def test_extract_7zip_native_with_unicode_path_should_extract_without_error(self):
         test_file = self.get_test_loc('archive/7z/7zip_unicode.7z')
@@ -1896,10 +1976,10 @@ class TestXzLzma(BaseArchiveTestCase):
         extract_dir = self.get_temp_dir()
         expected_file = os.path.join(extract_dir, expected)
         extract_fun(test_file, extract_dir)
-        assert  os.path.exists(expected_file), (
-                        '%(expected_file)s file was not extracted '
-                        'correctly from archive %(test_file)s'
-                        % locals())
+        assert os.path.exists(expected_file), (
+            '%(expected_file)s file was not extracted '
+            'correctly from archive %(test_file)s'
+            % locals())
 
     def test_extract_archive_tar_xz_1(self):
         test_file = 'archive/lzma_xz/texlive-core-patches-20.tar.xz'
@@ -1922,15 +2002,15 @@ class TestXzLzma(BaseArchiveTestCase):
     def test_extract_archive_tar_lzma_2(self):
         test_file = 'archive/lzma_xz/orionsocket-1.0.9.tar.lzma'
         self.check_lzma_extract(extract_fun=archive.extract_lzma,
-                        test_file=test_file,
-                        expected='orionsocket-1.0.9.tar')
+                                test_file=test_file,
+                                expected='orionsocket-1.0.9.tar')
 
     def test_extract_archive_tar_lzma_3(self):
         test_file = 'archive/lzma_xz/MinGW-5.1.6.exe-src.tar.lzma'
         expected = 'MinGW-5.1.6.exe-src.tar'
         self.check_lzma_extract(extract_fun=archive.extract_lzma,
-                        test_file=test_file,
-                        expected=expected)
+                                test_file=test_file,
+                                expected=expected)
 
 
 class TestDia(BaseArchiveTestCase):
@@ -1962,25 +2042,27 @@ class TestDia(BaseArchiveTestCase):
         test_file = self.get_test_loc('archive/dia/dia_broken.dia')
         test_dir = self.get_temp_dir()
         self.assertExceptionContains('CRC check failed',
-            archive.uncompress_gzip, test_file, test_dir)
+                                     archive.uncompress_gzip, test_file, test_dir)
 
     def test_extract_dia_broken_2(self):
         test_file = self.get_test_loc('archive/dia/broken/PublisherUML.dia')
         test_dir = self.get_temp_dir()
         self.assertExceptionContains('invalid distance too far back',
-            archive.uncompress_gzip, test_file, test_dir)
+                                     archive.uncompress_gzip, test_file, test_dir)
 
     def test_extract_dia_broken_3(self):
-        test_file = self.get_test_loc('archive/dia/broken/schedulerClassDiagram.dia')
+        test_file = self.get_test_loc(
+            'archive/dia/broken/schedulerClassDiagram.dia')
         test_dir = self.get_temp_dir()
         self.assertExceptionContains('invalid distance too far back',
-            archive.uncompress_gzip, test_file, test_dir)
+                                     archive.uncompress_gzip, test_file, test_dir)
 
     def test_extract_dia_broken_4(self):
-        test_file = self.get_test_loc('archive/dia/broken/ServletProxyGenerator.dia')
+        test_file = self.get_test_loc(
+            'archive/dia/broken/ServletProxyGenerator.dia')
         test_dir = self.get_temp_dir()
         self.assertExceptionContains('invalid distance too far back',
-            archive.uncompress_gzip, test_file, test_dir)
+                                     archive.uncompress_gzip, test_file, test_dir)
 
     def test_extract_can_get_extractor_and_uncompress_dia_files(self):
         test_file = self.get_test_loc('archive/dia/guess/infoset-doc.dia')
@@ -2148,7 +2230,8 @@ class TestCbz(BaseArchiveTestCase):
 
 class TestLzip(BaseArchiveTestCase):
 
-    pytestmark = pytest.mark.skipif(on_windows, reason='FIXME: lzip does not work on Windows')
+    pytestmark = pytest.mark.skipif(
+        on_windows, reason='FIXME: lzip does not work on Windows')
 
     def test_extract_tarlzip_basic(self):
         test_file = self.get_test_loc('archive/lzip/sample.tar.lz')
@@ -2244,7 +2327,8 @@ class ExtractArchiveWithIllegalFilenamesTestCase(BaseArchiveTestCase):
                 return
 
         len_test_dir = len(test_dir)
-        extracted = sorted(path[len_test_dir:] for path in fileutils.resource_iter(test_dir, with_dirs=False))
+        extracted = sorted(path[len_test_dir:] for path in fileutils.resource_iter(
+            test_dir, with_dirs=False))
         extracted = [str(p) for p in extracted]
         extracted = [to_posix(p) for p in extracted]
 
@@ -2290,7 +2374,8 @@ class TestExtractArchiveWithIllegalFilenamesWithLibarchiveOnPosix(ExtractArchive
         test_file = self.get_test_loc('archive/weird_names/weird_names.ar')
         test_dir = self.get_temp_dir()
         expected = Exception('Incorrect file header signature')
-        self.assertRaisesInstance(expected, libarchive2.extract, test_file, test_dir)
+        self.assertRaisesInstance(
+            expected, libarchive2.extract, test_file, test_dir)
 
     def test_extract_cpio_with_weird_filenames_with_libarchive_posix(self):
         test_file = self.get_test_loc('archive/weird_names/weird_names.cpio')

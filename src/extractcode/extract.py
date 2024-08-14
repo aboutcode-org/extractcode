@@ -3,7 +3,7 @@
 # ScanCode is a trademark of nexB Inc.
 # SPDX-License-Identifier: Apache-2.0
 # See http://www.apache.org/licenses/LICENSE-2.0 for the license text.
-# See https://github.com/nexB/extractcode for support or download.
+# See https://github.com/aboutcode-org/extractcode for support or download.
 # See https://aboutcode.org for more information about nexB OSS projects.
 #
 
@@ -165,9 +165,11 @@ def extract_files(
 
     ``ignore_pattern`` is a list of glob patterns to ignore.
     """
-    ignored = partial(ignore.is_ignored, ignores=ignore.default_ignores, unignores={})
+    ignored = partial(ignore.is_ignored,
+                      ignores=ignore.default_ignores, unignores={})
     if TRACE:
-        logger.debug('extract:start: %(location)r recurse: %(recurse)r\n' % locals())
+        logger.debug(
+            'extract:start: %(location)r recurse: %(recurse)r\n' % locals())
 
     abs_location = abspath(expanduser(location))
     for top, dirs, files in fileutils.walk(abs_location, ignored):
@@ -214,12 +216,14 @@ def extract_files(
                 kinds=kinds,
             ):
                 if TRACE:
-                    logger.debug('extract:walk:extraction event: %(xevent)r' % locals())
+                    logger.debug(
+                        'extract:walk:extraction event: %(xevent)r' % locals())
                 yield xevent
 
             if recurse:
                 if TRACE:
-                    logger.debug('extract:walk: recursing on target: %(target)r' % locals())
+                    logger.debug(
+                        'extract:walk: recursing on target: %(target)r' % locals())
                 for xevent in extract(
                     location=target,
                     kinds=kinds,
@@ -227,7 +231,8 @@ def extract_files(
                     ignore_pattern=ignore_pattern,
                 ):
                     if TRACE:
-                        logger.debug('extract:walk:recurse:extraction event: %(xevent)r' % locals())
+                        logger.debug(
+                            'extract:walk:recurse:extraction event: %(xevent)r' % locals())
                     yield xevent
 
 

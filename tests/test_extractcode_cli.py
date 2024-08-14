@@ -3,7 +3,7 @@
 # ScanCode is a trademark of nexB Inc.
 # SPDX-License-Identifier: Apache-2.0
 # See http://www.apache.org/licenses/LICENSE-2.0 for the license text.
-# See https://github.com/nexB/extractcode for support or download.
+# See https://github.com/aboutcode-org/extractcode for support or download.
 # See https://aboutcode.org for more information about nexB OSS projects.
 #
 
@@ -38,11 +38,11 @@ def run_extract(options, expected_rc=None, cwd=None):
     assert os.path.exists(cmd_loc + ('.exe' if on_windows else ''))
     args = [cmd_loc] + options
     result = subprocess.run(args,
-        stderr=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        cwd=cwd,
-        universal_newlines=True,
-    )
+                            stderr=subprocess.PIPE,
+                            stdout=subprocess.PIPE,
+                            cwd=cwd,
+                            universal_newlines=True,
+                            )
 
     if expected_rc is not None and result.returncode != expected_rc:
         opts = ' '.join(options)
@@ -103,13 +103,14 @@ def test_extractcode_command_works_with_relative_paths():
     # dir where we run tests from, i.e. the git checkout  dir To use relative
     # paths, we use our tmp dir at the root of the code tree
     from os.path import join
-    from  commoncode import fileutils
+    from commoncode import fileutils
     import extractcode
     import tempfile
     import shutil
 
     try:
-        test_file = test_env.get_test_loc('cli/extract_relative_path/basic.zip')
+        test_file = test_env.get_test_loc(
+            'cli/extract_relative_path/basic.zip')
 
         project_tmp = join(project_root, 'tmp')
         fileutils.create_dir(project_tmp)
@@ -120,7 +121,8 @@ def test_extractcode_command_works_with_relative_paths():
         shutil.copy(test_file, temp_rel)
 
         test_src_file = join(relative_dir, 'basic.zip')
-        test_tgt_dir = join(project_root, test_src_file) + extractcode.EXTRACT_SUFFIX
+        test_tgt_dir = join(project_root, test_src_file) + \
+            extractcode.EXTRACT_SUFFIX
         result = run_extract([test_src_file], expected_rc=0, cwd=project_root)
 
         assert 'Extracting done' in result.stderr
@@ -143,19 +145,21 @@ def test_extractcode_command_works_with_relative_paths_verbose():
     # to the base dir where we run tests from, i.e. the git checkout dir
     # To use relative paths, we use our tmp dir at the root of the code tree
     from os.path import join
-    from  commoncode import fileutils
+    from commoncode import fileutils
     import tempfile
     import shutil
 
     try:
         project_tmp = join(project_root, 'tmp')
         fileutils.create_dir(project_tmp)
-        test_src_dir = tempfile.mkdtemp(dir=project_tmp).replace(project_root, '').strip('\\/')
-        test_file = test_env.get_test_loc('cli/extract_relative_path/basic.zip')
+        test_src_dir = tempfile.mkdtemp(dir=project_tmp).replace(
+            project_root, '').strip('\\/')
+        test_file = test_env.get_test_loc(
+            'cli/extract_relative_path/basic.zip')
         shutil.copy(test_file, test_src_dir)
         test_src_file = join(test_src_dir, 'basic.zip')
 
-        result = run_extract(['--verbose', test_src_file] , expected_rc=0)
+        result = run_extract(['--verbose', test_src_file], expected_rc=0)
 
         # extract the path from the second line of the output
         # check that the path is relative and not absolute
@@ -174,7 +178,7 @@ def test_extractcode_command_works_with_relative_paths_verbose():
 def test_usage_and_help_return_a_correct_script_name_on_all_platforms():
     options = ['--help']
 
-    result = run_extract(options , expected_rc=0)
+    result = run_extract(options, expected_rc=0)
 
     assert 'Usage: extractcode [OPTIONS]' in result.stdout
     # this was showing up on Windows
@@ -185,20 +189,21 @@ def test_usage_and_help_return_a_correct_script_name_on_all_platforms():
     # this was showing up on Windows
     assert 'extractcode-script.py' not in result.stderr
 
-    result = run_extract(['-xyz'] , expected_rc=2)
+    result = run_extract(['-xyz'], expected_rc=2)
     # this was showing up on Windows
     assert 'extractcode-script.py' not in result.stderr
 
 
 def test_extractcode_command_can_extract_archive_with_unicode_names_verbose():
     test_dir = test_env.get_test_loc('cli/unicodearch', copy=True)
-    result = run_extract(['--verbose', test_dir] , expected_rc=0)
+    result = run_extract(['--verbose', test_dir], expected_rc=0)
     assert 'Sanders' in result.stdout
 
     file_result = [
         f for f in map(as_posixpath, resource_iter(test_dir, with_dirs=False))
         if not f.endswith('unicodepath.tgz')]
-    file_result = [''.join(f.partition('/unicodepath/')[1:]) for f in file_result]
+    file_result = [''.join(f.partition('/unicodepath/')[1:])
+                   for f in file_result]
     file_result = [f for f in file_result if f]
     expected = [
         '/unicodepath/Ho_',
@@ -210,12 +215,13 @@ def test_extractcode_command_can_extract_archive_with_unicode_names_verbose():
 
 def test_extractcode_command_can_extract_archive_with_unicode_names():
     test_dir = test_env.get_test_loc('cli/unicodearch', copy=True)
-    run_extract([test_dir] , expected_rc=0)
+    run_extract([test_dir], expected_rc=0)
 
     file_result = [
         f for f in map(as_posixpath, resource_iter(test_dir, with_dirs=False))
         if not f.endswith('unicodepath.tgz')]
-    file_result = [''.join(f.partition('/unicodepath/')[1:]) for f in file_result]
+    file_result = [''.join(f.partition('/unicodepath/')[1:])
+                   for f in file_result]
     file_result = [f for f in file_result if f]
     expected = [
         '/unicodepath/Ho_',
@@ -227,12 +233,13 @@ def test_extractcode_command_can_extract_archive_with_unicode_names():
 
 def test_extractcode_command_can_extract_shallow():
     test_dir = test_env.get_test_loc('cli/extract_shallow', copy=True)
-    run_extract(['--shallow', test_dir] , expected_rc=0)
+    run_extract(['--shallow', test_dir], expected_rc=0)
 
     file_result = [
         f for f in map(as_posixpath, resource_iter(test_dir, with_dirs=False))
         if not f.endswith('unicodepath.tgz')]
-    file_result = [''.join(f.partition('/top.zip-extract/')[1:]) for f in file_result]
+    file_result = [''.join(f.partition('/top.zip-extract/')[1:])
+                   for f in file_result]
     file_result = [f for f in file_result if f]
     # this checks that the zip in top.zip are not extracted
     expected = [
@@ -245,12 +252,13 @@ def test_extractcode_command_can_extract_shallow():
 
 def test_extractcode_command_can_ignore():
     test_dir = test_env.get_test_loc('cli/extract_ignore', copy=True)
-    run_extract(['--ignore', '*.tar', test_dir] , expected_rc=0)
+    run_extract(['--ignore', '*.tar', test_dir], expected_rc=0)
 
     file_result = [
         f for f in map(as_posixpath, resource_iter(test_dir, with_dirs=False))
         if not f.endswith('a.tar') or not f.endswith('b.tar')]
-    file_result = [''.join(f.partition('/a.zip-extract/')[1:]) for f in file_result]
+    file_result = [''.join(f.partition('/a.zip-extract/')[1:])
+                   for f in file_result]
     file_result = [f for f in file_result if f]
     expected = [
         '/a.zip-extract/a.txt',
@@ -263,7 +271,8 @@ def test_extractcode_command_can_ignore():
 
 def test_extractcode_command_does_not_crash_with_replace_originals_and_corrupted_archives():
     test_dir = test_env.get_test_loc('cli/replace-originals', copy=True)
-    result = run_extract(['--replace-originals', '--verbose', test_dir] , expected_rc=1)
+    result = run_extract(
+        ['--replace-originals', '--verbose', test_dir], expected_rc=1)
 
     assert not os.path.exists(os.path.join(test_dir, 'rake.1.gz-extract'))
     assert 'rake.1.gz' in result.stdout

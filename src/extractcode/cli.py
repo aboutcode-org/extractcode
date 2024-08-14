@@ -3,22 +3,21 @@
 # ScanCode is a trademark of nexB Inc.
 # SPDX-License-Identifier: Apache-2.0
 # See http://www.apache.org/licenses/LICENSE-2.0 for the license text.
-# See https://github.com/nexB/extractcode for support or download.
+# See https://github.com/aboutcode-org/extractcode for support or download.
 # See https://aboutcode.org for more information about nexB OSS projects.
 #
 
+from extractcode.api import extract_archives
+from commoncode.text import toascii
+from commoncode import filetype
+from commoncode import fileutils
+from commoncode import cliutils
 import os
 import functools
 
 import click
 click.disable_unicode_literals_warning = True
 
-from commoncode import cliutils
-from commoncode import fileutils
-from commoncode import filetype
-from commoncode.text import toascii
-
-from extractcode.api import extract_archives
 
 __version__ = '2021.6.2'
 
@@ -40,7 +39,7 @@ def print_archive_formats(ctx, param, value):
     if not value or ctx.resilient_parsing:
         return
 
-    kindkey = lambda x:x.kind
+    def kindkey(x): return x.kind
 
     by_kind = groupby(sorted(archive_handlers, key=kindkey), key=kindkey)
 
@@ -63,11 +62,12 @@ def print_archive_formats(ctx, param, value):
 info_text = '''
 ExtractCode is a mostly universal archive and compressed files extractor, with
 a particular focus on code archives.
-Visit https://aboutcode.org and https://github.com/nexB/extractcode/ for support and download.
+Visit https://aboutcode.org and https://github.com/aboutcode-org/extractcode/ for support and download.
 
 '''
 
-notice_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'NOTICE')
+notice_path = os.path.join(os.path.abspath(
+    os.path.dirname(__file__)), 'NOTICE')
 notice_text = open(notice_path).read()
 
 
@@ -111,13 +111,11 @@ Try 'extractcode --help' for help on options and arguments.'''
 
 @click.command(name='extractcode', epilog=epilog_text, cls=ExtractCommand)
 @click.pass_context
-
 @click.argument(
     'input',
     metavar='<input>',
     type=click.Path(exists=True, readable=True),
 )
-
 @click.option(
     '--verbose',
     is_flag=True,
@@ -144,12 +142,10 @@ Try 'extractcode --help' for help on options and arguments.'''
     multiple=True,
     help='Ignore files/directories matching this glob pattern.',
 )
-
 @click.option(
     '--all-formats',
     is_flag=True,
-    help=
-    'Extract archives from all known formats. '
+    help='Extract archives from all known formats. '
     'The default is to extract only the common format of these kinds: '
     '"regular", "regular_nested" and "package". '
     'To show all supported formats use the option --list-formats .',
@@ -245,7 +241,8 @@ def extractcode(
             source = fileutils.as_posixpath(xev.source)
 
             if not isinstance(source, str):
-                source = toascii(source, translit=True).decode('utf-8', 'replace')
+                source = toascii(source, translit=True).decode(
+                    'utf-8', 'replace')
 
                 source = get_relative_path(
                     path=source,
@@ -294,7 +291,7 @@ def extractcode(
 
         with cliutils.progressmanager(
             extractibles,
-            item_show_func=extract_event, 
+            item_show_func=extract_event,
             verbose=verbose
         ) as extraction_events:
 
@@ -329,4 +326,3 @@ def get_relative_path(path, len_base_path, base_is_dir):
         rel_path = fileutils.file_name(path)
 
     return rel_path.lstrip('/')
-

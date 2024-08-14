@@ -3,7 +3,7 @@
 # ScanCode is a trademark of nexB Inc.
 # SPDX-License-Identifier: Apache-2.0
 # See http://www.apache.org/licenses/LICENSE-2.0 for the license text.
-# See https://github.com/nexB/extractcode for support or download.
+# See https://github.com/aboutcode-org/extractcode for support or download.
 # See https://aboutcode.org for more information about nexB OSS projects.
 #
 
@@ -84,7 +84,8 @@ def check_files(test_dir, expected, regen=False):
     except AssertionError:
         files = [
             'test_dir: file://{}'.format(test_dir),
-            'expected: file://{}'.format(expected if expected_is_json_file else ''),
+            'expected: file://{}'.format(
+                expected if expected_is_json_file else ''),
         ]
         assert result == files + expected_content
 
@@ -257,4 +258,4 @@ class BaseArchiveTestCase(FileBasedTesting):
                 )
         else:
             raise self.failureException(
-                   'Exception containing %(text)r not raised' % locals())
+                'Exception containing %(text)r not raised' % locals())

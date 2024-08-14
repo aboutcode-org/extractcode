@@ -4,7 +4,7 @@
 # ScanCode is a trademark of nexB Inc.
 # SPDX-License-Identifier: Apache-2.0
 # See http://www.apache.org/licenses/LICENSE-2.0 for the license text.
-# See https://github.com/nexB/extractcode for support or download.
+# See https://github.com/aboutcode-org/extractcode for support or download.
 # See https://aboutcode.org for more information about nexB OSS projects.
 #
 
@@ -35,8 +35,10 @@ class TestExtractApi(BaseArchiveTestCase):
 
         cleaned_test_file = test_dir.replace(base, '')
         expected_event = [
-            extract.ExtractEvent(source='doc.docx', target='doc.docx-extract', done=False, warnings=[], errors=[]),
-            extract.ExtractEvent(source='doc.docx', target='doc.docx-extract', done=True, warnings=[], errors=[]),
+            extract.ExtractEvent(
+                source='doc.docx', target='doc.docx-extract', done=False, warnings=[], errors=[]),
+            extract.ExtractEvent(
+                source='doc.docx', target='doc.docx-extract', done=True, warnings=[], errors=[]),
         ]
         target = extractcode.get_extraction_path(test_dir)
         result = list(api.extract_archive(test_dir, target))
