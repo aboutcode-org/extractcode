@@ -3,7 +3,7 @@
 # ScanCode is a trademark of nexB Inc.
 # SPDX-License-Identifier: Apache-2.0
 # See http://www.apache.org/licenses/LICENSE-2.0 for the license text.
-# See https://github.com/nexB/extractcode for support or download.
+# See https://github.com/aboutcode-org/extractcode for support or download.
 # See https://aboutcode.org for more information about nexB OSS projects.
 #
 
@@ -20,7 +20,7 @@ from shutil import which
 
 import attr
 
-from commoncode  import command
+from commoncode import command
 from commoncode import fileutils
 from commoncode import paths
 from commoncode.system import is_case_sensitive_fs
@@ -105,7 +105,7 @@ def get_command_location(_cache=[]):
             f'OR set the {EXTRACTCODE_7ZIP_PATH_ENVVAR} environment variable. '
             'OR install 7zip as a system package. '
             'OR ensure 7zip is available in the system PATH.'
-    )
+        )
     _cache.append(cmd_loc)
     return cmd_loc
 
@@ -467,12 +467,14 @@ def extract_file_by_file(
                 errors[entry.path] = 'No file name extracted.'
             continue
 
-        safe_path = paths.safe_path(entry.path, posix=True, preserve_spaces=True)
+        safe_path = paths.safe_path(
+            entry.path, posix=True, preserve_spaces=True)
         target_file_loc = os.path.join(target_dir, safe_path)
         target_file_dir = os.path.dirname(target_file_loc)
         fileutils.create_dir(target_file_dir)
 
-        unique_target_file_loc = extractcode.new_name(target_file_loc, is_dir=False)
+        unique_target_file_loc = extractcode.new_name(
+            target_file_loc, is_dir=False)
 
         if TRACE:
             logger.debug('extract: unique_target_file_loc: from {} to {}'.format(
@@ -607,7 +609,8 @@ def parse_7z_listing(location):
         text = text.replace('\r\n', '\n')
 
     if TRACE:
-        logger.debug('parse_7z_listing: initial text: type: ' + repr(type(text)))
+        logger.debug('parse_7z_listing: initial text: type: ' +
+                     repr(type(text)))
         print('--------------------------------------')
         print(text)
         print('--------------------------------------')
@@ -657,7 +660,7 @@ def parse_7z_listing(location):
             first_line = '\n'.join([first_line, second_line])
             lines[0] = first_line
 
-        dangling_lines = [line  for line in lines if key_value_sep not in line]
+        dangling_lines = [line for line in lines if key_value_sep not in line]
         entry_errors = []
         if dangling_lines:
             emsg = (
@@ -667,7 +670,7 @@ def parse_7z_listing(location):
             entry_errors.append(emsg)
 
         entry_attributes = {}
-        key_lines = [line  for line in lines if key_value_sep in line]
+        key_lines = [line for line in lines if key_value_sep in line]
         for line in key_lines:
             k, _, v = line.partition(key_value_sep)
             k = k.strip()

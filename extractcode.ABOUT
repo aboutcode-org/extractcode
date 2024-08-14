@@ -2,9 +2,9 @@ about_resource: .
 copyright: copyright (c) nexB. Inc. and others
 description: A mostly universal archive extractor using 7zip, libarchive and the
  Python standard library for reliable archive extraction on Linux, Windows and
- macOS. It is used by ScanCode toolkit and related projects. 
+ macOS. It is used by ScanCode toolkit and related projects.
 keywords: archive, extraction, libarchive, 7zip, gzip, xz, lzma, bzip2, tar, ar, cpio, scancode-toolkit
-homepage_url: https://github.com/nexB/extractcode
+homepage_url: https://github.com/aboutcode-org/extractcode
 holder: nexB. Inc. and others
 holder_contact: info@aboutcode.org
 license_expression: apache-2.0

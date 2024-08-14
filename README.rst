@@ -4,7 +4,7 @@ ExtractCode
 
 - license: Apache-2.0
 - copyright: copyright (c) nexB. Inc. and others
-- homepage_url: https://github.com/nexB/extractcode
+- homepage_url: https://github.com/aboutcode-org/extractcode
 - keywords: archive, extraction, libarchive, 7zip, scancode-toolkit, extractcode
 
 Supports Windows, Linux and macOS on 64 bits processors and Python 3.6 to 3.9.
@@ -83,7 +83,7 @@ libmagic) to select the most appropriate extractor or decompressor function.
 It can handle multi-level archives such as tar.gz and can extract recursively
 any nested archives.
 
-Visit https://aboutcode.org and https://github.com/nexB/ for support and download.
+Visit https://aboutcode.org and https://github.com/aboutcode-org/ for support and download.
 
 
 We run CI tests on:
@@ -109,7 +109,7 @@ In this case, you will need to provide a working and compatible libarchive and
 find them:
 
 - **a typecode-libarchive and typecode-7z plugin**: See the standard ones at
-  https://github.com/nexB/scancode-plugins/tree/main/builtins
+  https://github.com/aboutcode-org/scancode-plugins/tree/main/builtins
   These can either bundle a libarchive library, a 7z executable or expose a
   system-installed libraries.
   It does so by providing plugin entry points as ``scancode_location_provider``
@@ -121,8 +121,8 @@ find them:
 
   See for example:
 
-    - https://github.com/nexB/scancode-plugins/blob/4da5fe8a5ab1c87b9b4af9e54d7ad60e289747f5/builtins/extractcode_libarchive-linux/setup.py#L40
-    - https://github.com/nexB/scancode-plugins/blob/4da5fe8a5ab1c87b9b4af9e54d7ad60e289747f5/builtins/extractcode_libarchive-linux/src/extractcode_libarchive/__init__.py#L17
+    - https://github.com/aboutcode-org/scancode-plugins/blob/4da5fe8a5ab1c87b9b4af9e54d7ad60e289747f5/builtins/extractcode_libarchive-linux/setup.py#L40
+    - https://github.com/aboutcode-org/scancode-plugins/blob/4da5fe8a5ab1c87b9b4af9e54d7ad60e289747f5/builtins/extractcode_libarchive-linux/src/extractcode_libarchive/__init__.py#L17
 
   And in the same way, the ``scancode_location_provider`` for ``extractcode_7zip``
   should point to a ``LocationProviderPlugin`` subclass with a ``get_locations()``
@@ -132,8 +132,8 @@ find them:
 
   See for example:
 
-    - https://github.com/nexB/scancode-plugins/blob/4da5fe8a5ab1c87b9b4af9e54d7ad60e289747f5/builtins/extractcode_7z-linux/setup.py#L40
-    - https://github.com/nexB/scancode-plugins/blob/4da5fe8a5ab1c87b9b4af9e54d7ad60e289747f5/builtins/extractcode_7z-linux/src/extractcode_7z/__init__.py#L18
+    - https://github.com/aboutcode-org/scancode-plugins/blob/4da5fe8a5ab1c87b9b4af9e54d7ad60e289747f5/builtins/extractcode_7z-linux/setup.py#L40
+    - https://github.com/aboutcode-org/scancode-plugins/blob/4da5fe8a5ab1c87b9b4af9e54d7ad60e289747f5/builtins/extractcode_7z-linux/src/extractcode_7z/__init__.py#L18
 
 - use **environment variables** to point to installed binaries:
 
@@ -181,14 +181,14 @@ ExtractCode will use these environment variables if set:
 - EXTRACTCODE_LIBARCHIVE_PATH : the path to the ``libarchive.so`` libarchive
   shared library used to support some of the archive formats. If not provided,
   ExtractCode will look for a plugin-provided libarchive library path. See
-  https://github.com/nexB/scancode-plugins/tree/main/builtins for such plugins.
+  https://github.com/aboutcode-org/scancode-plugins/tree/main/builtins for such plugins.
   If no plugin contributes libarchive, then a final attempt is made to look for
   it in the PATH using standard DLL loading techniques.
 
 - EXTRACTCODE_7Z_PATH : the path to the ``7z`` 7zip executable used to support
   some of the archive formats. If not provided, ExtractCode will look for a
   plugin-provided 7z executable path. See
-  https://github.com/nexB/scancode-plugins/tree/main/builtins for such plugins.
+  https://github.com/aboutcode-org/scancode-plugins/tree/main/builtins for such plugins.
   If no plugin contributes 7z, then a final attempt is made to look for
   it in the PATH.
 

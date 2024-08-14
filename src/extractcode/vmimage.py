@@ -3,7 +3,7 @@
 # ScanCode is a trademark of nexB Inc.
 # SPDX-License-Identifier: Apache-2.0
 # See http://www.apache.org/licenses/LICENSE-2.0 for the license text.
-# See https://github.com/nexB/extractcode for support or download.
+# See https://github.com/aboutcode-org/extractcode for support or download.
 # See https://aboutcode.org for more information about nexB OSS projects.
 #
 
@@ -45,15 +45,15 @@ GUESTFISH_NOT_FOUND = (
     'Unable to extract virtual machine image: you need to install the '
     'guestfish tool from libguestfs and extra FS drivers as needed. '
     'See the ExtractCode README.rst at '
-    'https://github.com/nexB/extractcode/blob/main/README.rst '
+    'https://github.com/aboutcode-org/extractcode/blob/main/README.rst '
     'and https://libguestfs.org/ for details.'
 )
 
 GUESTFISH_KERNEL_NOT_READABLE = (
-'''libguestfs requires the kernel executable to be readable.
+    '''libguestfs requires the kernel executable to be readable.
 This is the case by default on most Linux distributions except on Ubuntu.
 Please follow the ExtractCode installation instructions in the README.rst at:
-https://github.com/nexB/extractcode/blob/main/README.rst '
+https://github.com/aboutcode-org/extractcode/blob/main/README.rst '
 ''')
 
 EXTRACTCODE_GUESTFISH_PATH_ENVVAR = 'EXTRACTCODE_GUESTFISH_PATH'
@@ -162,7 +162,7 @@ class VmImage:
         args = [
             '--ro',
             f'--format={self.image_format}',
-            '--add' , self.location,
+            '--add', self.location,
             'run',
             ':', 'list-filesystems',
         ]

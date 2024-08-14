@@ -3,7 +3,7 @@
 # ScanCode is a trademark of nexB Inc.
 # SPDX-License-Identifier: Apache-2.0
 # See http://www.apache.org/licenses/LICENSE-2.0 for the license text.
-# See https://github.com/nexB/extractcode for support or download.
+# See https://github.com/aboutcode-org/extractcode for support or download.
 # See https://aboutcode.org for more information about nexB OSS projects.
 #
 
@@ -102,7 +102,7 @@ def should_extract(location, kinds, ignore_pattern=()):
     """
     location = os.path.abspath(os.path.expanduser(location))
     ignore_pattern = {
-        extension : 'User ignore: Supplied by --ignore'
+        extension: 'User ignore: Supplied by --ignore'
         for extension in ignore_pattern
     }
     should_ignore = is_ignored(location, ignore_pattern)
@@ -218,10 +218,13 @@ def get_handlers(location):
                 raise Exception('Maximum level of archive nesting is two.')
 
             # default to False
-            type_matched = handler.filetypes and any(t in ftype for t in handler.filetypes)
+            type_matched = handler.filetypes and any(
+                t in ftype for t in handler.filetypes)
             if TRACE_DEEP:
-                logger.debug(f'    get_handlers: handler.filetypes={handler.filetypes}')
-            mime_matched = handler.mimetypes and any(m in mtype for m in handler.mimetypes)
+                logger.debug(
+                    f'    get_handlers: handler.filetypes={handler.filetypes}')
+            mime_matched = handler.mimetypes and any(
+                m in mtype for m in handler.mimetypes)
             exts = handler.extensions
             if exts:
                 extension_matched = exts and location.lower().endswith(exts)
@@ -230,7 +233,7 @@ def get_handlers(location):
                 print(
                     f'  get_handlers: matched type: {type_matched}, '
                     f'mime: {mime_matched}, ext: {extension_matched}' % locals()
-                  )
+                )
 
             if (
                 handler.strict
@@ -247,7 +250,8 @@ def get_handlers(location):
             if type_matched or mime_matched or extension_matched:
                 if TRACE_DEEP:
                     handler_name = handler.name
-                    logger.debug('     get_handlers: yielding handler: %(handler_name)r' % locals())
+                    logger.debug(
+                        '     get_handlers: yielding handler: %(handler_name)r' % locals())
                 yield handler, type_matched, mime_matched, extension_matched
 
 
@@ -267,7 +271,8 @@ def score_handlers(handlers):
         # increment kind value: higher kinds numerical values are more
         # specific by design
         score += handler.kind
-        if TRACE_DEEP: logger.debug(f'     score_handlers: score += handler.kind {score}')
+        if TRACE_DEEP:
+            logger.debug(f'     score_handlers: score += handler.kind {score}')
 
         # increment score based on matched criteria
         if type_matched and mime_matched and extension_matched:
@@ -384,13 +389,15 @@ def extract_twice(location, target_dir, extractor1, extractor2):
 
     # extract this intermediate payload to the final target_dir
     try:
-        inner_archives = list(fileutils.resource_iter(temp_target, with_dirs=False))
+        inner_archives = list(fileutils.resource_iter(
+            temp_target, with_dirs=False))
         if not inner_archives:
             warnings.append(location + ': No files found in archive.')
         else:
             for extracted1_loc in inner_archives:
                 if TRACE:
-                    logger.debug('extract_twice: extractor2: %(extracted1_loc)r' % locals())
+                    logger.debug(
+                        'extract_twice: extractor2: %(extracted1_loc)r' % locals())
                 warnings.extend(extractor2(extracted1_loc, abs_target_dir))
     finally:
         # cleanup the temporary output from extractor1
@@ -415,14 +422,17 @@ def extract_with_fallback(location, target_dir, extractor1, extractor2):
     try:
         warnings = extractor1(abs_location, temp_target1)
         if TRACE:
-            logger.debug('extract_with_fallback: temp_target1: %(temp_target1)r' % locals())
+            logger.debug(
+                'extract_with_fallback: temp_target1: %(temp_target1)r' % locals())
         fileutils.copytree(temp_target1, abs_target_dir)
     except:
         try:
-            temp_target2 = str(fileutils.get_temp_dir(prefix='extractcode-extract2-'))
+            temp_target2 = str(fileutils.get_temp_dir(
+                prefix='extractcode-extract2-'))
             warnings = extractor2(abs_location, temp_target2)
             if TRACE:
-                logger.debug('extract_with_fallback: temp_target2: %(temp_target2)r' % locals())
+                logger.debug(
+                    'extract_with_fallback: temp_target2: %(temp_target2)r' % locals())
             fileutils.copytree(temp_target2, abs_target_dir)
         finally:
             fileutils.delete(temp_target2)
@@ -446,7 +456,8 @@ def try_to_extract(location, target_dir, extractor):
     try:
         warnings = extractor(abs_location, temp_target)
         if TRACE:
-            logger.debug('try_to_extract: temp_target: %(temp_target)r' % locals())
+            logger.debug(
+                'try_to_extract: temp_target: %(temp_target)r' % locals())
         fileutils.copytree(temp_target, abs_target_dir)
     except:
         return warnings
@@ -685,7 +696,7 @@ PythonHandler = Handler(
 XzHandler = Handler(
     name='xz',
     filetypes=('xz compressed',),
-    mimetypes=('application/x-xz',) ,
+    mimetypes=('application/x-xz',),
     extensions=('.xz',),
     kind=regular,
     extractors=[extract_xz],
@@ -695,7 +706,7 @@ XzHandler = Handler(
 LzmaHandler = Handler(
     name='lzma',
     filetypes=('lzma compressed',),
-    mimetypes=('application/x-xz',) ,
+    mimetypes=('application/x-xz',),
     extensions=('.lzma',),
     kind=regular,
     extractors=[extract_lzma],
@@ -705,7 +716,7 @@ LzmaHandler = Handler(
 TarXzHandler = Handler(
     name='Tar xz',
     filetypes=('xz compressed',),
-    mimetypes=('application/x-xz',) ,
+    mimetypes=('application/x-xz',),
     extensions=('.tar.xz', '.txz', '.tarxz',),
     kind=regular_nested,
     extractors=[extract_xz, extract_tar],
@@ -715,7 +726,7 @@ TarXzHandler = Handler(
 TarLzmaHandler = Handler(
     name='Tar lzma',
     filetypes=('lzma compressed',),
-    mimetypes=('application/x-lzma',) ,
+    mimetypes=('application/x-lzma',),
     extensions=('tar.lzma', '.tlz', '.tarlz', '.tarlzma',),
     kind=regular_nested,
     extractors=[extract_lzma, extract_tar],
@@ -726,7 +737,8 @@ TarGzipHandler = Handler(
     name='Tar gzip',
     filetypes=('gzip compressed',),
     mimetypes=('application/gzip',),
-    extensions=('.tgz', '.tar.gz', '.tar.gzip', '.targz', '.targzip', '.tgzip',),
+    extensions=('.tgz', '.tar.gz', '.tar.gzip',
+                '.targz', '.targzip', '.tgzip',),
     kind=regular_nested,
     extractors=[extract_tar],
     strict=False
@@ -735,7 +747,7 @@ TarGzipHandler = Handler(
 TarLzipHandler = Handler(
     name='Tar lzip',
     filetypes=('lzip compressed',),
-    mimetypes=('application/x-lzip',) ,
+    mimetypes=('application/x-lzip',),
     extensions=('.tar.lz', '.tar.lzip',),
     kind=regular_nested,
     extractors=[extract_lzip, extract_tar],
@@ -745,7 +757,7 @@ TarLzipHandler = Handler(
 TarZstdHandler = Handler(
     name='Tar zstd',
     filetypes=('zstandard compressed',),
-    mimetypes=('application/x-zstd',) ,
+    mimetypes=('application/x-zstd',),
     extensions=('.tar.zst', '.tar.zstd',),
     kind=regular_nested,
     extractors=[extract_zstd, extract_tar],
@@ -755,7 +767,7 @@ TarZstdHandler = Handler(
 TarLz4Handler = Handler(
     name='Tar lz4',
     filetypes=('lz4 compressed',),
-    mimetypes=('application/x-lz4',) ,
+    mimetypes=('application/x-lz4',),
     extensions=('.tar.lz4',),
     kind=regular_nested,
     extractors=[extract_lz4, extract_tar],
@@ -788,7 +800,7 @@ GzipHandler = Handler(
 LzipHandler = Handler(
     name='lzip',
     filetypes=('lzip compressed',),
-    mimetypes=('application/x-lzip',) ,
+    mimetypes=('application/x-lzip',),
     extensions=('.lzip',),
     kind=regular,
     extractors=[extract_lzip],
@@ -798,7 +810,7 @@ LzipHandler = Handler(
 ZstdHandler = Handler(
     name='zstd',
     filetypes=('zstandard compressed',),
-    mimetypes=('application/x-zstd',) ,
+    mimetypes=('application/x-zstd',),
     extensions=('.zst', '.zstd',),
     kind=regular_nested,
     extractors=[extract_zstd],
@@ -808,7 +820,7 @@ ZstdHandler = Handler(
 Lz4Handler = Handler(
     name='lz4',
     filetypes=('lz4 compressed',),
-    mimetypes=('application/x-lz4',) ,
+    mimetypes=('application/x-lz4',),
     extensions=('.lz4',),
     kind=regular_nested,
     extractors=[extract_lz4],

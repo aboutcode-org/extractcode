@@ -3,7 +3,7 @@
 # ScanCode is a trademark of nexB Inc.
 # SPDX-License-Identifier: Apache-2.0
 # See http://www.apache.org/licenses/LICENSE-2.0 for the license text.
-# See https://github.com/nexB/extractcode for support or download.
+# See https://github.com/aboutcode-org/extractcode for support or download.
 # See https://aboutcode.org for more information about nexB OSS projects.
 #
 
@@ -123,7 +123,8 @@ def remove_backslashes_and_dotdots(directory):
                 continue
             try:
                 new_path = as_posixpath(filename).strip('/')
-                new_path = posixpath.normpath(new_path).replace('..', '/').strip('/')
+                new_path = posixpath.normpath(
+                    new_path).replace('..', '/').strip('/')
                 new_path = posixpath.normpath(new_path)
                 segments = new_path.split('/')
                 directory = join(top, *segments[:-1])

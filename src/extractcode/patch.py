@@ -3,7 +3,7 @@
 # ScanCode is a trademark of nexB Inc.
 # SPDX-License-Identifier: Apache-2.0
 # See http://www.apache.org/licenses/LICENSE-2.0 for the license text.
-# See https://github.com/nexB/extractcode for support or download.
+# See https://github.com/aboutcode-org/extractcode for support or download.
 # See https://aboutcode.org for more information about nexB OSS projects.
 #
 
@@ -52,7 +52,8 @@ def extract(location, target_dir):
 
         # make the path safe to use as a subfile path
         # ensure this a good and clean posix relative path
-        patch_subfile_path = paths.safe_path(patch_subfile_path, preserve_spaces=True)
+        patch_subfile_path = paths.safe_path(
+            patch_subfile_path, preserve_spaces=True)
 
         # create directories
         parent_dir = posixpath.dirname(patch_subfile_path)

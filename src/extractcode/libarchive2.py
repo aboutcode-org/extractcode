@@ -3,7 +3,7 @@
 # ScanCode is a trademark of nexB Inc.
 # SPDX-License-Identifier: Apache-2.0
 # See http://www.apache.org/licenses/LICENSE-2.0 for the license text.
-# See https://github.com/nexB/extractcode for support or download.
+# See https://github.com/aboutcode-org/extractcode for support or download.
 # See https://aboutcode.org for more information about nexB OSS projects.
 #
 
@@ -128,7 +128,7 @@ def load_lib():
             f'OR set the {EXTRACTCODE_LIBARCHIVE_PATH_ENVVAR} environment variable. '
             'OR install libarchive as a system package. '
             'OR ensure libarchive is available in the system PATH.'
-    )
+        )
     return command.load_shared_library(dll_loc)
 
 
@@ -203,7 +203,8 @@ def extract(location, target_dir, skip_symlinks=True):
         if TRACE:
             logger.debug('  writing.....')
 
-        _target_path = entry.write(abs_target_dir, transform_path=partial(paths.safe_path, preserve_spaces=True))
+        _target_path = entry.write(abs_target_dir, transform_path=partial(
+            paths.safe_path, preserve_spaces=True))
 
     return warnings
 
@@ -785,7 +786,8 @@ internal buffer optimizations.
 """
 # int archive_read_data_block(struct archive *, const void **buff, size_t *len, off_t *offset);
 read_entry_data_block = libarchive.archive_read_data_block
-read_entry_data_block.argtypes = [c_void_p, POINTER(c_void_p), POINTER(c_size_t), POINTER(c_longlong)]
+read_entry_data_block.argtypes = [c_void_p, POINTER(
+    c_void_p), POINTER(c_size_t), POINTER(c_longlong)]
 read_entry_data_block.restype = c_int
 read_entry_data_block.errcheck = errcheck
 

@@ -4,7 +4,7 @@
 # ScanCode is a trademark of nexB Inc.
 # SPDX-License-Identifier: Apache-2.0
 # See http://www.apache.org/licenses/LICENSE-2.0 for the license text.
-# See https://github.com/nexB/extractcode for support or download.
+# See https://github.com/aboutcode-org/extractcode for support or download.
 # See https://aboutcode.org for more information about nexB OSS projects.
 #
 
@@ -33,7 +33,8 @@ class TestExtract(BaseArchiveTestCase):
     test_data_dir = os.path.join(os.path.dirname(__file__), 'data')
 
     def test_extract_file_function(self):
-        test_file = self.get_test_loc('extract/basic_non_nested.tar.gz', copy=True)
+        test_file = self.get_test_loc(
+            'extract/basic_non_nested.tar.gz', copy=True)
         base = fileutils.parent_directory(test_file)
         expected = ['a/b/a.txt', 'a/b/b.txt', 'a/c/c.txt']
         cleaned_test_file = test_file.replace(base, '')
@@ -53,14 +54,15 @@ class TestExtract(BaseArchiveTestCase):
         target = extractcode.get_extraction_path(test_file)
         result = list(extract.extract_file(test_file, target))
         result = [r._replace(
-                    source=cleaned_test_file,
-                    target=extractcode.get_extraction_path(cleaned_test_file))
-                  for r in result]
+            source=cleaned_test_file,
+            target=extractcode.get_extraction_path(cleaned_test_file))
+            for r in result]
         assert expected_event == result
         check_files(target, expected)
 
     def test_extract_archive_non_nested(self):
-        test_dir = self.get_test_loc('extract/basic_non_nested.tar.gz', copy=True)
+        test_dir = self.get_test_loc(
+            'extract/basic_non_nested.tar.gz', copy=True)
         expected = (
             'a/b/a.txt',
             'a/b/b.txt',
@@ -75,7 +77,8 @@ class TestExtract(BaseArchiveTestCase):
         check_files(extractcode.get_extraction_path(test_dir), expected)
 
     def test_extract_archive_shallow_with_readonly_inside(self):
-        test_file = self.get_test_loc('extract/readonly/read_only.tar.gz', copy=True)
+        test_file = self.get_test_loc(
+            'extract/readonly/read_only.tar.gz', copy=True)
         """
         This test file was created with:
             import tarfile, time, datetime, io, os
@@ -265,7 +268,8 @@ class TestExtract(BaseArchiveTestCase):
             'c/a.tar.gz/a/c/c.txt',
         )
         test_dir = self.get_test_loc('extract/tree', copy=True)
-        result = list(extract.extract(test_dir, recurse=True, replace_originals=True))
+        result = list(extract.extract(
+            test_dir, recurse=True, replace_originals=True))
         check_no_error(result)
         check_files(test_dir, expected)
         # again
@@ -275,17 +279,22 @@ class TestExtract(BaseArchiveTestCase):
 
     def test_extract_with_replace_originals_does_not_fail_with_gz_with_trailing(self):
         expected = ('rake.1.gz',)
-        test_dir = self.get_test_loc('extract/replace-originals/rake.1.gz', copy=True)
-        result = list(extract.extract(test_dir, recurse=True, replace_originals=True))
+        test_dir = self.get_test_loc(
+            'extract/replace-originals/rake.1.gz', copy=True)
+        result = list(extract.extract(
+            test_dir, recurse=True, replace_originals=True))
         r = result[-1]
-        assert r.errors and all(e.startswith('Not a gzipped file') for e in r.errors)
+        assert r.errors and all(e.startswith(
+            'Not a gzipped file') for e in r.errors)
         assert not r.warnings
         check_files(test_dir, expected)
 
     def test_extract_with_replace_originals_does_not_fail_with_corrupted_archive(self):
         expected = ('issue6550.gz',)
-        test_dir = self.get_test_loc('extract/replace-originals/issue6550.gz', copy=True)
-        result = list(extract.extract(test_dir, recurse=True, replace_originals=True))
+        test_dir = self.get_test_loc(
+            'extract/replace-originals/issue6550.gz', copy=True)
+        result = list(extract.extract(
+            test_dir, recurse=True, replace_originals=True))
         r = result[-1]
         assert r.errors and all(e.startswith('Error') for e in r.errors)
         assert not r.warnings
@@ -391,14 +400,16 @@ class TestExtract(BaseArchiveTestCase):
         test_file = self.get_test_loc('extract/corrupted/a.tar.gz', copy=True)
         test_dir = self.get_temp_dir()
         expected = Exception('Error -3 while decompressing')
-        self.assertRaisesInstance(expected, archive.uncompress_gzip, test_file, test_dir)
+        self.assertRaisesInstance(
+            expected, archive.uncompress_gzip, test_file, test_dir)
 
     def test_uncompress_corrupted_archive_with_libarchive(self):
         from extractcode import libarchive2
         test_file = self.get_test_loc('extract/corrupted/a.tar.gz', copy=True)
         test_dir = self.get_temp_dir()
         expected = Exception('gzip decompression failed')
-        self.assertRaisesInstance(expected, libarchive2.extract, test_file, test_dir)
+        self.assertRaisesInstance(
+            expected, libarchive2.extract, test_file, test_dir)
 
     @pytest.mark.skipif(not on_linux, reason='Expectations are different on Windows and macOS')
     def test_extract_tree_with_corrupted_archives_linux(self):
@@ -450,7 +461,8 @@ class TestExtract(BaseArchiveTestCase):
         assert expected_warning == warns
 
     def test_extract_nested_tar_file_recurse_only(self):
-        test_file = self.get_test_loc('extract/nested/nested_tars.tar.gz', copy=True)
+        test_file = self.get_test_loc(
+            'extract/nested/nested_tars.tar.gz', copy=True)
         expected = [
             'nested_tars.tar.gz',
             'nested_tars.tar.gz-extract/b/.svn/all-wcprops',
@@ -489,7 +501,8 @@ class TestExtract(BaseArchiveTestCase):
         check_files(test_file, expected)
 
     def test_extract_nested_tar_file_shallow_only(self):
-        test_dir = self.get_test_loc('extract/nested/nested_tars.tar.gz', copy=True)
+        test_dir = self.get_test_loc(
+            'extract/nested/nested_tars.tar.gz', copy=True)
         expected = [
             'nested_tars.tar.gz',
             'nested_tars.tar.gz-extract/b/.svn/all-wcprops',
@@ -522,7 +535,8 @@ class TestExtract(BaseArchiveTestCase):
         check_files(test_dir, expected)
 
     def test_extract_nested_tar_file_shallow_then_recurse(self):
-        test_file = self.get_test_loc('extract/nested/nested_tars.tar.gz', copy=True)
+        test_file = self.get_test_loc(
+            'extract/nested/nested_tars.tar.gz', copy=True)
         expected = [
             'nested_tars.tar.gz',
             'nested_tars.tar.gz-extract/b/.svn/all-wcprops',
@@ -667,7 +681,8 @@ class TestExtract(BaseArchiveTestCase):
 
     def test_extract_directory_with_office_docs(self):
         test_dir = self.get_test_loc('extract/office_docs', copy=True)
-        result = list(extract.extract(test_dir, kinds=(extractcode.docs,), recurse=True))
+        result = list(extract.extract(
+            test_dir, kinds=(extractcode.docs,), recurse=True))
         expected = [
             'abc.docx',
             'abc.docx-extract/[Content_Types].xml',
@@ -781,7 +796,8 @@ class TestExtract(BaseArchiveTestCase):
         self.touch(os.path.join(test_dir, 'dir', 'otherarch.gz'))
         allpaths = []
         for top, dirs, files in self.extract_walker(test_dir):
-            allpaths.extend([as_posixpath(os.path.join(top, d).replace(test_dir, '')) for d in dirs + files])
+            allpaths.extend([as_posixpath(os.path.join(
+                top, d).replace(test_dir, '')) for d in dirs + files])
 
         expected = [
             '/arch.gzextract/extracted_file',
@@ -805,11 +821,13 @@ class TestExtract(BaseArchiveTestCase):
         project_tmp = join(project_root, 'tmp')
         fileutils.create_dir(project_tmp)
         project_root_abs = abspath(project_root)
-        test_src_dir = tempfile.mkdtemp(dir=project_tmp).replace(project_root_abs, '').strip('\\/')
+        test_src_dir = tempfile.mkdtemp(dir=project_tmp).replace(
+            project_root_abs, '').strip('\\/')
         test_file = self.get_test_loc('extract/relative_path/basic.zip')
         shutil.copy(test_file, test_src_dir)
         test_src_file = join(test_src_dir, 'basic.zip')
-        test_tgt_dir = join(project_root, test_src_file) + extractcode.EXTRACT_SUFFIX
+        test_tgt_dir = join(project_root, test_src_file) + \
+            extractcode.EXTRACT_SUFFIX
         result = list(extract.extract(test_src_file))
         expected = ['c/a/a.txt', 'c/b/a.txt', 'c/c/a.txt']
         check_files(test_tgt_dir, expected)
@@ -869,7 +887,8 @@ class TestExtract(BaseArchiveTestCase):
             'gamma/gamma.zip',
             'gamma/gamma.zip-extract/c.txt'
         ]
-        result = list(extract.extract(test_dir, recurse=True, ignore_pattern=('alpha.zip',)))
+        result = list(extract.extract(test_dir, recurse=True,
+                      ignore_pattern=('alpha.zip',)))
         check_no_error(result)
         check_files(test_dir, expected)
 
@@ -888,7 +907,8 @@ class TestExtract(BaseArchiveTestCase):
             'beta.tar-extract/c.txt',
             'gamma/gamma.zip',
         ]
-        result = list(extract.extract(test_dir, recurse=True, ignore_pattern=('gamma',)))
+        result = list(extract.extract(
+            test_dir, recurse=True, ignore_pattern=('gamma',)))
         check_no_error(result)
         check_files(test_dir, expected)
 
@@ -907,7 +927,8 @@ class TestExtract(BaseArchiveTestCase):
             'gamma/gamma.zip',
             'gamma/gamma.zip-extract/c.txt'
         ]
-        result = list(extract.extract(test_dir, recurse=True, ignore_pattern=('b*.zip',)))
+        result = list(extract.extract(
+            test_dir, recurse=True, ignore_pattern=('b*.zip',)))
         check_no_error(result)
         check_files(test_dir, expected)
 
@@ -972,8 +993,10 @@ class TestExtract(BaseArchiveTestCase):
         ]
         cleaned_test_file = test_dir.replace(base, '')
         expected_events = [
-            extract.ExtractEvent(source='doc.docx', target='doc.docx-extract', done=False, warnings=[], errors=[]),
-            extract.ExtractEvent(source='doc.docx', target='doc.docx-extract', done=True, warnings=[], errors=[]),
+            extract.ExtractEvent(
+                source='doc.docx', target='doc.docx-extract', done=False, warnings=[], errors=[]),
+            extract.ExtractEvent(
+                source='doc.docx', target='doc.docx-extract', done=True, warnings=[], errors=[]),
         ]
 
         target = extractcode.get_extraction_path(test_dir)

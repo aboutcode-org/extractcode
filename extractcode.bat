@@ -4,7 +4,7 @@
 @rem SPDX-License-Identifier: Apache-2.0
 @rem See http://www.apache.org/licenses/LICENSE-2.0 for the license text.
 @rem ScanCode is a trademark of nexB Inc.
-@rem See https://github.com/nexB/extractcode for support or download.
+@rem See https://github.com/aboutcode-org/extractcode for support or download.
 @rem See https://aboutcode.org for more information about nexB OSS projects.
 
 @rem  A wrapper to ExtractCode command line entry point

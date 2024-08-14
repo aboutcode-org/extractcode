@@ -3,7 +3,7 @@
 # ScanCode is a trademark of nexB Inc.
 # SPDX-License-Identifier: Apache-2.0
 # See http://www.apache.org/licenses/LICENSE-2.0 for the license text.
-# See https://github.com/nexB/extractcode for support or download.
+# See https://github.com/aboutcode-org/extractcode for support or download.
 # See https://aboutcode.org for more information about nexB OSS projects.
 #
 
@@ -42,7 +42,8 @@ def uncompress(location, target_dir, decompressor, suffix=EXTRACT_SUFFIX):
 
     tmp_loc, warnings = uncompress_file(location, decompressor)
 
-    target_location = os.path.join(target_dir, os.path.basename(location) + suffix)
+    target_location = os.path.join(
+        target_dir, os.path.basename(location) + suffix)
     if os.path.exists(target_location):
         fileutils.delete(target_location)
     shutil.move(tmp_loc, target_location)
