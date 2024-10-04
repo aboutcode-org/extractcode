@@ -18,7 +18,7 @@ from commoncode.text import as_unicode
 from extractcode import patch
 
 try:
-    import patch as _pythonpatch
+    import patch_ng as _pythonpatch
 except ImportError:
     import pytest
     pytestmark = pytest.mark.skipif(True, reason="Run only if patch is installed.")
