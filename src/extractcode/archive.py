@@ -11,28 +11,26 @@ import logging
 import os
 from collections import namedtuple
 
-from commoncode import fileutils
 from commoncode import filetype
+from commoncode import fileutils
 from commoncode import functional
 from commoncode.ignore import is_ignored
 from typecode import contenttype
 
 from extractcode import all_kinds
-from extractcode import regular
-from extractcode import package
 from extractcode import docs
-from extractcode import regular_nested
 from extractcode import file_system
-from extractcode import patches
-from extractcode import special_package
-
 from extractcode import libarchive2
+from extractcode import package
 from extractcode import patch
+from extractcode import patches
+from extractcode import regular
+from extractcode import regular_nested
 from extractcode import sevenzip
+from extractcode import special_package
 from extractcode import vmimage
-
-from extractcode.uncompress import uncompress_gzip
 from extractcode.uncompress import uncompress_bzip2
+from extractcode.uncompress import uncompress_gzip
 
 logger = logging.getLogger(__name__)
 TRACE = False
@@ -1096,7 +1094,7 @@ QCOWHandler = Handler(
     # note that there are v1, v2 and v3 formats.
     name='QEMU QCOW2 disk image',
     filetypes=('qemu qcow2 image', 'qemu qcow image',),
-    mimetypes=('application/octet-stream',),
+    mimetypes=('application/octet-stream', 'application/x-qemu-disk'),
     extensions=('.qcow2', '.qcow', '.qcow2c', '.img',),
     kind=file_system,
     extractors=[extract_vm_image],

@@ -13,6 +13,7 @@ from pathlib import Path
 import pytest
 
 from commoncode.system import on_linux
+from commoncode.system import on_ubuntu_22
 
 from extractcode_assert_utils import BaseArchiveTestCase
 from extractcode_assert_utils import check_files
@@ -20,7 +21,7 @@ from extractcode_assert_utils import check_files
 from extractcode import vmimage
 
 
-@pytest.mark.skipif(not on_linux, reason='Only linux supports image extraction')
+@pytest.mark.skipif((not on_linux) or on_ubuntu_22, reason='Only linux supports image extraction, kernel is unreadable on Ubuntu 22.04')
 class TestExtractVmImage(BaseArchiveTestCase):
     test_data_dir = os.path.join(os.path.dirname(__file__), 'data')
 
