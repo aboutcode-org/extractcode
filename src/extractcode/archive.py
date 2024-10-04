@@ -24,10 +24,12 @@ from extractcode import docs
 from extractcode import regular_nested
 from extractcode import file_system
 from extractcode import patches
+from extractcode import sources_map
 from extractcode import special_package
 
 from extractcode import libarchive2
 from extractcode import patch
+from extractcode import source_map
 from extractcode import sevenzip
 from extractcode import vmimage
 
@@ -506,6 +508,7 @@ extract_nsis = sevenzip.extract
 extract_ishield = sevenzip.extract
 extract_Z = sevenzip.extract
 extract_xarpkg = sevenzip.extract
+extract_source_map = source_map.extract
 
 # Archive handlers.
 ####################
@@ -1133,6 +1136,24 @@ PatchHandler = Handler(
     strict=True
 )
 
+SourceMapFileHandler = Handler(
+    name='Source Map File',
+    filetypes=('json data',),
+    mimetypes=('application/json',),
+    extensions=(
+        '.js.map',
+        '.ts.map',
+        '.css.map',
+        '.less.map',
+        '.scss.map',
+        '.soy.map',
+        '.jsx.map',
+        ),
+    kind=sources_map,
+    extractors=[extract_source_map],
+    strict=True,
+)
+
 # Actual list of handlers
 
 archive_handlers = [
@@ -1194,6 +1215,7 @@ archive_handlers = [
     QCOWHandler,
     VMDKHandler,
     VirtualBoxHandler,
+    SourceMapFileHandler,
 ]
 
 # only support extracting patches if patch is installed. This is not a default

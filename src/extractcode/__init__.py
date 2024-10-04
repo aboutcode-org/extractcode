@@ -42,6 +42,7 @@ package = 4
 file_system = 5
 patches = 6
 special_package = 7
+sources_map = 8
 
 kind_labels = {
     1: 'docs',
@@ -51,6 +52,7 @@ kind_labels = {
     5: 'file_system',
     6: 'patches',
     7: 'special_package',
+    8: 'sources_map',
 }
 
 # note: we do not include special_package in all_kinds by default
@@ -62,6 +64,7 @@ all_kinds = (
     docs,
     patches,
     special_package,
+    sources_map
 )
 
 default_kinds = (
@@ -79,6 +82,7 @@ extract_types = {
     'doc': (docs,),
     'patch': (patches,),
     'special_package': (special_package,),
+    'sources_map': (sources_map,),
 }
 
 
