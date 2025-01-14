@@ -230,6 +230,14 @@ def extract_files(
                         logger.debug('extract:walk:recurse:extraction event: %(xevent)r' % locals())
                     yield xevent
 
+def extract_libre_office_document(location, target):
+    """ Extract Libre Office documents (e.g., .ods files) as ZIP archives. """
+    if not zipfile.is_zipfile(location):
+        return
+    with zipfile.ZipFile(location, 'r') as zip_ref:
+        zip_ref.extractall(target)
+        print(f"Extracted Libre Office document from {location} to {target}")
+
 
 def extract_file(
     location,
