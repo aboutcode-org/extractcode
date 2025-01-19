@@ -9,6 +9,7 @@
 
 import logging
 import traceback
+import zipfile
 
 from collections import namedtuple
 from functools import partial
@@ -229,14 +230,15 @@ def extract_files(
                     if TRACE:
                         logger.debug('extract:walk:recurse:extraction event: %(xevent)r' % locals())
                     yield xevent
-
+    
 def extract_libre_office_document(location, target):
-    """ Extract Libre Office documents (e.g., .ods files) as ZIP archives. """
-    if not zipfile.is_zipfile(location):
-        return
-    with zipfile.ZipFile(location, 'r') as zip_ref:
-        zip_ref.extractall(target)
-        print(f"Extracted Libre Office document from {location} to {target}")
+        """Extract Libre Office documents (e.g., .ods files) as ZIP archives."""
+        try:
+            with zipfile.ZipFile(location, 'r') as zip_ref:
+                zip_ref.extractall(target)
+                logger.info(f"Extracted Libre Office document from {location} to {target}")
+        except zipfile.BadZipFile:
+                raise ValueError(f"File at {location} is not a valid ZIP archive.")
 
 
 def extract_file(
