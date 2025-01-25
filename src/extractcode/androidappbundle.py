@@ -76,13 +76,14 @@ class AndroidAppBundle:
                 for file in files:
                     file_path = os.path.join(root, file)
                     file_size = os.path.getsize(file_path)
-                    relative_path = os.path.relpath(file_path, abs_target_dir)
+                    # Normalize the path to use forward slashes
+                    relative_path = os.path.relpath(file_path, abs_target_dir).replace(os.sep, '/')
                     file_map[relative_path] = file_size
 
             return file_map
         except Exception as e:
             raise ExtractErrorFailedToExtract(f'Failed to extract {self.location}: {e}')
-
+    
     def show_file_map(self):
         """
         Show the file map of extracted files and their sizes.
