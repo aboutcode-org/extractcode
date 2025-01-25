@@ -98,6 +98,8 @@ class AndroidAppBundle:
                 file_path = os.path.join(root, file)
                 file_size = os.path.getsize(file_path)
                 relative_path = os.path.relpath(file_path, self.extracted_dir)
+                # Normalize the path to use forward slashes
+                relative_path = os.path.relpath(file_path, self.extracted_dir).replace(os.sep, '/')
                 file_map[relative_path] = file_size
 
         # Print the file map
