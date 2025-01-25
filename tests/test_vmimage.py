@@ -19,8 +19,24 @@ from extractcode_assert_utils import check_files
 
 from extractcode import vmimage
 
+def is_kernel_readable():
+    """
+    Check if the kernel is readable by testing access to /boot/vmlinuz-*.
+    Return True if readable, False otherwise.
+    """
+    if not os.name == "posix":
+        return False  # Skip on non-Linux systems
+
+    try:
+        kernels = list(Path("/boot").glob("vmlinuz-*"))
+        if not kernels:
+            return False  # No kernel found
+        return all(os.access(kern, os.R_OK) for kern in kernels)
+    except Exception:
+        return False  # Kernel check failed
 
 @pytest.mark.skipif(not on_linux, reason='Only linux supports image extraction')
+@pytest.mark.skipif(not is_kernel_readable(), reason="Kernel not readable")
 class TestExtractVmImage(BaseArchiveTestCase):
     test_data_dir = os.path.join(os.path.dirname(__file__), 'data')
 
