@@ -58,8 +58,8 @@ def uncompress_file(location, decompressor):
     # FIXME: do not create a sub-directory and instead strip the "compression"
     # extension such gz, etc. or introspect the archive header to get the file
     # name when present.
-    assert location
-    assert decompressor
+    if not location: raise ValueError("Invalid file location: Location cannot be none or empty.")
+    if not decompressor: raise ValueError("Invalid decompressor: Decompressor object cannot be none or empty.")
 
     warnings = []
     base_name = fileutils.file_base_name(location)
