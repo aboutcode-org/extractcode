@@ -45,7 +45,7 @@ def extract(location, target_dir):
     for source, target, text in patch_info(location):
         # prefer the target path for writing the patch text to a subfile
         # unless target is /dev/null (a deletion)
-        if '/dev/null' in target:
+        if "/dev/null" in target:
             patch_subfile_path = source
         else:
             patch_subfile_path = target
@@ -64,15 +64,15 @@ def extract(location, target_dir):
         counter = 0
         fp = base_subfile_path
         while os.path.exists(fp + extractcode.EXTRACT_SUFFIX):
-            fp = base_subfile_path + '_%d' % counter
+            fp = base_subfile_path + "_%d" % counter
             counter += 1
         base_subfile_path = fp
 
         # write the location proper, with a suffix extension to avoid
         # recursive extraction
         subfile_path = base_subfile_path + extractcode.EXTRACT_SUFFIX
-        with open(subfile_path, 'w') as subfile:
-            subfile.write('\n'.join(text))
+        with open(subfile_path, "w") as subfile:
+            subfile.write("\n".join(text))
 
         return []
 
@@ -84,11 +84,7 @@ def is_patch(location, include_extracted=False):
     """
     T = typecode.contenttype.get_type(location)
     file_name = fileutils.file_name(location)
-    patch_like = (
-        'diff ' in T.filetype_file.lower()
-        or '.diff' in file_name
-        or '.patch' in file_name
-    )
+    patch_like = "diff " in T.filetype_file.lower() or ".diff" in file_name or ".patch" in file_name
 
     if not patch_like:
         return False
@@ -108,9 +104,9 @@ def patch_text(ptch):
     """
     for head in ptch.header:
         yield head
-    yield '--- ' + fileutils.as_posixpath(ptch.source)
-    yield '+++ ' + fileutils.as_posixpath(ptch.target)
-    hk = '@@ -%(startsrc)d,%(linessrc)d +%(starttgt)d,%(linestgt)d @@ %(desc)s'
+    yield "--- " + fileutils.as_posixpath(ptch.source)
+    yield "+++ " + fileutils.as_posixpath(ptch.target)
+    hk = "@@ -%(startsrc)d,%(linessrc)d +%(starttgt)d,%(linestgt)d @@ %(desc)s"
 
     def hunk_data(hnk):
         return dict(
@@ -135,9 +131,10 @@ def patch_info(location):
     Raise an exception if the file is not a patch file or cannot be parsed.
     """
     import patch as pythonpatch
+
     patchset = pythonpatch.fromfile(location)
     if not patchset:
-        msg = 'Unable to parse patch file: %(location)s' % locals()
+        msg = "Unable to parse patch file: %(location)s" % locals()
         raise ExtractErrorFailedToExtract(msg)
 
     for ptch in patchset.items:

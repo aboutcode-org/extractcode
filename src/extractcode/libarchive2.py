@@ -41,6 +41,7 @@ TRACE_DEEP = False
 
 if TRACE or TRACE_DEEP:
     import sys
+
     logging.basicConfig(stream=sys.stdout)
     logger.setLevel(logging.DEBUG)
 
@@ -75,11 +76,11 @@ ffi-libarchive.
 """
 
 # keys for plugin-provided locations
-EXTRACTCODE_LIBARCHIVE_DLL = 'extractcode.libarchive.dll'
+EXTRACTCODE_LIBARCHIVE_DLL = "extractcode.libarchive.dll"
 
-EXTRACTCODE_LIBARCHIVE_PATH_ENVVAR = 'EXTRACTCODE_LIBARCHIVE_PATH'
+EXTRACTCODE_LIBARCHIVE_PATH_ENVVAR = "EXTRACTCODE_LIBARCHIVE_PATH"
 
-_LIBRARY_NAME = 'libarchive'
+_LIBRARY_NAME = "libarchive"
 
 
 def load_lib():
@@ -106,41 +107,41 @@ def load_lib():
         if libarchive:
             warnings.warn(
                 'Using "libarchive" library found in a system location. '
-                'Install instead a extractcode-libarchive plugin for best support.'
+                "Install instead a extractcode-libarchive plugin for best support."
             )
             return libarchive
 
     # try the PATH
     if not dll_loc:
-        dll = 'libarchive.dll' if on_windows else 'libarchive.so'
+        dll = "libarchive.dll" if on_windows else "libarchive.so"
         dll_loc = command.find_in_path(dll)
         if dll_loc:
             warnings.warn(
                 'Using "libarchive" library found in the PATH. '
-                'Install instead a extractcode-libarchive plugin for best support.'
+                "Install instead a extractcode-libarchive plugin for best support."
             )
 
     if not dll_loc or not os.path.isfile(dll_loc):
         raise Exception(
-            'CRITICAL: libarchive DLL is not installed. '
-            'Unable to continue: you need to install a valid extractcode-libarchive '
-            'plugin with a valid libarchive DLL available. '
-            f'OR set the {EXTRACTCODE_LIBARCHIVE_PATH_ENVVAR} environment variable. '
-            'OR install libarchive as a system package. '
-            'OR ensure libarchive is available in the system PATH.'
-    )
+            "CRITICAL: libarchive DLL is not installed. "
+            "Unable to continue: you need to install a valid extractcode-libarchive "
+            "plugin with a valid libarchive DLL available. "
+            f"OR set the {EXTRACTCODE_LIBARCHIVE_PATH_ENVVAR} environment variable. "
+            "OR install libarchive as a system package. "
+            "OR ensure libarchive is available in the system PATH."
+        )
     return command.load_shared_library(dll_loc)
 
 
 def set_env_with_tz():
     # NOTE: this is important to avoid timezone differences
-    os.environ['TZ'] = 'UTC'
+    os.environ["TZ"] = "UTC"
 
 
 set_env_with_tz()
 
 # NOTE: this is important to avoid locale-specific errors on various OS
-locale.setlocale(locale.LC_ALL, '')
+locale.setlocale(locale.LC_ALL, "")
 
 # load and initialize the shared library
 libarchive = load_lib()
@@ -162,48 +163,51 @@ def extract(location, target_dir, skip_symlinks=True):
     set_env_with_tz()
 
     for entry in list_entries(abs_location):
-        logger.debug('processing entry: {}'.format(entry))
+        logger.debug("processing entry: {}".format(entry))
         if not entry:
             continue
 
         if entry.is_empty():
             if TRACE:
-                logger.debug('Skipping empty: {}'.format(entry))
+                logger.debug("Skipping empty: {}".format(entry))
             continue
 
         if entry.warnings:
             if not entry.is_empty():
                 entry_path = entry.path
-                msgs = ['%(entry_path)r: ' % locals()]
+                msgs = ["%(entry_path)r: " % locals()]
             else:
-                msgs = ['No path available: ']
+                msgs = ["No path available: "]
 
             messages = (w for w in entry.warnings if w and w.strip())
             messages = map(text.as_unicode, messages)
-            messages = (w.strip('"\' ') for w in messages)
+            messages = (w.strip("\"' ") for w in messages)
             msgs.extend(w for w in messages if w)
-            msgs = '\n'.join(msgs) or 'No message provided'
+            msgs = "\n".join(msgs) or "No message provided"
 
             if msgs not in warnings:
                 warnings.append(msgs)
 
             if TRACE:
-                logger.debug('\n'.join(msgs))
+                logger.debug("\n".join(msgs))
 
         if not (entry.isdir or entry.isfile):
             # skip special files and links
             if TRACE:
-                logger.debug('skipping: {}'.format(entry))
+                logger.debug("skipping: {}".format(entry))
 
             if entry.issym and not skip_symlinks:
                 raise NotImplemented(
-                    'extraction of symlinks with libarchive is not yet implemented.')
+                    "extraction of symlinks with libarchive is not yet implemented."
+                )
             continue
 
         if TRACE:
-            logger.debug('  writing.....')
+            logger.debug("  writing.....")
 
-        _target_path = entry.write(abs_target_dir, transform_path=partial(paths.safe_path, preserve_spaces=True))
+        _target_path = entry.write(
+            abs_target_dir, transform_path=partial(paths.safe_path, preserve_spaces=True)
+        )
 
     return warnings
 
@@ -246,7 +250,7 @@ class Archive(object):
         If both are True, the archive will be uncompressed then extracted as
         needed. (e.g. a tar.xz will be unxzed then untarred at once).
         """
-        msg = 'At least one of `uncompress` or `extract` flag is required.'
+        msg = "At least one of `uncompress` or `extract` flag is required."
         assert uncompress or extract, msg
         self.location = location
         self.uncompress = uncompress
@@ -289,7 +293,7 @@ class Archive(object):
         """
         Yield Entry(ies) for this archive.
         """
-        assert self.archive_struct, 'Archive must be used as a context manager.'
+        assert self.archive_struct, "Archive must be used as a context manager."
         entry_struct = new_entry()
         try:
             while True:
@@ -335,6 +339,7 @@ class Entry(object):
     by design to ensure extracted files are readable/writable and owned by the
     extracting user.
     """
+
     # TODO: re-check if users/groups may have some value for origin determination?
 
     # an archive object
@@ -425,7 +430,7 @@ class Entry(object):
         The default is a no-op lambda.
         """
         if TRACE:
-            logger.debug('writing entry: {}'.format(self))
+            logger.debug("writing entry: {}".format(self))
 
         if not self.archive.archive_struct:
             raise ArchiveErrorIllegalOperationOnClosedArchive()
@@ -439,8 +444,7 @@ class Entry(object):
         if skip_links and self.issym:
             return
         if not skip_links and self.issym:
-            raise NotImplemented(
-                'extraction of sym links with librarchive is not yet implemented.')
+            raise NotImplemented("extraction of sym links with librarchive is not yet implemented.")
 
         abs_target_dir = os.path.abspath(os.path.expanduser(target_dir))
         # TODO: return some warning when original path has been transformed
@@ -464,14 +468,13 @@ class Entry(object):
         unique_path = extractcode.new_name(target_path, is_dir=False)
         if TRACE:
             logger.debug(
-                f'path: \ntarget_path: {target_path}\n'
-                f'unique_path: {unique_path}',
+                f"path: \ntarget_path: {target_path}\nunique_path: {unique_path}",
             )
 
-        with open(unique_path, 'wb') as target:
+        with open(unique_path, "wb") as target:
             for content in self.get_content():
                 if TRACE_DEEP:
-                    logger.debug('    chunk: {}'.format(repr(content)))
+                    logger.debug("    chunk: {}".format(repr(content)))
                 target.write(content)
 
         os.utime(unique_path, (self.time, self.time))
@@ -492,7 +495,6 @@ class Entry(object):
 
 
 class ArchiveException(ExtractError):
-
     def __init__(
         self,
         rc=None,
@@ -506,23 +508,23 @@ class ArchiveException(ExtractError):
             self.errno = root_ex.errno
             msg = root_ex.args or []
             msg = map(text.as_unicode, msg)
-            msg = u'\n'.join(msg)
+            msg = "\n".join(msg)
             self.msg = msg or None
             self.func = root_ex.func
         else:
             self.rc = rc
             self.errno = archive_struct and errno(archive_struct) or None
-            msg = archive_struct and err_msg(archive_struct) or ''
-            self.msg = msg and text.as_unicode(msg) or 'Unknown error'
+            msg = archive_struct and err_msg(archive_struct) or ""
+            self.msg = msg and text.as_unicode(msg) or "Unknown error"
             self.func = archive_func and archive_func.__name__ or None
 
     def __str__(self):
         if TRACE:
             msg = (
-                '%(msg)r: in function %(func)r with rc=%(rc)r, '
-                'errno=%(errno)r, root_ex=%(root_ex)r')
+                "%(msg)r: in function %(func)r with rc=%(rc)r, errno=%(errno)r, root_ex=%(root_ex)r"
+            )
             return msg % self.__dict__
-        return self.msg or ''
+        return self.msg or ""
 
 
 class ArchiveWarning(ArchiveException):
@@ -555,6 +557,7 @@ class ArchiveErrorPasswordProtected(
 class ArchiveErrorIllegalOperationOnClosedArchive(ArchiveException):
     pass
 
+
 #################################################
 # ctypes defintion of the interface to libarchive
 #################################################
@@ -562,7 +565,7 @@ class ArchiveErrorIllegalOperationOnClosedArchive(ArchiveException):
 
 def errcheck(rc, archive_func, args, null=False):
     """
-    ctypes error check handler for functions returning int, or null if null is
+    Ctypes error check handler for functions returning int, or null if null is
     True.
     """
     if null:
@@ -785,7 +788,12 @@ internal buffer optimizations.
 """
 # int archive_read_data_block(struct archive *, const void **buff, size_t *len, off_t *offset);
 read_entry_data_block = libarchive.archive_read_data_block
-read_entry_data_block.argtypes = [c_void_p, POINTER(c_void_p), POINTER(c_size_t), POINTER(c_longlong)]
+read_entry_data_block.argtypes = [
+    c_void_p,
+    POINTER(c_void_p),
+    POINTER(c_size_t),
+    POINTER(c_longlong),
+]
 read_entry_data_block.restype = c_int
 read_entry_data_block.errcheck = errcheck
 

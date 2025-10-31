@@ -11,6 +11,7 @@ import os
 import functools
 
 import click
+
 click.disable_unicode_literals_warning = True
 
 from commoncode import cliutils
@@ -20,7 +21,7 @@ from commoncode.text import toascii
 
 from extractcode.api import extract_archives
 
-__version__ = '2021.6.2'
+__version__ = "2021.6.2"
 
 echo_stderr = functools.partial(click.secho, err=True)
 
@@ -28,7 +29,7 @@ echo_stderr = functools.partial(click.secho, err=True)
 def print_version(ctx, param, value):
     if not value or ctx.resilient_parsing:
         return
-    echo_stderr('ExtractCode version ' + __version__)
+    echo_stderr("ExtractCode version " + __version__)
     ctx.exit()
 
 
@@ -40,34 +41,34 @@ def print_archive_formats(ctx, param, value):
     if not value or ctx.resilient_parsing:
         return
 
-    kindkey = lambda x:x.kind
+    kindkey = lambda x: x.kind
 
     by_kind = groupby(sorted(archive_handlers, key=kindkey), key=kindkey)
 
     for kind, handlers in by_kind:
-        click.echo(f'Archive format kind: {kind_labels[kind]}')
-        click.echo('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+        click.echo(f"Archive format kind: {kind_labels[kind]}")
+        click.echo("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         for handler in handlers:
-            exts = ', '.join(handler.extensions)
-            mimes = ', '.join(handler.mimetypes)
-            types = ', '.join(handler.filetypes)
-            click.echo(f'  name: {handler.name}')
-            click.echo(f'     - extensions: {exts}')
-            click.echo(f'     - filetypes : {types}')
-            click.echo(f'     - mimetypes : {mimes}')
-            click.echo('')
+            exts = ", ".join(handler.extensions)
+            mimes = ", ".join(handler.mimetypes)
+            types = ", ".join(handler.filetypes)
+            click.echo(f"  name: {handler.name}")
+            click.echo(f"     - extensions: {exts}")
+            click.echo(f"     - filetypes : {types}")
+            click.echo(f"     - mimetypes : {mimes}")
+            click.echo("")
 
     ctx.exit()
 
 
-info_text = '''
+info_text = """
 ExtractCode is a mostly universal archive and compressed files extractor, with
 a particular focus on code archives.
 Visit https://aboutcode.org and https://github.com/nexB/extractcode/ for support and download.
 
-'''
+"""
 
-notice_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'NOTICE')
+notice_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "NOTICE")
 notice_text = open(notice_path).read()
 
 
@@ -81,7 +82,7 @@ def print_about(ctx, param, value):
     ctx.exit()
 
 
-epilog_text = '''\b\bExamples:
+epilog_text = """\b\bExamples:
 
 (Note for Windows: use '\\' backslash instead of '/' slash for paths.)
 
@@ -101,80 +102,76 @@ Extract a single archive. Files are extracted in the directory
 'samples/arch/zlib.tar.gz-extract/':
 
     extractcode samples/arch/zlib.tar.gz
-'''
+"""
 
 
 class ExtractCommand(cliutils.BaseCommand):
-    short_usage_help = '''
-Try 'extractcode --help' for help on options and arguments.'''
+    short_usage_help = """
+Try 'extractcode --help' for help on options and arguments."""
 
 
-@click.command(name='extractcode', epilog=epilog_text, cls=ExtractCommand)
+@click.command(name="extractcode", epilog=epilog_text, cls=ExtractCommand)
 @click.pass_context
-
 @click.argument(
-    'input',
-    metavar='<input>',
+    "input",
+    metavar="<input>",
     type=click.Path(exists=True, readable=True),
 )
-
 @click.option(
-    '--verbose',
+    "--verbose",
     is_flag=True,
-    help='Print verbose file-by-file progress messages.',
+    help="Print verbose file-by-file progress messages.",
 )
 @click.option(
-    '--quiet',
+    "--quiet",
     is_flag=True,
-    help='Do not print any summary or progress message.',
+    help="Do not print any summary or progress message.",
 )
 @click.option(
-    '--shallow',
+    "--shallow",
     is_flag=True,
-    help='Do not extract recursively nested archives in archives.',
+    help="Do not extract recursively nested archives in archives.",
 )
 @click.option(
-    '--replace-originals',
+    "--replace-originals",
     is_flag=True,
-    help='Replace extracted archives by the extracted content.',
+    help="Replace extracted archives by the extracted content.",
 )
 @click.option(
-    '--ignore',
+    "--ignore",
     default=[],
     multiple=True,
-    help='Ignore files/directories matching this glob pattern.',
+    help="Ignore files/directories matching this glob pattern.",
 )
-
 @click.option(
-    '--all-formats',
+    "--all-formats",
     is_flag=True,
-    help=
-    'Extract archives from all known formats. '
-    'The default is to extract only the common format of these kinds: '
+    help="Extract archives from all known formats. "
+    "The default is to extract only the common format of these kinds: "
     '"regular", "regular_nested" and "package". '
-    'To show all supported formats use the option --list-formats .',
+    "To show all supported formats use the option --list-formats .",
 )
 @click.option(
-    '--list-formats',
+    "--list-formats",
     is_flag=True,
     is_eager=True,
     callback=print_archive_formats,
-    help='Show the list of supported archive and compressed file formats and exit.',
+    help="Show the list of supported archive and compressed file formats and exit.",
 )
-@click.help_option('-h', '--help')
+@click.help_option("-h", "--help")
 @click.option(
-    '--about',
+    "--about",
     is_flag=True,
     is_eager=True,
     callback=print_about,
-    help='Show information about ExtractCode and its licensing and exit.',
+    help="Show information about ExtractCode and its licensing and exit.",
 )
 @click.option(
-    '--version',
+    "--version",
     is_flag=True,
     is_eager=True,
     callback=print_version,
-    help='Show the version and exit.',
+    help="Show the version and exit.",
 )
 def extractcode(
     ctx,
@@ -188,7 +185,8 @@ def extractcode(
     *args,
     **kwargs,
 ):
-    """extract archives and compressed files in the <input> file or directory tree.
+    """
+    Extract archives and compressed files in the <input> file or directory tree.
 
     Archives found inside an extracted archive are extracted recursively.
     Use --shallow for a shallow extraction.
@@ -196,41 +194,41 @@ def extractcode(
     '<archive file name>-extract' created side-by-side with an archive.
     """
 
-    abs_location = fileutils.as_posixpath(
-        os.path.abspath(
-            os.path.expanduser(input)
-        )
-    )
+    abs_location = fileutils.as_posixpath(os.path.abspath(os.path.expanduser(input)))
 
     def extract_event(item):
         """
         Display an extract event.
         """
         if quiet:
-            return ''
+            return ""
         if not item:
-            return ''
+            return ""
 
         source = item.source
         if not isinstance(source, str):
-            source = toascii(source, translit=True).decode('utf-8', 'replace')
+            source = toascii(source, translit=True).decode("utf-8", "replace")
 
         if verbose:
             if item.done:
-                return ''
-            line = source and get_relative_path(
-                path=source,
-                len_base_path=len_base_path,
-                base_is_dir=base_is_dir,
-            ) or ''
+                return ""
+            line = (
+                source
+                and get_relative_path(
+                    path=source,
+                    len_base_path=len_base_path,
+                    base_is_dir=base_is_dir,
+                )
+                or ""
+            )
 
         else:
-            line = source and fileutils.file_name(source) or ''
+            line = source and fileutils.file_name(source) or ""
 
         if not isinstance(line, str):
-            line = toascii(line, translit=True).decode('utf-8', 'replace')
+            line = toascii(line, translit=True).decode("utf-8", "replace")
 
-        return 'Extracting: %(line)s' % locals()
+        return "Extracting: %(line)s" % locals()
 
     def display_extract_summary():
         """
@@ -245,7 +243,7 @@ def extractcode(
             source = fileutils.as_posixpath(xev.source)
 
             if not isinstance(source, str):
-                source = toascii(source, translit=True).decode('utf-8', 'replace')
+                source = toascii(source, translit=True).decode("utf-8", "replace")
 
                 source = get_relative_path(
                     path=source,
@@ -254,24 +252,18 @@ def extractcode(
                 )
 
             for e in xev.errors:
-                echo_stderr(
-                    'ERROR extracting: %(source)s: %(e)s' % locals(),
-                    fg='red'
-                )
+                echo_stderr("ERROR extracting: %(source)s: %(e)s" % locals(), fg="red")
 
             for warn in xev.warnings:
-                echo_stderr(
-                    'WARNING extracting: %(source)s: %(warn)s' % locals(),
-                    fg='yellow'
-                )
+                echo_stderr("WARNING extracting: %(source)s: %(warn)s" % locals(), fg="yellow")
 
-        summary_color = 'green'
+        summary_color = "green"
         if has_warnings:
-            summary_color = 'yellow'
+            summary_color = "yellow"
         if has_errors:
-            summary_color = 'red'
+            summary_color = "red"
 
-        echo_stderr('Extracting done.', fg=summary_color, reset=True)
+        echo_stderr("Extracting done.", fg=summary_color, reset=True)
 
     # use for relative paths computation
     len_base_path = len(abs_location)
@@ -290,14 +282,11 @@ def extractcode(
     )
 
     if not quiet:
-        echo_stderr('Extracting archives...', fg='green')
+        echo_stderr("Extracting archives...", fg="green")
 
         with cliutils.progressmanager(
-            extractibles,
-            item_show_func=extract_event, 
-            verbose=verbose
+            extractibles, item_show_func=extract_event, verbose=verbose
         ) as extraction_events:
-
             for xev in extraction_events:
                 if xev.done and (xev.warnings or xev.errors):
                     has_extract_errors = has_extract_errors or xev.errors
@@ -328,5 +317,4 @@ def get_relative_path(path, len_base_path, base_is_dir):
     else:
         rel_path = fileutils.file_name(path)
 
-    return rel_path.lstrip('/')
-
+    return rel_path.lstrip("/")

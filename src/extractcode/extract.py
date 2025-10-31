@@ -27,6 +27,7 @@ TRACE = False
 
 if TRACE:
     import sys
+
     logging.basicConfig(stream=sys.stdout)
     logger.setLevel(logging.DEBUG)
 
@@ -77,7 +78,7 @@ An ExtractEvent contains data about an archive extraction progress:
  - `warnings` is a mapping of extracted paths to a list of warning messages.
  - `errors` is a list of error messages.
 """
-ExtractEvent = namedtuple('ExtractEvent', 'source target done warnings errors')
+ExtractEvent = namedtuple("ExtractEvent", "source target done warnings errors")
 
 
 def extract(
@@ -137,10 +138,7 @@ def extract(
                 source = xevent.source
                 target = xevent.target
                 if TRACE:
-                    logger.debug(
-                        f'extract:replace_originals: replacing '
-                        f'{source!r} by {target!r}'
-                    )
+                    logger.debug(f"extract:replace_originals: replacing {source!r} by {target!r}")
                 fileutils.delete(source)
                 fileutils.copytree(target, source)
                 fileutils.delete(target)
@@ -167,13 +165,12 @@ def extract_files(
     """
     ignored = partial(ignore.is_ignored, ignores=ignore.default_ignores, unignores={})
     if TRACE:
-        logger.debug('extract:start: %(location)r recurse: %(recurse)r\n' % locals())
+        logger.debug("extract:start: %(location)r recurse: %(recurse)r\n" % locals())
 
     abs_location = abspath(expanduser(location))
     for top, dirs, files in fileutils.walk(abs_location, ignored):
         if TRACE:
-            logger.debug(
-                'extract:walk: top: %(top)r dirs: %(dirs)r files: r(files)r' % locals())
+            logger.debug("extract:walk: top: %(top)r dirs: %(dirs)r files: r(files)r" % locals())
 
         if not recurse:
             if TRACE:
@@ -183,29 +180,27 @@ def extract_files(
                     dirs.remove(d)
             if TRACE:
                 rd = repr(drs.symmetric_difference(set(dirs)))
-                logger.debug(f'extract:walk: not recurse: removed dirs: {rd}')
+                logger.debug(f"extract:walk: not recurse: removed dirs: {rd}")
 
         for f in files:
             loc = join(top, f)
             if not recurse and extractcode.is_extraction_path(loc):
                 if TRACE:
-                    logger.debug(
-                        'extract:walk not recurse: skipped  file: %(loc)r' % locals())
+                    logger.debug("extract:walk not recurse: skipped  file: %(loc)r" % locals())
                 continue
 
             if not extractcode.archive.should_extract(
-                location=loc,
-                kinds=kinds,
-                ignore_pattern=ignore_pattern
+                location=loc, kinds=kinds, ignore_pattern=ignore_pattern
             ):
                 if TRACE:
                     logger.debug(
-                        'extract:walk: skipped file: not should_extract: %(loc)r' % locals())
+                        "extract:walk: skipped file: not should_extract: %(loc)r" % locals()
+                    )
                 continue
 
             target = join(abspath(top), extractcode.get_extraction_path(loc))
             if TRACE:
-                logger.debug('extract:target: %(target)r' % locals())
+                logger.debug("extract:target: %(target)r" % locals())
 
             # extract proper
             for xevent in extract_file(
@@ -214,12 +209,12 @@ def extract_files(
                 kinds=kinds,
             ):
                 if TRACE:
-                    logger.debug('extract:walk:extraction event: %(xevent)r' % locals())
+                    logger.debug("extract:walk:extraction event: %(xevent)r" % locals())
                 yield xevent
 
             if recurse:
                 if TRACE:
-                    logger.debug('extract:walk: recursing on target: %(target)r' % locals())
+                    logger.debug("extract:walk: recursing on target: %(target)r" % locals())
                 for xevent in extract(
                     location=target,
                     kinds=kinds,
@@ -227,7 +222,7 @@ def extract_files(
                     ignore_pattern=ignore_pattern,
                 ):
                     if TRACE:
-                        logger.debug('extract:walk:recurse:extraction event: %(xevent)r' % locals())
+                        logger.debug("extract:walk:recurse:extraction event: %(xevent)r" % locals())
                     yield xevent
 
 
@@ -252,11 +247,10 @@ def extract_file(
     )
 
     if TRACE:
-        emodule = getattr(extractor, '__module__', '')
-        ename = getattr(extractor, '__name__', '')
+        emodule = getattr(extractor, "__module__", "")
+        ename = getattr(extractor, "__name__", "")
         logger.debug(
-            f'extract_file: extractor: for: {location} with kinds: '
-            f'{kinds}: {emodule}.{ename}'
+            f"extract_file: extractor: for: {location} with kinds: {kinds}: {emodule}.{ename}"
         )
 
     if extractor:
@@ -271,7 +265,7 @@ def extract_file(
         try:
             # Extract first to a temp directory: if there is an error, the
             # extracted files will not be moved to the target.
-            tmp_tgt = fileutils.get_temp_dir(prefix='extractcode-extract-')
+            tmp_tgt = fileutils.get_temp_dir(prefix="extractcode-extract-")
             abs_location = abspath(expanduser(location))
             warns = extractor(abs_location, tmp_tgt) or []
             warnings.extend(warns)
@@ -279,13 +273,12 @@ def extract_file(
             fileutils.delete(tmp_tgt)
 
         except Exception as e:
-            errors = [str(e).strip(' \'"')]
+            errors = [str(e).strip(" '\"")]
             if verbose:
                 errors.append(traceback.format_exc())
             if TRACE:
                 tb = traceback.format_exc()
-                logger.debug(
-                    f'extract_file: ERROR: {location}: {errors}\n{e}\n{tb}')
+                logger.debug(f"extract_file: ERROR: {location}: {errors}\n{e}\n{tb}")
 
         finally:
             yield ExtractEvent(

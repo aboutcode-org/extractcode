@@ -40,6 +40,7 @@ TRACE_DEEP = False
 
 if TRACE:
     import sys
+
     logging.basicConfig(stream=sys.stdout)
     logger.setLevel(logging.DEBUG)
 
@@ -71,16 +72,16 @@ For background on archive and compressed file formats see:
 
 # if strict, all handlers criteria must be matched for a handler to be selected
 Handler = namedtuple(
-    'Handler',
+    "Handler",
     [
-        'name',
-        'filetypes',
-        'mimetypes',
-        'extensions',
-        'kind',
-        'extractors',
-        'strict',
-    ]
+        "name",
+        "filetypes",
+        "mimetypes",
+        "extensions",
+        "kind",
+        "extractors",
+        "strict",
+    ],
 )
 
 
@@ -102,17 +103,13 @@ def should_extract(location, kinds, ignore_pattern=()):
     """
     location = os.path.abspath(os.path.expanduser(location))
     ignore_pattern = {
-        extension : 'User ignore: Supplied by --ignore'
-        for extension in ignore_pattern
+        extension: "User ignore: Supplied by --ignore" for extension in ignore_pattern
     }
     should_ignore = is_ignored(location, ignore_pattern)
     extractor = get_extractor(location, kinds=kinds)
 
     if TRACE_DEEP:
-        logger.debug(
-            f'  should_extract: extractor: {extractor}, '
-            f'should_ignore: {should_ignore}'
-        )
+        logger.debug(f"  should_extract: extractor: {extractor}, should_ignore: {should_ignore}")
 
     if extractor and not should_ignore:
         return True
@@ -137,7 +134,7 @@ def get_extractor(location, kinds=all_kinds):
     extractors = get_extractors(location, kinds=kinds)
     if not extractors:
         if TRACE_DEEP:
-            logger.debug(f'  get_extractor: not extractors: {extractors}')
+            logger.debug(f"  get_extractor: not extractors: {extractors}")
         return None
 
     if len(extractors) == 2:
@@ -161,7 +158,7 @@ def get_extractors(location, kinds=all_kinds):
     """
     handler = get_best_handler(location, kinds)
     if TRACE_DEEP:
-        logger.debug(f'  get_extractors: handler: {handler}')
+        logger.debug(f"  get_extractors: handler: {handler}")
 
     return handler and handler.extractors or []
 
@@ -176,21 +173,21 @@ def get_best_handler(location, kinds=all_kinds):
 
     handlers = list(get_handlers(location))
     if TRACE_DEEP:
-        logger.debug(f'    get_best_handler: handlers: {handlers}')
+        logger.debug(f"    get_best_handler: handlers: {handlers}")
     if not handlers:
         return
 
     candidates = list(score_handlers(handlers))
     if TRACE_DEEP:
-        logger.debug(f'    get_best_handler: candidates: {candidates}')
+        logger.debug(f"    get_best_handler: candidates: {candidates}")
     if not candidates:
         if TRACE_DEEP:
-            logger.debug(f'    get_best_handler: candidates: {candidates}')
+            logger.debug(f"    get_best_handler: candidates: {candidates}")
         return
 
     picked = pick_best_handler(candidates, kinds=kinds)
     if TRACE_DEEP:
-        logger.debug(f'    get_best_handler: picked: {picked}')
+        logger.debug(f"    get_best_handler: picked: {picked}")
     return picked
 
 
@@ -200,27 +197,27 @@ def get_handlers(location):
     extension_matched,) for this `location`.
     """
     if filetype.is_file(location):
-
         T = contenttype.get_type(location)
         ftype = T.filetype_file.lower()
         mtype = T.mimetype_file
 
         if TRACE_DEEP:
             logger.debug(
-                'get_handlers: processing %(location)s: '
-                'ftype: %(ftype)s, mtype: %(mtype)s ' % locals())
+                "get_handlers: processing %(location)s: "
+                "ftype: %(ftype)s, mtype: %(mtype)s " % locals()
+            )
         for handler in archive_handlers:
             if not handler.extractors:
                 continue
 
             extractor_count = len(handler.extractors)
             if extractor_count > 2:
-                raise Exception('Maximum level of archive nesting is two.')
+                raise Exception("Maximum level of archive nesting is two.")
 
             # default to False
             type_matched = handler.filetypes and any(t in ftype for t in handler.filetypes)
             if TRACE_DEEP:
-                logger.debug(f'    get_handlers: handler.filetypes={handler.filetypes}')
+                logger.debug(f"    get_handlers: handler.filetypes={handler.filetypes}")
             mime_matched = handler.mimetypes and any(m in mtype for m in handler.mimetypes)
             exts = handler.extensions
             if exts:
@@ -228,26 +225,19 @@ def get_handlers(location):
 
             if TRACE_DEEP:
                 print(
-                    f'  get_handlers: matched type: {type_matched}, '
-                    f'mime: {mime_matched}, ext: {extension_matched}' % locals()
-                  )
-
-            if (
-                handler.strict
-                and not (
-                    type_matched
-                    and mime_matched
-                    and extension_matched
+                    f"  get_handlers: matched type: {type_matched}, "
+                    f"mime: {mime_matched}, ext: {extension_matched}" % locals()
                 )
-            ):
+
+            if handler.strict and not (type_matched and mime_matched and extension_matched):
                 if TRACE_DEEP:
-                    print(f'  get_handlers: skip strict: {handler.name}')
+                    print(f"  get_handlers: skip strict: {handler.name}")
                 continue
 
             if type_matched or mime_matched or extension_matched:
                 if TRACE_DEEP:
                     handler_name = handler.name
-                    logger.debug('     get_handlers: yielding handler: %(handler_name)r' % locals())
+                    logger.debug("     get_handlers: yielding handler: %(handler_name)r" % locals())
                 yield handler, type_matched, mime_matched, extension_matched
 
 
@@ -258,16 +248,17 @@ def score_handlers(handlers):
     for handler, type_matched, mime_matched, extension_matched in handlers:
         if TRACE_DEEP:
             logger.debug(
-                f'     score_handlers: handler={handler}, '
-                f'type_matched={type_matched}, '
-                f'mime_matched={mime_matched}, '
-                f'extension_matched={extension_matched}'
+                f"     score_handlers: handler={handler}, "
+                f"type_matched={type_matched}, "
+                f"mime_matched={mime_matched}, "
+                f"extension_matched={extension_matched}"
             )
         score = 0
         # increment kind value: higher kinds numerical values are more
         # specific by design
         score += handler.kind
-        if TRACE_DEEP: logger.debug(f'     score_handlers: score += handler.kind {score}')
+        if TRACE_DEEP:
+            logger.debug(f"     score_handlers: score += handler.kind {score}")
 
         # increment score based on matched criteria
         if type_matched and mime_matched and extension_matched:
@@ -300,8 +291,9 @@ def score_handlers(handlers):
         if TRACE_DEEP:
             handler_name = handler.name
             logger.debug(
-                '     score_handlers: yielding handler: %(handler_name)r, '
-                'score: %(score)d, extension_matched: %(extension_matched)r' % locals())
+                "     score_handlers: yielding handler: %(handler_name)r, "
+                "score: %(score)d, extension_matched: %(extension_matched)r" % locals()
+            )
 
         if score > 0:
             yield score, handler, extension_matched
@@ -320,7 +312,7 @@ def pick_best_handler(candidates, kinds):
     scored = sorted(candidates, reverse=True)
 
     if TRACE_DEEP:
-        logger.debug(f'  pick_best_handler: scored: {scored}')
+        logger.debug(f"  pick_best_handler: scored: {scored}")
 
     if not scored:
         return
@@ -377,20 +369,20 @@ def extract_twice(location, target_dir, extractor1, extractor2):
     abs_location = os.path.abspath(os.path.expanduser(location))
     abs_target_dir = str(os.path.abspath(os.path.expanduser(target_dir)))
     # extract first the intermediate payload to a temp dir
-    temp_target = str(fileutils.get_temp_dir(prefix='extractcode-extract-'))
+    temp_target = str(fileutils.get_temp_dir(prefix="extractcode-extract-"))
     warnings = extractor1(abs_location, temp_target)
     if TRACE:
-        logger.debug('extract_twice: temp_target: %(temp_target)r' % locals())
+        logger.debug("extract_twice: temp_target: %(temp_target)r" % locals())
 
     # extract this intermediate payload to the final target_dir
     try:
         inner_archives = list(fileutils.resource_iter(temp_target, with_dirs=False))
         if not inner_archives:
-            warnings.append(location + ': No files found in archive.')
+            warnings.append(location + ": No files found in archive.")
         else:
             for extracted1_loc in inner_archives:
                 if TRACE:
-                    logger.debug('extract_twice: extractor2: %(extracted1_loc)r' % locals())
+                    logger.debug("extract_twice: extractor2: %(extracted1_loc)r" % locals())
                 warnings.extend(extractor2(extracted1_loc, abs_target_dir))
     finally:
         # cleanup the temporary output from extractor1
@@ -411,18 +403,18 @@ def extract_with_fallback(location, target_dir, extractor1, extractor2):
     abs_location = os.path.abspath(os.path.expanduser(location))
     abs_target_dir = str(os.path.abspath(os.path.expanduser(target_dir)))
     # attempt extract first to a temp dir
-    temp_target1 = str(fileutils.get_temp_dir(prefix='extractcode-extract1-'))
+    temp_target1 = str(fileutils.get_temp_dir(prefix="extractcode-extract1-"))
     try:
         warnings = extractor1(abs_location, temp_target1)
         if TRACE:
-            logger.debug('extract_with_fallback: temp_target1: %(temp_target1)r' % locals())
+            logger.debug("extract_with_fallback: temp_target1: %(temp_target1)r" % locals())
         fileutils.copytree(temp_target1, abs_target_dir)
     except:
         try:
-            temp_target2 = str(fileutils.get_temp_dir(prefix='extractcode-extract2-'))
+            temp_target2 = str(fileutils.get_temp_dir(prefix="extractcode-extract2-"))
             warnings = extractor2(abs_location, temp_target2)
             if TRACE:
-                logger.debug('extract_with_fallback: temp_target2: %(temp_target2)r' % locals())
+                logger.debug("extract_with_fallback: temp_target2: %(temp_target2)r" % locals())
             fileutils.copytree(temp_target2, abs_target_dir)
         finally:
             fileutils.delete(temp_target2)
@@ -441,18 +433,19 @@ def try_to_extract(location, target_dir, extractor):
     """
     abs_location = os.path.abspath(os.path.expanduser(location))
     abs_target_dir = str(os.path.abspath(os.path.expanduser(target_dir)))
-    temp_target = str(fileutils.get_temp_dir(prefix='extractcode-extract1-'))
+    temp_target = str(fileutils.get_temp_dir(prefix="extractcode-extract1-"))
     warnings = []
     try:
         warnings = extractor(abs_location, temp_target)
         if TRACE:
-            logger.debug('try_to_extract: temp_target: %(temp_target)r' % locals())
+            logger.debug("try_to_extract: temp_target: %(temp_target)r" % locals())
         fileutils.copytree(temp_target, abs_target_dir)
     except:
         return warnings
     finally:
         fileutils.delete(temp_target)
     return warnings
+
 
 # High level aliases to lower level extraction functions
 ########################################################
@@ -511,626 +504,780 @@ extract_xarpkg = sevenzip.extract
 ####################
 
 TarHandler = Handler(
-    name='Tar',
-    filetypes=('.tar', 'tar archive',),
-    mimetypes=('application/x-tar',),
-    extensions=('.tar',),
+    name="Tar",
+    filetypes=(
+        ".tar",
+        "tar archive",
+    ),
+    mimetypes=("application/x-tar",),
+    extensions=(".tar",),
     kind=regular,
     extractors=[extract_tar],
-    strict=False
+    strict=False,
 )
 
 RubyGemHandler = Handler(
-    name='Ruby Gem package',
-    filetypes=('.tar', 'tar archive',),
-    mimetypes=('application/x-tar',),
-    extensions=('.gem',),
+    name="Ruby Gem package",
+    filetypes=(
+        ".tar",
+        "tar archive",
+    ),
+    mimetypes=("application/x-tar",),
+    extensions=(".gem",),
     kind=package,
     extractors=[extract_tar],
-    strict=True
+    strict=True,
 )
 
 ZipHandler = Handler(
-    name='Zip',
-    filetypes=('zip archive',),
-    mimetypes=('application/zip',),
-    extensions=('.zip', '.zipx',),
+    name="Zip",
+    filetypes=("zip archive",),
+    mimetypes=("application/zip",),
+    extensions=(
+        ".zip",
+        ".zipx",
+    ),
     kind=regular,
     extractors=[extract_zip],
-    strict=False
+    strict=False,
 )
 
 OfficeDocHandler = Handler(
-    name='Office doc',
+    name="Office doc",
     filetypes=(
-        'zip archive',
-        'microsoft word 2007+',
-        'microsoft excel 2007+',
-        'microsoft powerpoint 2007+',
+        "zip archive",
+        "microsoft word 2007+",
+        "microsoft excel 2007+",
+        "microsoft powerpoint 2007+",
     ),
-    mimetypes=('application/zip', 'application/vnd.openxmlformats',),
+    mimetypes=(
+        "application/zip",
+        "application/vnd.openxmlformats",
+    ),
     # Extensions of office documents that are zip files too
     extensions=(
         # ms doc
-        '.docx', '.dotx', '.docm',
+        ".docx",
+        ".dotx",
+        ".docm",
         # ms xls
-        '.xlsx', '.xltx', '.xlsm', '.xltm',
+        ".xlsx",
+        ".xltx",
+        ".xlsm",
+        ".xltm",
         # ms ppt
-        '.pptx', '.ppsx', '.potx', '.pptm', '.potm', '.ppsm',
+        ".pptx",
+        ".ppsx",
+        ".potx",
+        ".pptm",
+        ".potm",
+        ".ppsm",
         # oo write
-        '.odt', '.odf', '.sxw', '.stw',
+        ".odt",
+        ".odf",
+        ".sxw",
+        ".stw",
         # oo calc
-        '.ods', '.ots', '.sxc', '.stc',
+        ".ods",
+        ".ots",
+        ".sxc",
+        ".stc",
         # oo pres and draw
-        '.odp', '.otp', '.odg', '.otg', '.sxi', '.sti', '.sxd',
-        '.sxg', '.std',
+        ".odp",
+        ".otp",
+        ".odg",
+        ".otg",
+        ".sxi",
+        ".sti",
+        ".sxd",
+        ".sxg",
+        ".std",
         # star office
-        '.sdc', '.sda', '.sdd', '.smf', '.sdw', '.sxm', '.stw',
-        '.oxt', '.sldx',
-
-        '.epub',
+        ".sdc",
+        ".sda",
+        ".sdd",
+        ".smf",
+        ".sdw",
+        ".sxm",
+        ".stw",
+        ".oxt",
+        ".sldx",
+        ".epub",
     ),
     kind=docs,
     extractors=[extract_zip],
-    strict=True
+    strict=True,
 )
 
 AndroidAppHandler = Handler(
-    name='Android app',
-    filetypes=('zip archive',),
-    mimetypes=('application/zip',),
-    extensions=('.apk',),
+    name="Android app",
+    filetypes=("zip archive",),
+    mimetypes=("application/zip",),
+    extensions=(".apk",),
     kind=package,
     extractors=[extract_zip],
-    strict=True
+    strict=True,
 )
 
 # see http://tools.android.com/tech-docs/new-build-system/aar-formats
 AndroidLibHandler = Handler(
-    name='Android library',
-    filetypes=('zip archive',),
-    mimetypes=('application/zip',),
+    name="Android library",
+    filetypes=("zip archive",),
+    mimetypes=("application/zip",),
     # note: Apache Axis also uses AAR extensions for plain Jars
-    extensions=('.aar',),
+    extensions=(".aar",),
     kind=package,
     extractors=[extract_zip],
-    strict=True
+    strict=True,
 )
 
 MozillaExtHandler = Handler(
-    name='Mozilla extension',
-    filetypes=('zip archive',),
-    mimetypes=('application/zip',),
-    extensions=('.xpi',),
+    name="Mozilla extension",
+    filetypes=("zip archive",),
+    mimetypes=("application/zip",),
+    extensions=(".xpi",),
     kind=package,
     extractors=[extract_zip],
-    strict=True
+    strict=True,
 )
 
 # see https://developer.chrome.com/extensions/crx
 # not supported for now
 ChromeExtHandler = Handler(
-    name='Chrome extension',
-    filetypes=('data',),
-    mimetypes=('application/octet-stream',),
-    extensions=('.crx',),
+    name="Chrome extension",
+    filetypes=("data",),
+    mimetypes=("application/octet-stream",),
+    extensions=(".crx",),
     kind=package,
     extractors=[extract_7z],
-    strict=True
+    strict=True,
 )
 
 IosAppHandler = Handler(
-    name='iOS app',
-    filetypes=('zip archive',),
-    mimetypes=('application/zip',),
-    extensions=('.ipa',),
+    name="iOS app",
+    filetypes=("zip archive",),
+    mimetypes=("application/zip",),
+    extensions=(".ipa",),
     kind=package,
     extractors=[extract_zip],
-    strict=True
+    strict=True,
 )
 
 JavaJarHandler = Handler(
-    name='Java Jar package',
-    filetypes=('java archive',),
-    mimetypes=('application/java-archive',),
-    extensions=('.jar', '.zip',),
+    name="Java Jar package",
+    filetypes=("java archive",),
+    mimetypes=("application/java-archive",),
+    extensions=(
+        ".jar",
+        ".zip",
+    ),
     kind=package,
     extractors=[extract_zip],
-    strict=False
+    strict=False,
 )
 
 JavaJarZipHandler = Handler(
-    name='Java Jar package',
-    filetypes=('zip archive',),
-    mimetypes=('application/zip',),
-    extensions=('.jar',),
+    name="Java Jar package",
+    filetypes=("zip archive",),
+    mimetypes=("application/zip",),
+    extensions=(".jar",),
     kind=package,
     extractors=[extract_zip],
-    strict=False
+    strict=False,
 )
 
 # See https://projects.spring.io/spring-boot/
 # this is a ZIP with a shell header (e.g. a self-executing zip of sorts)
 # internalyl the zip is really a war rather than a jar
 SpringBootShellJarHandler = Handler(
-    name='Springboot Java Jar package',
-    filetypes=('bourne-again shell script executable (binary data)',),
-    mimetypes=('text/x-shellscript',),
-    extensions=('.jar',),
+    name="Springboot Java Jar package",
+    filetypes=("bourne-again shell script executable (binary data)",),
+    mimetypes=("text/x-shellscript",),
+    extensions=(".jar",),
     kind=package,
     extractors=[extract_springboot],
-    strict=True
+    strict=True,
 )
 
 JavaWebHandler = Handler(
-    name='Java archive',
-    filetypes=('zip archive',),
-    mimetypes=('application/zip', 'application/java-archive',),
-    extensions=('.war', '.sar', '.ear',),
+    name="Java archive",
+    filetypes=("zip archive",),
+    mimetypes=(
+        "application/zip",
+        "application/java-archive",
+    ),
+    extensions=(
+        ".war",
+        ".sar",
+        ".ear",
+    ),
     kind=regular,
     extractors=[extract_zip],
-    strict=True
+    strict=True,
 )
 
 PythonHandler = Handler(
-    name='Python package',
-    filetypes=('zip archive',),
-    mimetypes=('application/zip',),
-    extensions=('.egg', '.whl', '.pyz', '.pex',),
+    name="Python package",
+    filetypes=("zip archive",),
+    mimetypes=("application/zip",),
+    extensions=(
+        ".egg",
+        ".whl",
+        ".pyz",
+        ".pex",
+    ),
     kind=package,
     extractors=[extract_zip],
-    strict=True
+    strict=True,
 )
 
 XzHandler = Handler(
-    name='xz',
-    filetypes=('xz compressed',),
-    mimetypes=('application/x-xz',) ,
-    extensions=('.xz',),
+    name="xz",
+    filetypes=("xz compressed",),
+    mimetypes=("application/x-xz",),
+    extensions=(".xz",),
     kind=regular,
     extractors=[extract_xz],
-    strict=False
+    strict=False,
 )
 
 LzmaHandler = Handler(
-    name='lzma',
-    filetypes=('lzma compressed',),
-    mimetypes=('application/x-xz',) ,
-    extensions=('.lzma',),
+    name="lzma",
+    filetypes=("lzma compressed",),
+    mimetypes=("application/x-xz",),
+    extensions=(".lzma",),
     kind=regular,
     extractors=[extract_lzma],
-    strict=False
+    strict=False,
 )
 
 TarXzHandler = Handler(
-    name='Tar xz',
-    filetypes=('xz compressed',),
-    mimetypes=('application/x-xz',) ,
-    extensions=('.tar.xz', '.txz', '.tarxz',),
+    name="Tar xz",
+    filetypes=("xz compressed",),
+    mimetypes=("application/x-xz",),
+    extensions=(
+        ".tar.xz",
+        ".txz",
+        ".tarxz",
+    ),
     kind=regular_nested,
     extractors=[extract_xz, extract_tar],
-    strict=False
+    strict=False,
 )
 
 TarLzmaHandler = Handler(
-    name='Tar lzma',
-    filetypes=('lzma compressed',),
-    mimetypes=('application/x-lzma',) ,
-    extensions=('tar.lzma', '.tlz', '.tarlz', '.tarlzma',),
+    name="Tar lzma",
+    filetypes=("lzma compressed",),
+    mimetypes=("application/x-lzma",),
+    extensions=(
+        "tar.lzma",
+        ".tlz",
+        ".tarlz",
+        ".tarlzma",
+    ),
     kind=regular_nested,
     extractors=[extract_lzma, extract_tar],
-    strict=False
+    strict=False,
 )
 
 TarGzipHandler = Handler(
-    name='Tar gzip',
-    filetypes=('gzip compressed',),
-    mimetypes=('application/gzip',),
-    extensions=('.tgz', '.tar.gz', '.tar.gzip', '.targz', '.targzip', '.tgzip',),
+    name="Tar gzip",
+    filetypes=("gzip compressed",),
+    mimetypes=("application/gzip",),
+    extensions=(
+        ".tgz",
+        ".tar.gz",
+        ".tar.gzip",
+        ".targz",
+        ".targzip",
+        ".tgzip",
+    ),
     kind=regular_nested,
     extractors=[extract_tar],
-    strict=False
+    strict=False,
 )
 
 TarLzipHandler = Handler(
-    name='Tar lzip',
-    filetypes=('lzip compressed',),
-    mimetypes=('application/x-lzip',) ,
-    extensions=('.tar.lz', '.tar.lzip',),
+    name="Tar lzip",
+    filetypes=("lzip compressed",),
+    mimetypes=("application/x-lzip",),
+    extensions=(
+        ".tar.lz",
+        ".tar.lzip",
+    ),
     kind=regular_nested,
     extractors=[extract_lzip, extract_tar],
-    strict=False
+    strict=False,
 )
 
 TarZstdHandler = Handler(
-    name='Tar zstd',
-    filetypes=('zstandard compressed',),
-    mimetypes=('application/x-zstd',) ,
-    extensions=('.tar.zst', '.tar.zstd',),
+    name="Tar zstd",
+    filetypes=("zstandard compressed",),
+    mimetypes=("application/x-zstd",),
+    extensions=(
+        ".tar.zst",
+        ".tar.zstd",
+    ),
     kind=regular_nested,
     extractors=[extract_zstd, extract_tar],
-    strict=True
+    strict=True,
 )
 
 TarLz4Handler = Handler(
-    name='Tar lz4',
-    filetypes=('lz4 compressed',),
-    mimetypes=('application/x-lz4',) ,
-    extensions=('.tar.lz4',),
+    name="Tar lz4",
+    filetypes=("lz4 compressed",),
+    mimetypes=("application/x-lz4",),
+    extensions=(".tar.lz4",),
     kind=regular_nested,
     extractors=[extract_lz4, extract_tar],
-    strict=True
+    strict=True,
 )
 
 # https://wiki.openwrt.org/doc/techref/opkg: ipk
 # http://downloads.openwrt.org/snapshots/trunk/x86/64/packages/base/
 
 OpkgHandler = Handler(
-    name='OPKG package',
-    filetypes=('gzip compressed',),
-    mimetypes=('application/gzip',),
-    extensions=('.ipk',),
+    name="OPKG package",
+    filetypes=("gzip compressed",),
+    mimetypes=("application/gzip",),
+    extensions=(".ipk",),
     kind=regular_nested,
     extractors=[extract_tar],
-    strict=False
+    strict=False,
 )
 
 GzipHandler = Handler(
-    name='Gzip',
-    filetypes=('gzip compressed', 'gzip compressed data'),
-    mimetypes=('application/gzip',),
-    extensions=('.gz', '.gzip', '.wmz', '.arz',),
+    name="Gzip",
+    filetypes=("gzip compressed", "gzip compressed data"),
+    mimetypes=("application/gzip",),
+    extensions=(
+        ".gz",
+        ".gzip",
+        ".wmz",
+        ".arz",
+    ),
     kind=regular,
     extractors=[uncompress_gzip],
-    strict=False
+    strict=False,
 )
 
 LzipHandler = Handler(
-    name='lzip',
-    filetypes=('lzip compressed',),
-    mimetypes=('application/x-lzip',) ,
-    extensions=('.lzip',),
+    name="lzip",
+    filetypes=("lzip compressed",),
+    mimetypes=("application/x-lzip",),
+    extensions=(".lzip",),
     kind=regular,
     extractors=[extract_lzip],
-    strict=False
+    strict=False,
 )
 
 ZstdHandler = Handler(
-    name='zstd',
-    filetypes=('zstandard compressed',),
-    mimetypes=('application/x-zstd',) ,
-    extensions=('.zst', '.zstd',),
+    name="zstd",
+    filetypes=("zstandard compressed",),
+    mimetypes=("application/x-zstd",),
+    extensions=(
+        ".zst",
+        ".zstd",
+    ),
     kind=regular_nested,
     extractors=[extract_zstd],
-    strict=False
+    strict=False,
 )
 
 Lz4Handler = Handler(
-    name='lz4',
-    filetypes=('lz4 compressed',),
-    mimetypes=('application/x-lz4',) ,
-    extensions=('.lz4',),
+    name="lz4",
+    filetypes=("lz4 compressed",),
+    mimetypes=("application/x-lz4",),
+    extensions=(".lz4",),
     kind=regular_nested,
     extractors=[extract_lz4],
-    strict=False
+    strict=False,
 )
 
 DiaDocHandler = Handler(
-    name='Dia diagram doc',
-    filetypes=('gzip compressed',),
-    mimetypes=('application/gzip',),
-    extensions=('.dia',),
+    name="Dia diagram doc",
+    filetypes=("gzip compressed",),
+    mimetypes=("application/gzip",),
+    extensions=(".dia",),
     kind=docs,
     extractors=[uncompress_gzip],
-    strict=True
+    strict=True,
 )
 
 GraffleDocHandler = Handler(
-    name='Graffle diagram doc',
-    filetypes=('gzip compressed',),
-    mimetypes=('application/gzip',),
-    extensions=('.graffle',),
+    name="Graffle diagram doc",
+    filetypes=("gzip compressed",),
+    mimetypes=("application/gzip",),
+    extensions=(".graffle",),
     kind=docs,
     extractors=[uncompress_gzip],
-    strict=True
+    strict=True,
 )
 
 SvgGzDocHandler = Handler(
-    name='SVG Compressed doc',
-    filetypes=('gzip compressed',),
-    mimetypes=('application/gzip',),
-    extensions=('.svgz',),
+    name="SVG Compressed doc",
+    filetypes=("gzip compressed",),
+    mimetypes=("application/gzip",),
+    extensions=(".svgz",),
     kind=docs,
     extractors=[uncompress_gzip],
-    strict=True
+    strict=True,
 )
 
 BzipHandler = Handler(
-    name='bzip2',
-    filetypes=('bzip2 compressed',),
-    mimetypes=('application/x-bzip2',),
-    extensions=('.bz', '.bz2', 'bzip2',),
+    name="bzip2",
+    filetypes=("bzip2 compressed",),
+    mimetypes=("application/x-bzip2",),
+    extensions=(
+        ".bz",
+        ".bz2",
+        "bzip2",
+    ),
     kind=regular,
     extractors=[uncompress_bzip2],
-    strict=False
+    strict=False,
 )
 
 TarBzipHandler = Handler(
-    name='Tar bzip2',
-    filetypes=('bzip2 compressed',),
-    mimetypes=('application/x-bzip2',),
+    name="Tar bzip2",
+    filetypes=("bzip2 compressed",),
+    mimetypes=("application/x-bzip2",),
     extensions=(
-        '.tar.bz2',
-        '.tar.bz',
-        '.tar.bzip',
-        '.tar.bzip2',
-        '.tbz',
-        '.tbz2',
-        '.tb2',
-        '.tarbz2',
+        ".tar.bz2",
+        ".tar.bz",
+        ".tar.bzip",
+        ".tar.bzip2",
+        ".tbz",
+        ".tbz2",
+        ".tb2",
+        ".tarbz2",
     ),
     kind=regular_nested,
     extractors=[extract_tar],
-    strict=False
+    strict=False,
 )
 
 RarHandler = Handler(
-    name='RAR',
-    filetypes=('rar archive',),
-    mimetypes=('application/x-rar',),
-    extensions=('.rar',),
+    name="RAR",
+    filetypes=("rar archive",),
+    mimetypes=("application/x-rar",),
+    extensions=(".rar",),
     kind=regular,
     extractors=[extract_rar],
-    strict=True
+    strict=True,
 )
 
 CabHandler = Handler(
-    name='Microsoft cab',
-    filetypes=('microsoft cabinet',),
-    mimetypes=('application/vnd.ms-cab-compressed',),
-    extensions=('.cab',),
+    name="Microsoft cab",
+    filetypes=("microsoft cabinet",),
+    mimetypes=("application/vnd.ms-cab-compressed",),
+    extensions=(".cab",),
     kind=package,
     extractors=[extract_cab],
-    strict=True
+    strict=True,
 )
 
 MsiInstallerHandler = Handler(
-    name='Microsoft MSI Installer',
-    filetypes=('msi installer',),
-    mimetypes=('application/x-msi',),
-    extensions=('.msi',),
+    name="Microsoft MSI Installer",
+    filetypes=("msi installer",),
+    mimetypes=("application/x-msi",),
+    extensions=(".msi",),
     kind=package,
     extractors=[extract_msi],
-    strict=True
+    strict=True,
 )
 
 InstallShieldHandler = Handler(
-    name='InstallShield Installer',
-    filetypes=('installshield',),
-    mimetypes=('application/x-dosexec',),
-    extensions=('.exe',),
+    name="InstallShield Installer",
+    filetypes=("installshield",),
+    mimetypes=("application/x-dosexec",),
+    extensions=(".exe",),
     kind=special_package,
     extractors=[extract_ishield],
-    strict=True
+    strict=True,
 )
 
 NugetHandler = Handler(
-    name='Nuget',
+    name="Nuget",
     # TODO: file a bug upstream
     # Weirdly enough the detection by libmagic is sometimes wrong
     # this is due to this issue:
     # being recognized by libmagic as an OOXML file
     # https://en.wikipedia.org/wiki/Open_Packaging_Conventions#File_formats_using_the_OPC
-    filetypes=('zip archive', 'microsoft ooxml',),
-    mimetypes=('application/zip', 'application/octet-stream',),
-    extensions=('.nupkg',),
+    filetypes=(
+        "zip archive",
+        "microsoft ooxml",
+    ),
+    mimetypes=(
+        "application/zip",
+        "application/octet-stream",
+    ),
+    extensions=(".nupkg",),
     kind=package,
     extractors=[extract_zip],
-    strict=True
+    strict=True,
 )
 
 NSISInstallerHandler = Handler(
-    name='Nullsoft Installer',
-    filetypes=('nullsoft installer',),
-    mimetypes=('application/x-dosexec',),
-    extensions=('.exe',),
+    name="Nullsoft Installer",
+    filetypes=("nullsoft installer",),
+    mimetypes=("application/x-dosexec",),
+    extensions=(".exe",),
     kind=special_package,
     extractors=[extract_nsis],
-    strict=True
+    strict=True,
 )
 
 ArHandler = Handler(
-    name='ar archive',
-    filetypes=('current ar archive',),
-    mimetypes=('application/x-archive',),
-    extensions=('.ar',),
+    name="ar archive",
+    filetypes=("current ar archive",),
+    mimetypes=("application/x-archive",),
+    extensions=(".ar",),
     kind=regular,
     extractors=[extract_ar],
-    strict=False
+    strict=False,
 )
 
 StaticLibHandler = Handler(
-    name='Static Library',
-    filetypes=('current ar archive', 'current ar archive random library',),
-    mimetypes=('application/x-archive',),
-    extensions=('.a', '.lib', '.out', '.ka',),
+    name="Static Library",
+    filetypes=(
+        "current ar archive",
+        "current ar archive random library",
+    ),
+    mimetypes=("application/x-archive",),
+    extensions=(
+        ".a",
+        ".lib",
+        ".out",
+        ".ka",
+    ),
     kind=package,
     extractors=[extract_ar],
-    strict=True
+    strict=True,
 )
 
 DebHandler = Handler(
-    name='Debian package',
-    filetypes=('debian binary package',),
+    name="Debian package",
+    filetypes=("debian binary package",),
     mimetypes=(
-        'application/vnd.debian.binary-package',
-        'application/x-archive',
+        "application/vnd.debian.binary-package",
+        "application/x-archive",
     ),
-    extensions=('.deb', '.udeb',),
+    extensions=(
+        ".deb",
+        ".udeb",
+    ),
     kind=package,
     extractors=[extract_deb],
-    strict=True
+    strict=True,
 )
 
 RpmHandler = Handler(
-    name='RPM package',
-    filetypes=('rpm ',),
-    mimetypes=('application/x-rpm',),
-    extensions=('.rpm', '.srpm', '.mvl', '.vip',),
+    name="RPM package",
+    filetypes=("rpm ",),
+    mimetypes=("application/x-rpm",),
+    extensions=(
+        ".rpm",
+        ".srpm",
+        ".mvl",
+        ".vip",
+    ),
     kind=package,
     extractors=[extract_rpm, extract_cpio],
-    strict=False
+    strict=False,
 )
 
 SevenZipHandler = Handler(
-    name='7zip',
-    filetypes=('7-zip archive',),
-    mimetypes=('application/x-7z-compressed',),
-    extensions=('.7z',),
+    name="7zip",
+    filetypes=("7-zip archive",),
+    mimetypes=("application/x-7z-compressed",),
+    extensions=(".7z",),
     kind=regular,
     extractors=[extract_7z],
-    strict=False
+    strict=False,
 )
 
 TarSevenZipHandler = Handler(
-    name='Tar 7zip',
-    filetypes=('7-zip archive',),
-    mimetypes=('application/x-7z-compressed',),
-    extensions=('.tar.7z', '.tar.7zip', '.t7z',),
+    name="Tar 7zip",
+    filetypes=("7-zip archive",),
+    mimetypes=("application/x-7z-compressed",),
+    extensions=(
+        ".tar.7z",
+        ".tar.7zip",
+        ".t7z",
+    ),
     kind=regular_nested,
     extractors=[extract_7z, extract_tar],
-    strict=True
+    strict=True,
 )
 
 SharHandler = Handler(
-    name='shar shell archive',
-    filetypes=('posix shell script',),
-    mimetypes=('text/x-shellscript',),
-    extensions=('.sha', '.shar', '.bin',),
+    name="shar shell archive",
+    filetypes=("posix shell script",),
+    mimetypes=("text/x-shellscript",),
+    extensions=(
+        ".sha",
+        ".shar",
+        ".bin",
+    ),
     kind=special_package,
     extractors=[],
-    strict=True
+    strict=True,
 )
 
 CpioHandler = Handler(
-    name='cpio',
-    filetypes=('cpio archive',),
-    mimetypes=('application/x-cpio',),
-    extensions=('.cpio',),
+    name="cpio",
+    filetypes=("cpio archive",),
+    mimetypes=("application/x-cpio",),
+    extensions=(".cpio",),
     kind=regular,
     extractors=[extract_cpio],
-    strict=False
+    strict=False,
 )
 
 ZHandler = Handler(
-    name='Z',
+    name="Z",
     filetypes=("compress'd data",),
-    mimetypes=('application/x-compress',),
-    extensions=('.z',),
+    mimetypes=("application/x-compress",),
+    extensions=(".z",),
     kind=regular,
     extractors=[extract_Z],
-    strict=False
+    strict=False,
 )
 
 TarZHandler = Handler(
-    name='Tar Z',
+    name="Tar Z",
     filetypes=("compress'd data",),
-    mimetypes=('application/x-compress',),
-    extensions=('.tz', '.tar.z', '.tarz',),
+    mimetypes=("application/x-compress",),
+    extensions=(
+        ".tz",
+        ".tar.z",
+        ".tarz",
+    ),
     kind=regular_nested,
     extractors=[extract_Z, extract_tar],
-    strict=False
+    strict=False,
 )
 
 AppleDmgHandler = Handler(
-    name='Apple dmg',
-    filetypes=('zlib compressed',),
-    mimetypes=('application/zlib',),
-    extensions=('.dmg', '.sparseimage',),
+    name="Apple dmg",
+    filetypes=("zlib compressed",),
+    mimetypes=("application/zlib",),
+    extensions=(
+        ".dmg",
+        ".sparseimage",
+    ),
     kind=package,
     extractors=[extract_iso],
-    strict=True
+    strict=True,
 )
 
 ApplePkgHandler = Handler(
-    name='Apple pkg or mpkg package installer',
-    filetypes=('xar archive',),
-    mimetypes=('application/octet-stream',),
-    extensions=('.pkg', '.mpkg',),
+    name="Apple pkg or mpkg package installer",
+    filetypes=("xar archive",),
+    mimetypes=("application/octet-stream",),
+    extensions=(
+        ".pkg",
+        ".mpkg",
+    ),
     kind=package,
     extractors=[extract_xarpkg],
-    strict=True
+    strict=True,
 )
 
 XarHandler = Handler(
-    name='Xar archive v1',
-    filetypes=('xar archive',),
-    mimetypes=('application/octet-stream', 'application/x-xar',),
-    extensions=('.xar',),
+    name="Xar archive v1",
+    filetypes=("xar archive",),
+    mimetypes=(
+        "application/octet-stream",
+        "application/x-xar",
+    ),
+    extensions=(".xar",),
     kind=package,
     extractors=[extract_xarpkg],
-    strict=True
+    strict=True,
 )
 
 IsoImageHandler = Handler(
-    name='ISO CD image',
-    filetypes=('iso 9660 cd-rom', 'high sierra cd-rom',),
-    mimetypes=('application/x-iso9660-image',),
-    extensions=('.iso', '.udf', '.img',),
+    name="ISO CD image",
+    filetypes=(
+        "iso 9660 cd-rom",
+        "high sierra cd-rom",
+    ),
+    mimetypes=("application/x-iso9660-image",),
+    extensions=(
+        ".iso",
+        ".udf",
+        ".img",
+    ),
     kind=file_system,
     extractors=[extract_iso],
-    strict=True
+    strict=True,
 )
 
 SquashfsHandler = Handler(
-    name='SquashFS disk image',
-    filetypes=('squashfs',),
+    name="SquashFS disk image",
+    filetypes=("squashfs",),
     mimetypes=(),
     extensions=(),
     kind=file_system,
     extractors=[extract_squashfs],
-    strict=False
+    strict=False,
 )
 
 QCOWHandler = Handler(
     # note that there are v1, v2 and v3 formats.
-    name='QEMU QCOW2 disk image',
-    filetypes=('qemu qcow2 image', 'qemu qcow image',),
-    mimetypes=('application/octet-stream',),
-    extensions=('.qcow2', '.qcow', '.qcow2c', '.img',),
+    name="QEMU QCOW2 disk image",
+    filetypes=(
+        "qemu qcow2 image",
+        "qemu qcow image",
+    ),
+    mimetypes=("application/octet-stream",),
+    extensions=(
+        ".qcow2",
+        ".qcow",
+        ".qcow2c",
+        ".img",
+    ),
     kind=file_system,
     extractors=[extract_vm_image],
     strict=True,
 )
 
 VMDKHandler = Handler(
-    name='VMDK disk image',
-    filetypes=('vmware4 disk image',),
-    mimetypes=('application/octet-stream',),
-    extensions=('.vmdk',),
+    name="VMDK disk image",
+    filetypes=("vmware4 disk image",),
+    mimetypes=("application/octet-stream",),
+    extensions=(".vmdk",),
     kind=file_system,
     extractors=[extract_vm_image],
     strict=True,
 )
 
 VirtualBoxHandler = Handler(
-    name='VirtualBox disk image',
-    filetypes=('virtualbox disk image',),
-    mimetypes=('application/octet-stream',),
-    extensions=('.vdi',),
+    name="VirtualBox disk image",
+    filetypes=("virtualbox disk image",),
+    mimetypes=("application/octet-stream",),
+    extensions=(".vdi",),
     kind=file_system,
     extractors=[extract_vm_image],
     strict=True,
 )
 
 PatchHandler = Handler(
-    name='Patch',
-    filetypes=('diff', 'patch',),
-    mimetypes=('text/x-diff',),
-    extensions=('.diff', '.patch',),
+    name="Patch",
+    filetypes=(
+        "diff",
+        "patch",
+    ),
+    mimetypes=("text/x-diff",),
+    extensions=(
+        ".diff",
+        ".patch",
+    ),
     kind=patches,
     extractors=[extract_patch],
-    strict=True
+    strict=True,
 )
 
 # Actual list of handlers
@@ -1199,6 +1346,7 @@ archive_handlers = [
 # only support extracting patches if patch is installed. This is not a default
 try:
     import patch as _pythonpatch
+
     archive_handlers.append(PatchHandler)
 except:
     pass

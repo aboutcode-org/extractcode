@@ -22,28 +22,32 @@ project_root = os.path.dirname(os.path.dirname(__file__))
 
 
 class TestExtractApi(BaseArchiveTestCase):
-    test_data_dir = os.path.join(os.path.dirname(__file__), 'data')
+    test_data_dir = os.path.join(os.path.dirname(__file__), "data")
 
     def test_extract_archive(self):
-        test_dir = self.get_test_loc('api/doc.docx', copy=True)
+        test_dir = self.get_test_loc("api/doc.docx", copy=True)
         base = fileutils.parent_directory(test_dir)
         expected = [
-            'c/a/a.txt',
-            'c/b/a.txt',
-            'c/c/a.txt',
+            "c/a/a.txt",
+            "c/b/a.txt",
+            "c/c/a.txt",
         ]
 
-        cleaned_test_file = test_dir.replace(base, '')
+        cleaned_test_file = test_dir.replace(base, "")
         expected_event = [
-            extract.ExtractEvent(source='doc.docx', target='doc.docx-extract', done=False, warnings=[], errors=[]),
-            extract.ExtractEvent(source='doc.docx', target='doc.docx-extract', done=True, warnings=[], errors=[]),
+            extract.ExtractEvent(
+                source="doc.docx", target="doc.docx-extract", done=False, warnings=[], errors=[]
+            ),
+            extract.ExtractEvent(
+                source="doc.docx", target="doc.docx-extract", done=True, warnings=[], errors=[]
+            ),
         ]
         target = extractcode.get_extraction_path(test_dir)
         result = list(api.extract_archive(test_dir, target))
         result = [
             r._replace(
-                source=cleaned_test_file,
-                target=extractcode.get_extraction_path(cleaned_test_file))
+                source=cleaned_test_file, target=extractcode.get_extraction_path(cleaned_test_file)
+            )
             for r in result
         ]
         assert expected_event == result
