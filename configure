@@ -84,7 +84,7 @@ find_python() {
         if [ -f "$CFG_ROOT_DIR/PYTHON_EXECUTABLE" ]; then
             PYTHON_EXECUTABLE=$(cat "$CFG_ROOT_DIR/PYTHON_EXECUTABLE")
         else
-            PYTHON_EXECUTABLE=python3
+            PYTHON_EXECUTABLE=python3.14
         fi
     fi
 }
