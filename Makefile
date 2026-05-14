@@ -22,6 +22,10 @@ dev:
 	@echo "-> Configure and install development dependencies"
 	./configure --dev
 
+dev-system-provided:
+	@echo "-> Configure and install development dependencies"
+	./configure --dev-system-provided
+
 doc8:
 	@echo "-> Run doc8 validation"
 	@${ACTIVATE} doc8 --quiet docs/ *.rst

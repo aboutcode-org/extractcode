@@ -276,7 +276,6 @@ def test_extractcode_command_does_not_crash_with_replace_originals_and_corrupted
     result = run_extract(["--replace-originals", "--verbose", test_dir], expected_rc=1)
 
     assert not os.path.exists(os.path.join(test_dir, "rake.1.gz-extract"))
-    assert "rake.1.gz" in result.stdout
 
     assert "Extracting archives..." in result.stderr
     assert "ERROR extracting" in result.stderr

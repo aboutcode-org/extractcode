@@ -273,8 +273,14 @@ Archive format kind: docs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   name: Office doc
-     - extensions: .docx, .dotx, .docm, .xlsx, .xltx, .xlsm, .xltm, .pptx, .ppsx, .potx, .pptm, .potm, .ppsm, .odt, .odf, .sxw, .stw, .ods, .ots, .sxc, .stc, .odp, .otp, .odg, .otg, .sxi, .sti, .sxd, .sxg, .std, .sdc, .sda, .sdd, .smf, .sdw, .sxm, .stw, .oxt, .sldx, .epub
-     - filetypes : zip archive, microsoft word 2007+, microsoft excel 2007+, microsoft powerpoint 2007+
+     - extensions:
+         .docx, .dotx, .docm, .xlsx, .xltx, .xlsm, .xltm, .pptx, .ppsx, .potx,
+         .pptm, .potm, .ppsm, .odt, .odf, .sxw, .stw, .ods, .ots, .sxc, .stc,
+         .odp, .otp, .odg, .otg, .sxi, .sti, .sxd, .sxg, .std,
+         .sdc, .sda, .sdd, .smf, .sdw, .sxm, .stw, .oxt, .sldx, .epub
+     - filetypes :
+         zip archive, microsoft word 2007+,
+         microsoft excel 2007+, microsoft powerpoint 2007+
      - mimetypes : application/zip, application/vnd.openxmlformats
 
   name: Dia diagram doc
