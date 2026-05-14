@@ -35,16 +35,6 @@ jobs:
 
   - template: etc/ci/azure-posix-arm.yml
     parameters:
-        job_name: ubuntu24_cpython_arm
-        image_name: ubuntu-24.04-arm
-        python_versions: ['3.10', '3.11', '3.12', '3.13', '3.14']
-        test_suites:
-            all:
-              sudo chmod 0644 /boot/vmlinuz-* && sudo apt install libguestfs-tools
-              && venv/bin/pytest -n 2 -vvs
-
-  - template: etc/ci/azure-posix-arm.yml
-    parameters:
         job_name: macos14_cpython
         image_name: macos-14
         python_versions: ['3.10', '3.11', '3.12', '3.13', '3.14']
@@ -54,15 +44,7 @@ jobs:
   - template: etc/ci/azure-posix-arm.yml
     parameters:
         job_name: macos15_cpython
-        image_name: macosS-15
-        python_versions: ['3.10', '3.11', '3.12', '3.13', '3.14']
-        test_suites:
-            all: venv/bin/pytest -n 2 -vvs
-
-  - template: etc/ci/azure-posix-arm.yml
-    parameters:
-        job_name: macos15_cpython_intel
-        image_name: macos-15-intel
+        image_name: macos-15
         python_versions: ['3.10', '3.11', '3.12', '3.13', '3.14']
         test_suites:
             all: venv/bin/pytest -n 2 -vvs
