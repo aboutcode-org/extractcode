@@ -32,7 +32,7 @@ if TRACE:
     logger.setLevel(logging.DEBUG)
 
 # Suffix added to extracted target_dir paths
-EXTRACT_SUFFIX = '-extract'
+EXTRACT_SUFFIX = "-extract"
 
 # high level archive "kinds"
 docs = 1
@@ -44,13 +44,13 @@ patches = 6
 special_package = 7
 
 kind_labels = {
-    1: 'docs',
-    2: 'regular',
-    3: 'regular_nested',
-    4: 'package',
-    5: 'file_system',
-    6: 'patches',
-    7: 'special_package',
+    1: "docs",
+    2: "regular",
+    3: "regular_nested",
+    4: "package",
+    5: "file_system",
+    6: "patches",
+    7: "special_package",
 }
 
 # note: we do not include special_package in all_kinds by default
@@ -72,13 +72,13 @@ default_kinds = (
 
 # map user-visible extract types to tuples of "kinds"
 extract_types = {
-    'default': default_kinds,
-    'all': all_kinds,
-    'package': (package,),
-    'filesystem': (file_system,),
-    'doc': (docs,),
-    'patch': (patches,),
-    'special_package': (special_package,),
+    "default": default_kinds,
+    "all": all_kinds,
+    "package": (package,),
+    "filesystem": (file_system,),
+    "doc": (docs,),
+    "patch": (patches,),
+    "special_package": (special_package,),
 }
 
 
@@ -86,7 +86,7 @@ def is_extraction_path(path):
     """
     Return True is the path points to an extraction path.
     """
-    return path and path.rstrip('\\/').endswith(EXTRACT_SUFFIX)
+    return path and path.rstrip("\\/").endswith(EXTRACT_SUFFIX)
 
 
 def is_extracted(location):
@@ -101,14 +101,14 @@ def get_extraction_path(path):
     """
     Return a path where to extract.
     """
-    return path.rstrip('\\/') + EXTRACT_SUFFIX
+    return path.rstrip("\\/") + EXTRACT_SUFFIX
 
 
 def remove_archive_suffix(path):
     """
     Remove all the extracted suffix from a path.
     """
-    return re.sub(EXTRACT_SUFFIX, '', path)
+    return re.sub(EXTRACT_SUFFIX, "", path)
 
 
 def remove_backslashes_and_dotdots(directory):
@@ -119,13 +119,13 @@ def remove_backslashes_and_dotdots(directory):
     errors = []
     for top, _, files in os.walk(directory):
         for filename in files:
-            if not ('\\' in filename or '..' in filename):
+            if not ("\\" in filename or ".." in filename):
                 continue
             try:
-                new_path = as_posixpath(filename).strip('/')
-                new_path = posixpath.normpath(new_path).replace('..', '/').strip('/')
+                new_path = as_posixpath(filename).strip("/")
+                new_path = posixpath.normpath(new_path).replace("..", "/").strip("/")
                 new_path = posixpath.normpath(new_path)
-                segments = new_path.split('/')
+                segments = new_path.split("/")
                 directory = join(top, *segments[:-1])
                 create_dir(directory)
                 shutil.move(join(top, filename), join(top, *segments))
@@ -149,7 +149,7 @@ def new_name(location, is_dir=False):
        the extension unchanged.
     """
     assert location
-    location = location.rstrip('\\/')
+    location = location.rstrip("\\/")
     assert location
 
     parent = parent_directory(location)
@@ -160,8 +160,8 @@ def new_name(location, is_dir=False):
     filename = file_name(location)
 
     # corner case
-    if filename in ('.', '..'):
-        filename = '_'
+    if filename in (".", ".."):
+        filename = "_"
 
     # if unique, return this
     if filename.lower() not in siblings_lower:
@@ -171,19 +171,19 @@ def new_name(location, is_dir=False):
     if is_dir:
         # directories do not have an "extension"
         base_name = filename
-        ext = ''
+        ext = ""
     else:
-        base_name, dot, ext = filename.partition('.')
+        base_name, dot, ext = filename.partition(".")
         if dot:
-            ext = f'.{ext}'
+            ext = f".{ext}"
         else:
             base_name = filename
-            ext = ''
+            ext = ""
 
     # find a unique filename, adding a counter int to the base_name
     counter = 1
     while 1:
-        filename = f'{base_name}_{counter}{ext}'
+        filename = f"{base_name}_{counter}{ext}"
         if filename.lower() not in siblings_lower:
             break
         counter += 1

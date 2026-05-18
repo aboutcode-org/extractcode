@@ -68,6 +68,7 @@ def extract_archive(location, target, verbose=False):
 
     from extractcode.extract import extract_file
     from extractcode import all_kinds
+
     return extract_file(
         location=location,
         target=target,

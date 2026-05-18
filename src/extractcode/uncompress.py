@@ -38,7 +38,7 @@ def uncompress(location, target_dir, decompressor, suffix=EXTRACT_SUFFIX):
     # extension such gz, etc. or introspect the archive header to get the file
     # name when present.
     if DEBUG:
-        logger.debug('uncompress: ' + location)
+        logger.debug("uncompress: " + location)
 
     tmp_loc, warnings = uncompress_file(location, decompressor)
 
@@ -63,11 +63,10 @@ def uncompress_file(location, decompressor):
 
     warnings = []
     base_name = fileutils.file_base_name(location)
-    target_location = os.path.join(fileutils.get_temp_dir(
-        prefix='extractcode-extract-'), base_name)
+    target_location = os.path.join(fileutils.get_temp_dir(prefix="extractcode-extract-"), base_name)
 
-    with decompressor(location, 'rb') as compressed:
-        with open(target_location, 'wb') as uncompressed:
+    with decompressor(location, "rb") as compressed:
+        with open(target_location, "wb") as uncompressed:
             buffer_size = 32 * 1024 * 1024
             while True:
                 chunk = compressed.read(buffer_size)
@@ -75,8 +74,8 @@ def uncompress_file(location, decompressor):
                     break
                 uncompressed.write(chunk)
 
-        if getattr(decompressor, 'has_trailing_garbage', False):
-            warnings.append(location + ': Trailing garbage found and ignored.')
+        if getattr(decompressor, "has_trailing_garbage", False):
+            warnings.append(location + ": Trailing garbage found and ignored.")
 
     return target_location, warnings
 
@@ -105,10 +104,10 @@ def get_compressed_file_content(location, decompressor):
     `decompressor` object for decompression.
     """
     warnings = []
-    with decompressor(location, 'rb') as compressed:
+    with decompressor(location, "rb") as compressed:
         content = compressed.read()
-        if getattr(decompressor, 'has_trailing_garbage', False):
-            warnings.append(location + ': Trailing garbage found and ignored.')
+        if getattr(decompressor, "has_trailing_garbage", False):
+            warnings.append(location + ": Trailing garbage found and ignored.")
     return content, warnings
 
 

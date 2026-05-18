@@ -28,8 +28,8 @@ def check_size(expected_size, location):
 
 def check_results_with_expected_json(results, expected_loc, regen=False):
     if regen:
-        with open(expected_loc, 'w') as ex:
-            json.dump(results, ex, indent=2, separators=(',', ':'))
+        with open(expected_loc, "w") as ex:
+            json.dump(results, ex, indent=2, separators=(",", ":"))
     with open(expected_loc) as ex:
         expected = json.load(ex)
     try:
@@ -58,17 +58,17 @@ def check_files(test_dir, expected, regen=False):
             location = os.path.join(top, f)
             locs.append(location)
             path = fileutils.as_posixpath(location)
-            path = path.replace(test_dir_path, '').strip('/')
+            path = path.replace(test_dir_path, "").strip("/")
             result.append(path)
 
     expected_is_json_file = False
 
-    if not isinstance(expected, (list, tuple)) and expected.endswith('.json'):
+    if not isinstance(expected, (list, tuple)) and expected.endswith(".json"):
         expected_is_json_file = True
         # this is a path to a JSON file
         if regen:
-            with open(expected, 'w') as ex:
-                json.dump(result, ex, indent=2, separators=(',', ':'))
+            with open(expected, "w") as ex:
+                json.dump(result, ex, indent=2, separators=(",", ":"))
             expected_content = result
         else:
             with open(expected) as ex:
@@ -83,8 +83,8 @@ def check_files(test_dir, expected, regen=False):
         assert result == expected_content
     except AssertionError:
         files = [
-            'test_dir: file://{}'.format(test_dir),
-            'expected: file://{}'.format(expected if expected_is_json_file else ''),
+            "test_dir: file://{}".format(test_dir),
+            "expected: file://{}".format(expected if expected_is_json_file else ""),
         ]
         assert result == files + expected_content
 
@@ -104,15 +104,15 @@ def check_no_error(result):
 
 
 def is_posixpath(location):
-    """
+    r"""
     Return True if the `location` path is likely a POSIX-like path using POSIX
     path separators (slash or "/")or has no path separator.
 
     Return False if the `location` path is likely a Windows-like path using
     backslash as path separators (e.g. "\").
     """
-    has_slashes = '/' in location
-    has_backslashes = '\\' in location
+    has_slashes = "/" in location
+    has_backslashes = "\\" in location
     # windows paths with drive
     if location:
         drive, _ = ntpath.splitdrive(location)
@@ -128,7 +128,7 @@ def is_posixpath(location):
 
 
 def to_posix(path):
-    """
+    r"""
     Return a path using the posix path separator given a path that may contain
     posix or windows separators, converting \\ to /. NB: this path will still be
     valid in the windows explorer (except as a UNC or share name). It will be a
@@ -136,8 +136,8 @@ def to_posix(path):
     line operations.
     """
     is_unicode = isinstance(path, str)
-    ntpath_sep = is_unicode and u'\\' or '\\'
-    posixpath_sep = is_unicode and u'/' or '/'
+    ntpath_sep = is_unicode and "\\" or "\\"
+    posixpath_sep = is_unicode and "/" or "/"
     if is_posixpath(path):
         if on_windows:
             return path.replace(ntpath_sep, posixpath_sep)
@@ -147,7 +147,7 @@ def to_posix(path):
 
 
 class BaseArchiveTestCase(FileBasedTesting):
-    test_data_dir = os.path.join(os.path.dirname(__file__), 'data')
+    test_data_dir = os.path.join(os.path.dirname(__file__), "data")
 
     def check_get_extractors(self, test_file, expected, kinds=()):
         from extractcode import archive
@@ -159,16 +159,16 @@ class BaseArchiveTestCase(FileBasedTesting):
             extractors = archive.get_extractors(test_loc)
 
         fe = fileutils.file_extension(test_loc).lower()
-        em = ', '.join(e.__module__ + '.' + e.__name__ for e in extractors)
+        em = ", ".join(e.__module__ + "." + e.__name__ for e in extractors)
 
-        msg = ('%(expected)r == %(extractors)r for %(test_file)s\n'
-               'with fe:%(fe)r, em:%(em)s' % locals())
+        msg = (
+            "%(expected)r == %(extractors)r for %(test_file)s\nwith fe:%(fe)r, em:%(em)s" % locals()
+        )
         assert expected == extractors, msg
 
     def assertRaisesInstance(self, excInstance, callableObj, *args, **kwargs):
         """
-        This assertion accepts an instance instead of a class for refined
-        exception testing.
+        Accept an instance instead of a class for refined exception testing.
         """
         kwargs = kwargs or {}
         excClass = excInstance.__class__
@@ -177,11 +177,11 @@ class BaseArchiveTestCase(FileBasedTesting):
         except excClass as e:
             assert str(e).startswith(str(excInstance))
         else:
-            if hasattr(excClass, '__name__'):
+            if hasattr(excClass, "__name__"):
                 excName = excClass.__name__
             else:
                 excName = str(excClass)
-            raise self.failureException('%s not raised' % excName)
+            raise self.failureException("%s not raised" % excName)
 
     def check_extract(
         self,
@@ -218,17 +218,17 @@ class BaseArchiveTestCase(FileBasedTesting):
         else:
             for exp_path, exp_size in expected.items():
                 exp_loc = os.path.join(test_dir, exp_path)
-                msg = '''When extracting: %(test_file)s
+                msg = """When extracting: %(test_file)s
                     With function: %(test_function)r
-                    Failed to find expected path: %(exp_loc)s'''
+                    Failed to find expected path: %(exp_loc)s"""
                 assert os.path.exists(exp_loc), msg % locals()
                 if exp_size is not None:
                     res_size = os.stat(exp_loc).st_size
-                    msg = '''When extracting: %(test_file)s
+                    msg = """When extracting: %(test_file)s
                         With function: %(test_function)r
                         Failed to assert the correct size %(exp_size)d
                         Got instead: %(res_size)d
-                        for expected path: %(exp_loc)s'''
+                        for expected path: %(exp_loc)s"""
                     assert exp_size == res_size, msg % locals()
 
     def collect_extracted_path(self, test_dir):
@@ -237,10 +237,10 @@ class BaseArchiveTestCase(FileBasedTesting):
         for t, dirs, files in os.walk(test_dir):
             t = fileutils.as_posixpath(t)
             for d in dirs:
-                nd = posixpath.join(t, d).replace(td, '') + '/'
+                nd = posixpath.join(t, d).replace(td, "") + "/"
                 result.append(nd)
             for f in files:
-                nf = posixpath.join(t, f).replace(td, '')
+                nf = posixpath.join(t, f).replace(td, "")
                 result.append(nf)
         result = sorted(result)
         return result
@@ -251,10 +251,9 @@ class BaseArchiveTestCase(FileBasedTesting):
         except Exception as e:
             if text not in str(e):
                 raise self.failureException(
-                    'Exception %(e)r raised, '
-                    'it should contain the text %(text)r '
-                    'and does not' % locals()
+                    "Exception %(e)r raised, "
+                    "it should contain the text %(text)r "
+                    "and does not" % locals()
                 )
         else:
-            raise self.failureException(
-                   'Exception containing %(text)r not raised' % locals())
+            raise self.failureException("Exception containing %(text)r not raised" % locals())

@@ -1,0 +1,79 @@
+name: CI on Linux ARM and MacOS Intel
+
+on: [push]
+
+permissions: {}
+jobs:
+
+  test_on_linux_arm:
+    permissions:
+      contents: read # to fetch code (actions/checkout)
+
+    name: Test PyPI wheels on linux
+    runs-on: ${{ matrix.os }}
+
+    defaults:
+      run:
+        shell: bash
+
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-24.04-arm]
+        pyver: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+
+      - name: Set up Python ${{ matrix.pyver }} on ${{ matrix.os }}
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        with:
+          python-version: ${{ matrix.pyver }}
+
+      - name: Configure and setup test environment
+        run: |
+          sudo apt update
+          sudo chmod 0644 /boot/vmlinuz-* && sudo apt install libguestfs-tools
+          ./configure --clean && ./configure --dev-system-provided
+      
+      - name: Run tests
+        run: |
+          make test
+
+
+  test_on_macos_intel:
+    permissions:
+      contents: read # to fetch code (actions/checkout)
+
+    name: Test PyPI wheels on linux
+    runs-on: ${{ matrix.os }}
+
+    defaults:
+      run:
+        shell: bash
+
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [macos-15-intel]
+        pyver: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+
+      - name: Set up Python ${{ matrix.pyver }} on ${{ matrix.os }}
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        with:
+          python-version: ${{ matrix.pyver }}
+
+      - name: Configure and setup test environment
+        run: |
+          ./configure --clean && ./configure --dev
+      
+      - name: Run tests
+        run: |
+          make test
