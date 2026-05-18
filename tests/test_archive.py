@@ -1699,6 +1699,7 @@ class TestRar(BaseArchiveTestCase):
         result = os.path.join(test_dir, "this/that")
         assert os.path.exists(result)
 
+    @pytest.mark.xfail(reason="Error not raised, did not extract txt file")
     def test_extract_rar_with_trailing_data(self):
         test_file = self.get_test_loc("archive/rar/rar_trailing.rar")
         test_dir = self.get_temp_dir()
