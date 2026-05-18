@@ -32,6 +32,10 @@ jobs:
               - script: |
                     python${{ pyver }} --version
                     echo "python${{ pyver }}" > PYTHON_EXECUTABLE
+                    sudo chmod 0644 /boot/vmlinuz-*
+                    for k in /boot/vmlinuz-*
+                        do sudo dpkg-statoverride --add --update root root 0644 $k
+                    done
                     ./configure --clean && ./configure --dev
                 displayName: '${{ pyver }} - Configure'
 

@@ -19,9 +19,7 @@ jobs:
         image_name: ubuntu-22.04
         python_versions: ['3.10', '3.11', '3.12', '3.13', '3.14']
         test_suites:
-            all:
-              sudo chmod 0644 /boot/vmlinuz-* && sudo apt install libguestfs-tools
-              && venv/bin/pytest -n 2 -vvs
+            all: sudo apt install libguestfs-tools && venv/bin/pytest -n 2 -vvs
 
   - template: etc/ci/azure-posix.yml
     parameters:
@@ -29,9 +27,7 @@ jobs:
         image_name: ubuntu-24.04
         python_versions: ['3.10', '3.11', '3.12', '3.13', '3.14']
         test_suites:
-            all:
-              sudo chmod 0644 /boot/vmlinuz-* && sudo apt install libguestfs-tools
-              && venv/bin/pytest -n 2 -vvs
+            all: sudo apt install libguestfs-tools && venv/bin/pytest -n 2 -vvs
 
   - template: etc/ci/azure-posix-arm.yml
     parameters:
@@ -39,7 +35,7 @@ jobs:
         image_name: macos-14
         python_versions: ['3.10', '3.11', '3.12', '3.13', '3.14']
         test_suites:
-            all: venv/bin/pytest -n 2 -vvs
+            all: brew install libarchive libmagic sevenzip && venv/bin/pytest -n 2 -vvs
 
   - template: etc/ci/azure-posix-arm.yml
     parameters:
@@ -47,7 +43,7 @@ jobs:
         image_name: macos-15
         python_versions: ['3.10', '3.11', '3.12', '3.13', '3.14']
         test_suites:
-            all: venv/bin/pytest -n 2 -vvs
+            all: brew install libarchive libmagic sevenzip && venv/bin/pytest -n 2 -vvs
 
   - template: etc/ci/azure-win.yml
     parameters:
