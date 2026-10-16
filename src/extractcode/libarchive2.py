@@ -80,7 +80,10 @@ EXTRACTCODE_LIBARCHIVE_DLL = "extractcode.libarchive.dll"
 
 EXTRACTCODE_LIBARCHIVE_PATH_ENVVAR = "EXTRACTCODE_LIBARCHIVE_PATH"
 
-_LIBRARY_NAME = "libarchive"
+# names to look up with ctypes.util.find_library: the library is "archive"
+# (libarchive.so on Linux and BSDs, libarchive.dylib on macOS), but a
+# Windows DLL can be named libarchive.dll
+_LIBRARY_NAMES = ("archive", "libarchive")
 
 
 def load_lib():
@@ -102,9 +105,15 @@ def load_lib():
 
     # try the standard locations with find_library
     if not dll_loc:
-        libarch_loc = ctypes.util.find_library(_LIBRARY_NAME)
-        libarchive = ctypes.cdll.LoadLibrary(libarch_loc)
-        if libarchive:
+        libarch_loc = None
+        for name in _LIBRARY_NAMES:
+            libarch_loc = ctypes.util.find_library(name)
+            if libarch_loc:
+                break
+        # find_library returns None if nothing is found: do not load that, as
+        # LoadLibrary(None) returns the running program on POSIX systems.
+        if libarch_loc:
+            libarchive = ctypes.cdll.LoadLibrary(libarch_loc)
             warnings.warn(
                 'Using "libarchive" library found in a system location. '
                 "Install instead a extractcode-libarchive plugin for best support."
