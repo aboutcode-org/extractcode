@@ -31,6 +31,15 @@ more conveniently.
 LOG = logging.getLogger(__name__)
 
 
+def _as_text(line):
+    if not isinstance(line, bytes):
+        return line
+    try:
+        return line.decode("utf-8")
+    except UnicodeDecodeError:
+        return line.decode("latin-1")
+
+
 def extract(location, target_dir):
     """
     Extract each patch of a patch file at `location` as files in a target_dir
@@ -74,7 +83,7 @@ def extract(location, target_dir):
         with open(subfile_path, "w") as subfile:
             subfile.write("\n".join(text))
 
-        return []
+    return []
 
 
 def is_patch(location, include_extracted=False):
@@ -140,5 +149,5 @@ def patch_info(location):
     for ptch in patchset.items:
         src = fileutils.as_posixpath(ptch.source.strip())
         tgt = fileutils.as_posixpath(ptch.target.strip())
-        text = [l.strip() for l in patch_text(ptch) if l]
-        yield src, tgt, text
+        lines = [_as_text(line).strip() for line in patch_text(ptch) if line]
+        yield src, tgt, lines

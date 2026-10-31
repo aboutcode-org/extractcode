@@ -1615,3 +1615,23 @@ class TestPatchInfo(FileBasedTesting):
         test_file = self.get_test_loc("patch/patches/xvidcap-xorg.patch")
         expected_file = self.get_test_loc("patch/patches/xvidcap-xorg.patch.expected")
         check_patch(test_file, expected_file)
+
+
+def test_extract_writes_a_subfile_for_each_patch_segment(tmp_path):
+    test_file = os.path.join(
+        os.path.dirname(__file__), "data", "patch", "patches", "dnsmasq_2.63-1.diff"
+    )
+    warnings = patch.extract(test_file, str(tmp_path))
+    extracted = [p for p in tmp_path.rglob("*") if p.is_file()]
+    assert warnings == []
+    assert len(extracted) == 19
+
+
+def test_extract_handles_bytes_patch_lines(tmp_path):
+    test_file = os.path.join(
+        os.path.dirname(__file__), "data", "patch", "patches", "libmediainfo-0.7.43.diff"
+    )
+    warnings = patch.extract(test_file, str(tmp_path))
+    extracted = [p for p in tmp_path.rglob("*") if p.is_file()]
+    assert warnings == []
+    assert len(extracted) == 1
