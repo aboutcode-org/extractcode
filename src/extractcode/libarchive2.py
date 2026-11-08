@@ -328,6 +328,26 @@ class Archive(object):
         return self.iter()
 
 
+def as_unicode_path(path):
+    """
+    Return a unicode string decoded from a path bytes `path` of an archive
+    entry.
+
+    Archive entry paths are bytes. Decode them as UTF-8 first: this is the
+    encoding used by most archives and decoding is deterministic. A charset
+    detector can mistake plain ASCII path segments such as ``+dfsg/`` for
+    UTF-7 and corrupt directory names, extracting files in the wrong
+    directory. Fall back to the historical charset detection for paths that
+    are not valid UTF-8.
+    """
+    if not isinstance(path, bytes):
+        return path
+    try:
+        return path.decode("utf-8")
+    except UnicodeDecodeError:
+        return text.as_unicode(path)
+
+
 @attr.attrs
 class Entry(object):
     """
@@ -416,7 +436,7 @@ class Entry(object):
         if not path:
             path = func_w(self.entry_struct)
         if not isinstance(path, str):
-            path = text.as_unicode(path)
+            path = as_unicode_path(path)
 
         return path
 
