@@ -7,11 +7,14 @@
 # See https://aboutcode.org for more information about nexB OSS projects.
 #
 
+import contextlib
 from functools import partial
 import locale
 import logging
 import mmap
 import os
+import threading
+import time
 import warnings
 
 import ctypes.util
@@ -133,20 +136,68 @@ def load_lib():
     return command.load_shared_library(dll_loc)
 
 
-def set_env_with_tz():
-    # NOTE: this is important to avoid timezone differences
-    os.environ["TZ"] = "UTC"
-
-
-set_env_with_tz()
-
-# NOTE: this is important to avoid locale-specific errors on various OS
-locale.setlocale(locale.LC_ALL, "")
-
 # load and initialize the shared library
 libarchive = load_lib()
 
+# The timezone and locale are process-wide settings shared with the calling
+# application. We set them only while an extraction is running rather than
+# globally on import. See https://github.com/aboutcode-org/extractcode/issues/65
+_extraction_env_lock = threading.Lock()
+_extraction_env_users = 0
+_saved_tz_and_locale = None
 
+
+def set_tz(tz):
+    """
+    Set the "TZ" environment variable to ``tz`` or unset it if ``tz`` is None.
+    """
+    if tz is None:
+        os.environ.pop("TZ", None)
+    else:
+        os.environ["TZ"] = tz
+    # Some C libraries such as glibc cache the timezone and only reload "TZ" in
+    # some calls: we must reload it explicitly (this is not available on Windows)
+    if hasattr(time, "tzset"):
+        time.tzset()
+
+
+@contextlib.contextmanager
+def extraction_environment():
+    """
+    Context manager to run an extraction with the "TZ" environment variable set
+    to UTC and with the user default locale, then restore the original "TZ" and
+    locale on exit.
+
+    NOTE: UTC is important to avoid timezone differences in the dates of
+    extracted files, and the user default locale is important to avoid
+    locale-specific errors on various OS.
+
+    This is reentrant and safe to use for concurrent extractions in threads: the
+    original "TZ" and locale are restored when the last running extraction
+    completes. Since these are process-wide settings, other threads also see
+    them while an extraction is running.
+    """
+    global _extraction_env_users, _saved_tz_and_locale
+    with _extraction_env_lock:
+        if not _extraction_env_users:
+            saved = os.environ.get("TZ"), locale.setlocale(locale.LC_ALL)
+            locale.setlocale(locale.LC_ALL, "")
+            set_tz("UTC")
+            _saved_tz_and_locale = saved
+        _extraction_env_users += 1
+    try:
+        yield
+    finally:
+        with _extraction_env_lock:
+            _extraction_env_users -= 1
+            if not _extraction_env_users:
+                original_tz, original_locale = _saved_tz_and_locale
+                _saved_tz_and_locale = None
+                set_tz(original_tz)
+                locale.setlocale(locale.LC_ALL, original_locale)
+
+
+@extraction_environment()
 def extract(location, target_dir, skip_symlinks=True):
     """
     Extract files from a libarchive-supported archive file at `location` in the
@@ -159,8 +210,6 @@ def extract(location, target_dir, skip_symlinks=True):
     abs_location = os.path.abspath(os.path.expanduser(location))
     abs_target_dir = os.path.abspath(os.path.expanduser(target_dir))
     warnings = []
-
-    set_env_with_tz()
 
     for entry in list_entries(abs_location):
         logger.debug("processing entry: {}".format(entry))
